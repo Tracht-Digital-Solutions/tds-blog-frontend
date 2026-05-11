@@ -1,0 +1,39 @@
+---
+interface Props {
+  slug: string;
+  category: string;
+  title: string;
+  excerpt: string;
+  publishedAt: string | null;
+  lang?: "de" | "en";
+}
+
+const { slug, category, title, excerpt, publishedAt, lang = "de" } = Astro.props;
+const locale = lang === "de" ? "de-DE" : "en-US";
+---
+
+<li class="border-b border-[var(--color-line)] pb-12 last:border-b-0">
+  <a href={`/${slug}`} class="block group">
+    <p class="text-xs uppercase tracking-[0.08em] text-[var(--color-accent)] mb-3">
+      {category}
+    </p>
+    <h2 class="font-[var(--font-display)] text-2xl md:text-3xl mb-3 group-hover:text-[var(--color-accent)] transition-colors">
+      {title}
+    </h2>
+    <p class="text-[var(--color-muted)] leading-relaxed mb-3">
+      {excerpt}
+    </p>
+    {publishedAt && (
+      <time
+        class="text-xs text-[var(--color-muted)]"
+        datetime={publishedAt}
+      >
+        {new Date(publishedAt).toLocaleDateString(locale, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </time>
+    )}
+  </a>
+</li>

@@ -1,16 +1,20 @@
 ---
 import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
+import { paginate } from "~/lib/pagination";
 
 const t = translations.de;
 
-let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
 try {
-  posts = await listAllPosts("de");
+  allPosts = await listAllPosts("de");
 } catch (err) {
   console.error("[tds-blog] failed to fetch posts at build time:", err);
 }
+
+const { items, hasOlder } = paginate(allPosts, 1);
 ---
 
 <Layout title="Journal — Tracht Digital Solutions" description="Gedanken und Artikel von Julian Tracht.">
@@ -25,35 +29,29 @@ try {
       </h1>
     </header>
 
-    {
-      posts.length === 0 ? (
-        <p class="text-[var(--color-muted)]">No posts yet.</p>
-      ) : (
-        <ul class="space-y-12">
-          {posts.map((p) => (
-            <li class="border-b border-[var(--color-line)] pb-12 last:border-b-0">
-              <a href={`/${p.slug}`} class="block group">
-                <p class="text-xs uppercase tracking-[0.08em] text-[var(--color-accent)] mb-3">
-                  {p.category}
-                </p>
-                <h2 class="font-[var(--font-display)] text-2xl md:text-3xl mb-3 group-hover:text-[var(--color-accent)] transition-colors">
-                  {p.title}
-                </h2>
-                <p class="text-[var(--color-muted)] leading-relaxed mb-3">
-                  {p.excerpt}
-                </p>
-                <span class="text-xs text-[var(--color-muted)]">
-                  {p.publishedAt && new Date(p.publishedAt).toLocaleDateString("de-DE", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )
-    }
+    {items.length === 0 ? (
+      <p class="text-[var(--color-muted)]">Noch keine Artikel veröffentlicht.</p>
+    ) : (
+      <ul class="space-y-12">
+        {items.map((p) => (
+          <BlogPostCard
+            slug={p.slug}
+            category={p.category}
+            title={p.title}
+            excerpt={p.excerpt}
+            publishedAt={p.publishedAt}
+            lang="de"
+          />
+        ))}
+      </ul>
+    )}
+
+    {hasOlder && (
+      <nav class="mt-16 flex justify-end">
+        <a href="/page/2" class="text-sm text-[var(--color-accent)] hover:underline">
+          Ältere Artikel →
+        </a>
+      </nav>
+    )}
   </main>
 </Layout>
