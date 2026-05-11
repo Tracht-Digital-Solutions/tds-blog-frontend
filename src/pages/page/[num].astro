@@ -1,0 +1,82 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
+import { listAllPosts } from "~/lib/content-api";
+import { paginate, PAGE_SIZE } from "~/lib/pagination";
+
+export async function getStaticPaths() {
+  let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    allPosts = await listAllPosts("de");
+  } catch (err) {
+    console.error("[tds-blog] getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const pageCount = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+  // /page/1 == / (the index page), so skip it.
+  const pages = [];
+  for (let n = 2; n <= pageCount; n++) {
+    pages.push({
+      params: { num: String(n) },
+      props: { allPosts, page: n },
+    });
+  }
+  return pages;
+}
+
+interface PageProps {
+  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
+  page: number;
+}
+
+const { allPosts, page } = Astro.props as PageProps;
+const t = translations.de;
+const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);
+const olderHref = page + 1 <= pageCount ? `/page/${page + 1}` : null;
+const newerHref = page - 1 <= 1 ? "/" : `/page/${page - 1}`;
+---
+
+<Layout
+  title={`Journal · Seite ${page} — Tracht Digital Solutions`}
+  description="Gedanken und Artikel von Julian Tracht."
+>
+  <main id="main" class="max-w-4xl mx-auto px-6 py-24">
+    <header class="mb-16">
+      <p class="text-xs uppercase tracking-[0.08em] text-[var(--color-muted)] mb-4">
+        {t.blog.label} · Seite {page} / {pageCount}
+      </p>
+      <h1 class="font-[var(--font-display)] text-5xl md:text-6xl leading-[0.95] tracking-tight">
+        {t.blog.headline}{" "}
+        <span class="text-[var(--color-accent)]">{t.blog.headlineAccent}</span>
+      </h1>
+    </header>
+
+    <ul class="space-y-12">
+      {items.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="de"
+        />
+      ))}
+    </ul>
+
+    <nav class="mt-16 flex items-center justify-between">
+      {hasNewer ? (
+        <a href={newerHref} class="text-sm text-[var(--color-accent)] hover:underline">
+          ← Neuere Artikel
+        </a>
+      ) : <span></span>}
+      {olderHref && hasOlder ? (
+        <a href={olderHref} class="text-sm text-[var(--color-accent)] hover:underline">
+          Ältere Artikel →
+        </a>
+      ) : <span></span>}
+    </nav>
+  </main>
+</Layout>
