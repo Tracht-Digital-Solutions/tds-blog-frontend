@@ -26,9 +26,20 @@ if (!post) {
 }
 
 const html = await marked.parse(post.body);
+const ogImage = post.coverHint?.startsWith("http") ? post.coverHint : "/og-default.png";
 ---
 
-<Layout title={`${post.title} — Journal`} description={post.excerpt} lang={lang}>
+<Layout
+  title={`${post.title} — Journal`}
+  description={post.excerpt}
+  lang={lang}
+  ogImage={ogImage}
+  article={{
+    publishedTime: post.publishedAt,
+    author: "Julian Tracht",
+    section: post.category,
+  }}
+>
   <main id="main" class="max-w-3xl mx-auto px-6 py-24">
     <article>
       <header class="mb-12">

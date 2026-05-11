@@ -5,9 +5,41 @@ interface Props {
   title: string;
   description?: string;
   lang?: "de" | "en";
+  /** Canonical URL — defaults to the current page's URL. */
+  canonical?: string;
+  /** Absolute URL or site-relative path. Used for og:image + twitter:image. */
+  ogImage?: string;
+  /** Article meta (only for /[slug] pages). */
+  article?: {
+    publishedTime?: string | null;
+    author?: string;
+    section?: string;
+  };
 }
 
-const { title, description = "Persönlich entwickelte digitale Lösungen für den Mittelstand.", lang = "de" } = Astro.props;
+const {
+  title,
+  description = "Persönlich entwickelte digitale Lösungen für den Mittelstand.",
+  lang = "de",
+  canonical,
+  ogImage = "/og-default.png",
+  article,
+} = Astro.props;
+
+const site = Astro.site?.origin ?? "https://blog.tracht-digital.de";
+const url = canonical ?? new URL(Astro.url.pathname, site).toString();
+const ogImageAbs = ogImage.startsWith("http")
+  ? ogImage
+  : new URL(ogImage, site).toString();
+
+// Alternate-language URL. Same slug, /en/-prefixed for the EN variant.
+// Lets search engines surface the right variant per locale.
+const altPath =
+  lang === "de"
+    ? Astro.url.pathname.replace(/^\//, "/en/")
+    : Astro.url.pathname.replace(/^\/en\//, "/");
+const altUrl = new URL(altPath, site).toString();
+const altLang = lang === "de" ? "en" : "de";
 ---
 
 <!DOCTYPE html>
@@ -17,8 +49,32 @@ const { title, description = "Persönlich entwickelte digitale Lösungen für de
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={url} />
+    <link rel="alternate" hreflang={lang} href={url} />
+    <link rel="alternate" hreflang={altLang} href={altUrl} />
+    <link rel="alternate" hreflang="x-default" href={lang === "de" ? url : altUrl} />
+    <link rel="alternate" type="application/rss+xml" title="TDS Journal" href="/rss.xml" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+
+    <meta property="og:type" content={article ? "article" : "website"} />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageAbs} />
+    <meta property="og:locale" content={lang === "de" ? "de_DE" : "en_GB"} />
+    <meta property="og:site_name" content="TDS Journal" />
+
+    {article?.publishedTime && (
+      <meta property="article:published_time" content={article.publishedTime} />
+    )}
+    {article?.author && <meta property="article:author" content={article.author} />}
+    {article?.section && <meta property="article:section" content={article.section} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageAbs} />
   </head>
   <body>
     <a href="#main" class="absolute -top-full left-0 z-50 px-6 py-3 bg-[var(--color-primary)] text-white text-sm font-semibold focus:top-0 transition-all">
