@@ -7,31 +7,30 @@ ships static — no runtime API calls, no client-side data fetching.
 ## How rebuilds get triggered
 
 When a post is published in `tds-admin`, the admin posts to
-`tds-content-api`, which then fires a `workflow_dispatch` against
-this repo's deploy workflow. That kicks off a new build with the
-just-published post included. **Check `tds-content-api`'s post-create
-action for the dispatch call.** TODO: implement that hook.
+`tds-content-api`, which is meant to fire a `workflow_dispatch`
+against this repo's deploy workflow so the build picks up the
+new post. The dispatch call isn't wired yet — tracked as
+`tds-content-api#3`. Until then, rebuilds run on push to `main`
+in this repo only.
 
 ## Status
 
-Scaffolded with:
-- `src/pages/index.astro` — paginated list (currently fetches all)
-- `src/pages/[slug].astro` — markdown render via `marked`
+- `src/pages/index.astro` — page 1 (10 newest)
+- `src/pages/page/[num].astro` — pages 2..N
+- `src/pages/[slug].astro` — post detail, OG + canonical + hreflang
 - `src/pages/rss.xml.ts` — RSS feed
-- `src/lib/content-api.ts` — build-time fetch client
+- `src/components/BlogPostCard.astro` — list-item component
+- `src/lib/content-api.ts` — build-time fetch client (cursor-paginated)
+- `src/lib/pagination.ts` — page-window slicing
 
-Markdown rendering currently uses `set:html` directly. The legacy
-app uses the same approach behind admin auth; if blog post bodies
-ever accept user-generated content, sanitise via DOMPurify or
-similar.
+Markdown rendering uses `set:html` directly. Bodies are admin-only
+today — if user-generated content ever ships, sanitise via DOMPurify
+or similar.
 
-## TODO
+## Open
 
-- [ ] BlogPostCard component port (currently inline in index.astro)
-- [ ] Pagination UI (cursor-based, matching content-api)
-- [ ] Tag filtering (depends on content-api adding tags)
-- [ ] OpenGraph meta tags per post
-- [ ] Consider syntax highlighting for code blocks (shiki)
+- Tag filtering UI — issue #6 (content-api `?tag=` filter is in)
+- Code block syntax highlighting (Shiki) — issue #5
 
 ## Don't
 
