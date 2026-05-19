@@ -1,0 +1,59 @@
+name: Build → build branch
+
+# Mirrors the install + typecheck + build steps that deploy.yml uses, but
+# instead of SFTP'ing the dist/ to netcup it force-publishes the dist/
+# contents to an orphan `build` branch. The branch always holds exactly
+# the latest build — useful for inspecting what got built, for pulling
+# the artifact into a second deploy target, or for diffing two builds.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tracht-digital-solutions'
+
+      - name: Install
+        run: npm ci
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build
+        run: npm run build
+
+      - name: Stamp build with source commit
+        run: |
+          mkdir -p dist
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+          } > dist/.build-info
+
+      - name: Publish dist to build branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: build
+          commit_message: 'build ${{ github.sha }}'
+          force_orphan: true
