@@ -16,6 +16,8 @@ interface Props {
     publishedTime?: string | null;
     author?: string;
     section?: string;
+    /** Slug of the article. When set, og:image defaults to /og/{lang}/{slug}.png. */
+    slug?: string;
   };
 }
 
@@ -24,15 +26,18 @@ const {
   description = "Persönlich entwickelte digitale Lösungen für den Mittelstand.",
   lang = "de",
   canonical,
-  ogImage = "/og-default.png",
+  ogImage,
   article,
 } = Astro.props;
 
+const resolvedOgImage =
+  ogImage ?? (article?.slug ? `/og/${lang}/${article.slug}.png` : "/og-default.png");
+
 const site = Astro.site?.origin ?? "https://blog.tracht-digital.de";
 const url = canonical ?? new URL(Astro.url.pathname, site).toString();
-const ogImageAbs = ogImage.startsWith("http")
-  ? ogImage
-  : new URL(ogImage, site).toString();
+const ogImageAbs = resolvedOgImage.startsWith("http")
+  ? resolvedOgImage
+  : new URL(resolvedOgImage, site).toString();
 
 // Alternate-language URL. Same slug, /en/-prefixed for the EN variant.
 // Lets search engines surface the right variant per locale.

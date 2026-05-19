@@ -33,7 +33,9 @@ if (!post) {
 
 const html = await marked.parse(post.body);
 const sameLangPosts = allPosts.filter((p) => p.lang === lang);
-const ogImage = post.coverHint?.startsWith("http") ? post.coverHint : "/og-default.png";
+// coverHint still wins if the post carries an explicit cover URL;
+// otherwise Layout falls back to the per-post generated /og/{lang}/{slug}.png.
+const explicitCover = post.coverHint?.startsWith("http") ? post.coverHint : undefined;
 
 const dateLabel = post.publishedAt
   ? new Date(post.publishedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
@@ -50,11 +52,12 @@ const readingMinutes = Math.max(1, Math.round(post.body.split(/\s+/).length / 22
   title={`${post.title} — Journal`}
   description={post.excerpt}
   lang={lang}
-  ogImage={ogImage}
+  ogImage={explicitCover}
   article={{
     publishedTime: post.publishedAt,
     author: "Julian Tracht",
     section: post.category,
+    slug: post.slug,
   }}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
