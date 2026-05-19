@@ -1,8 +1,11 @@
 # tds-blog
 
-Public blog at `blog.tracht-digital.de`. **Astro 5** SSG + **Tailwind v4**.
-Every post is fetched from **`tds-content-api`** at build time and rendered
-to static HTML — no runtime API calls, no client-side data fetching.
+Public blog at `blog.tracht-digital.de`. **Astro 5** SSG + **Tailwind v4**
+with self-hosted **Fraunces + Geist** and the shared editorial design
+language. Every post is fetched from **`tds-content-api`** at build time
+and rendered to static HTML — no runtime API calls, no client-side data
+fetching. Each post also gets a per-post **OG preview image** rendered
+at build time via Satori + Resvg.
 
 ---
 
@@ -45,17 +48,19 @@ references it.
 
 ```bash
 npm run dev          # Astro dev server with HMR (port 4321)
-npm run build        # → dist/ static HTML
+npm run build        # → dist/ static HTML + per-post /og/{lang}/{slug}.png
 npm run preview      # serve dist/ to verify production build
 npm run type-check   # astro check
+npm run og:smoke     # render two fixture OG images to scripts/og-smoke-*.png
 ```
 
 ---
 
 ## Manual deploy
 
-The repo ships an automated `.github/workflows/deploy.yml` (push to
-`main` → SFTP → `install.php`). To deploy by hand:
+Auto-SFTP to netcup was removed. The repo now ships
+`.github/workflows/build.yml` which only builds + force-pushes
+`dist/` to an orphan `build` branch. Deploy from there by hand:
 
 ```bash
 # 1. Build
@@ -91,8 +96,9 @@ the API is back up, re-run `npm run build` and the pages come back.
 ## Rebuild-on-publish hook
 
 When `tds-admin` publishes a post, `tds-content-api` should fire a
-`workflow_dispatch` against this repo's deploy workflow so the blog
-auto-rebuilds with the new post. Implementation lives in
+`workflow_dispatch` against this repo's `build.yml` so the blog
+rebuilds with the new post (which will then appear on the `build`
+branch ready for manual deploy). Implementation lives in
 [`tds-content-api#3`](https://github.com/Tracht-Digital-Solutions/tds-content-api/issues/3)
 (still pending).
 
@@ -100,11 +106,17 @@ auto-rebuilds with the new post. Implementation lives in
 
 ## Pages
 
+All pages share `JournalHeader.astro` + `JournalFooter.astro`
+(wordmark + cross-links to main site, customer portal, RSS).
+
 | Path | Source | Purpose |
 |---|---|---|
-| `/` | `src/pages/index.astro` | First page of the journal (newest 10) |
-| `/page/[num]` | `src/pages/page/[num].astro` | Pages 2..N (10 per page) |
-| `/[slug]` | `src/pages/[slug].astro` | Detail page per post |
+| `/` | `src/pages/index.astro` | DE index — page 1 of the journal (newest 10) |
+| `/page/[num]` | `src/pages/page/[num].astro` | DE pages 2..N |
+| `/[slug]` | `src/pages/[slug].astro` | Article page (DE + EN both routed through here via `lang` prop); drop-cap on first paragraph, marginalia rail with date + reading time + author, and a `RelatedArticles` strip at the bottom |
+| `/en/` | `src/pages/en/index.astro` | EN index — mirror of the DE index against `listAllPosts("en")` |
+| `/en/page/[num]` | `src/pages/en/page/[num].astro` | EN pagination |
+| `/og/[lang]/[slug].png` | `src/pages/og/[lang]/[slug].png.ts` | Per-post OG preview image, 1200×630, rendered at build time |
 | `/rss.xml` | `src/pages/rss.xml.ts` | RSS 2.0 feed |
 | `/sitemap-index.xml` | `@astrojs/sitemap` | Auto-generated |
 
@@ -114,18 +126,45 @@ auto-rebuilds with the new post. Implementation lives in
 
 ```
 src/
-├── components/BlogPostCard.astro
-├── layouts/Layout.astro            # canonical, hreflang, OG, Twitter Card
+├── components/
+│   ├── BlogPostCard.astro          # list-item: editorial-grid title + date marginalia
+│   ├── JournalHeader.astro
+│   ├── JournalFooter.astro
+│   └── RelatedArticles.astro       # 3-card strip on /[slug] (same-category + fallback)
+├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card
 ├── lib/
 │   ├── content-api.ts              # build-time fetch client (cursor-paginated)
 │   └── pagination.ts               # window slicing (PAGE_SIZE = 10)
+├── og/
+│   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
+│   └── fonts/                      # Fraunces Regular + Italic + Geist Medium TTFs (~330 KB)
 ├── pages/
-│   ├── index.astro                 # page 1
-│   ├── page/[num].astro            # pages 2+
-│   ├── [slug].astro                # post detail
+│   ├── index.astro                 # DE page 1
+│   ├── page/[num].astro            # DE pages 2+
+│   ├── [slug].astro                # article (DE + EN)
+│   ├── en/index.astro              # EN page 1
+│   ├── en/page/[num].astro         # EN pages 2+
+│   ├── og/[lang]/[slug].png.ts     # build-time per-post OG image
 │   └── rss.xml.ts                  # feed
+├── scripts/og-smoke.ts             # render two fixture OG images to disk
 └── styles/global.css
 ```
+
+## Per-post OG images
+
+Each post gets a 1200×630 PNG generated at build time and served as
+a static file. Layout.astro auto-resolves `og:image` to
+`/og/{lang}/{slug}.png` when the page passes an `article.slug`; an
+explicit URL in `coverHint` still overrides if you ever want to
+ship a hand-designed cover.
+
+The template is editorial: hairline rule + category eyebrow →
+Fraunces display headline with the last word italic-burgundy →
+hairline footer with date · author + "Tracht Digital · Journal"
+wordmark. See `src/og/render.ts` for the JSX-object tree.
+
+`npm run og:smoke` renders two fixtures (DE short + EN long title)
+to `scripts/og-smoke-*.png` for quick regression checks.
 
 ---
 
