@@ -1,0 +1,31 @@
+---
+/**
+ * Slim editorial header for the public journal. Wordmark on the left
+ * doubles as the back-to-main-site link; the right slot points at
+ * the rest of the brand surface (main site, customer portal, RSS).
+ */
+const items = [
+  { label: "Main", href: "https://tracht-digital.de" },
+  { label: "Kundenportal", href: "https://kunde.tracht-digital.de" },
+  { label: "RSS", href: "/rss.xml" },
+];
+---
+
+<header class="brand-header">
+  <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+    <a href="/" class="brand-wordmark text-[1.0625rem] tracking-tight">
+      Tracht <span class="accent-italic">Journal</span>
+    </a>
+
+    <nav class="flex items-center gap-6 text-sm">
+      {items.map((it) => (
+        <a
+          href={it.href}
+          class="link-underline text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors"
+        >
+          {it.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>

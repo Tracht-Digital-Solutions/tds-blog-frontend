@@ -1,5 +1,7 @@
 ---
 import "~/styles/global.css";
+import JournalHeader from "~/components/JournalHeader.astro";
+import JournalFooter from "~/components/JournalFooter.astro";
 
 interface Props {
   title: string;
@@ -80,6 +82,8 @@ const altLang = lang === "de" ? "en" : "de";
     <a href="#main" class="absolute -top-full left-0 z-50 px-6 py-3 bg-[var(--color-primary)] text-white text-sm font-semibold focus:top-0 transition-all">
       Skip to content
     </a>
+    <JournalHeader />
     <slot />
+    <JournalFooter />
   </body>
 </html>

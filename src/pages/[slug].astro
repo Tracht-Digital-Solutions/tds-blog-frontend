@@ -27,6 +27,16 @@ if (!post) {
 
 const html = await marked.parse(post.body);
 const ogImage = post.coverHint?.startsWith("http") ? post.coverHint : "/og-default.png";
+
+const dateLabel = post.publishedAt
+  ? new Date(post.publishedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  : null;
+
+const readingMinutes = Math.max(1, Math.round(post.body.split(/\s+/).length / 220));
 ---
 
 <Layout
@@ -40,36 +50,47 @@ const ogImage = post.coverHint?.startsWith("http") ? post.coverHint : "/og-defau
     section: post.category,
   }}
 >
-  <main id="main" class="max-w-3xl mx-auto px-6 py-24">
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <article>
-      <header class="mb-12">
-        <p class="text-xs uppercase tracking-[0.08em] text-[var(--color-accent)] mb-3">
-          {post.category}
-        </p>
-        <h1 class="font-[var(--font-display)] text-4xl md:text-5xl leading-[1.05] tracking-tight mb-4">
-          {post.title}
-        </h1>
-        {
-          post.publishedAt && (
-            <time
-              class="text-sm text-[var(--color-muted)]"
-              datetime={post.publishedAt}
-            >
-              {new Date(post.publishedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-          )
-        }
+      <div class="text-sm mb-10">
+        <a href="/" class="link-underline text-[var(--color-muted)]">
+          ← {lang === "de" ? "Journal" : "Journal"}
+        </a>
+      </div>
+
+      <header class="editorial-grid items-end mb-14">
+        <div>
+          <p class="section-num mb-5">{post.category}</p>
+          <h1 class="display text-5xl md:text-6xl lg:text-7xl">
+            {post.title}
+          </h1>
+        </div>
+        <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)] space-y-3">
+          {dateLabel && (
+            <div>
+              <p class="eyebrow">Erschienen</p>
+              <p class="mt-0.5 tabular"><strong>{dateLabel}</strong></p>
+            </div>
+          )}
+          <div>
+            <p class="eyebrow">Lesezeit</p>
+            <p class="mt-0.5 tabular"><strong>~{readingMinutes} Min.</strong></p>
+          </div>
+          <div>
+            <p class="eyebrow">Verfasst von</p>
+            <p class="mt-0.5"><strong>Julian Tracht</strong></p>
+          </div>
+        </aside>
       </header>
 
-      <div class="prose prose-lg max-w-none" set:html={html}></div>
+      <div class="prose-article drop-cap" set:html={html}></div>
 
-      <footer class="mt-16 pt-8 border-t border-[var(--color-line)]">
-        <a href="/" class="text-sm text-[var(--color-accent)] hover:underline">
+      <footer class="mt-20 pt-10 hairline-t flex flex-wrap items-baseline justify-between gap-4 text-sm">
+        <a href="/" class="link-underline text-[var(--color-accent)]">
           ← {lang === "de" ? "Alle Artikel" : "All articles"}
+        </a>
+        <a href="/rss.xml" class="link-underline text-[var(--color-muted)]">
+          RSS abonnieren
         </a>
       </footer>
     </article>

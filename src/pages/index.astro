@@ -17,22 +17,32 @@ try {
 const { items, hasOlder } = paginate(allPosts, 1);
 ---
 
-<Layout title="Journal — Tracht Digital Solutions" description="Gedanken und Artikel von Julian Tracht.">
-  <main id="main" class="max-w-4xl mx-auto px-6 py-24">
-    <header class="mb-16">
-      <p class="text-xs uppercase tracking-[0.08em] text-[var(--color-muted)] mb-4">
-        {t.blog.label}
-      </p>
-      <h1 class="font-[var(--font-display)] text-5xl md:text-6xl leading-[0.95] tracking-tight">
-        {t.blog.headline}{" "}
-        <span class="text-[var(--color-accent)]">{t.blog.headlineAccent}</span>
-      </h1>
+<Layout
+  title="Journal — Tracht Digital Solutions"
+  description="Gedanken und Artikel von Julian Tracht."
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="editorial-grid items-end mb-16 lg:mb-20">
+      <div>
+        <p class="section-num mb-5">{t.blog.label}</p>
+        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
+          {t.blog.headline}
+          {" "}
+          <span class="accent-italic">{t.blog.headlineAccent}</span>
+        </h1>
+      </div>
+      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
+        <p>
+          Notizen aus der Werkstatt — über Software, Auftraggeber und
+          das, was zwischen den beiden passiert.
+        </p>
+      </aside>
     </header>
 
     {items.length === 0 ? (
-      <p class="text-[var(--color-muted)]">Noch keine Artikel veröffentlicht.</p>
+      <p class="text-[var(--color-muted)] italic">Noch keine Artikel veröffentlicht.</p>
     ) : (
-      <ul class="space-y-12">
+      <ul>
         {items.map((p) => (
           <BlogPostCard
             slug={p.slug}
@@ -48,7 +58,7 @@ const { items, hasOlder } = paginate(allPosts, 1);
 
     {hasOlder && (
       <nav class="mt-16 flex justify-end">
-        <a href="/page/2" class="text-sm text-[var(--color-accent)] hover:underline">
+        <a href="/page/2" class="link-underline text-[var(--color-accent)] text-sm">
           Ältere Artikel →
         </a>
       </nav>
