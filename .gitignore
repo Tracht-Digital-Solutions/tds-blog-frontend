@@ -7,3 +7,6 @@ dist/
 *.log
 .idea/
 .vscode/
+
+# OG smoke-test outputs (the script writes here, the PNGs aren't tracked)
+scripts/og-smoke-*.png
