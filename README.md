@@ -1,5 +1,13 @@
 # tds-blog
 
+> **Setting this up from scratch?** See [`INSTALL.md`](INSTALL.md) for
+> the step-by-step bring-up (Packages auth → npm install → OG fonts
+> → env → dev → og:smoke → build → manual deploy). This README
+> documents the routing, structure and OG image generator.
+
+---
+
+
 Public blog at `blog.tracht-digital.de`. **Astro 5** SSG + **Tailwind v4**
 with self-hosted **Fraunces + Geist** and the shared editorial design
 language. Every post is fetched from **`tds-content-api`** at build time
