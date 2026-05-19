@@ -17,7 +17,6 @@
     "@astrojs/sitemap": "^3.2.0",
     "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource-variable/geist": "^5.2.9",
-    "@fontsource/fraunces": "^5.2.9",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.0.0",
     "@tracht-digital-solutions/tds-shared": "^0.1.0",
