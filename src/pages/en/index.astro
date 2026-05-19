@@ -1,0 +1,68 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
+import { listAllPosts } from "~/lib/content-api";
+import { paginate } from "~/lib/pagination";
+
+const t = translations.en;
+
+let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
+try {
+  allPosts = await listAllPosts("en");
+} catch (err) {
+  console.error("[tds-blog] failed to fetch posts at build time:", err);
+}
+
+const { items, hasOlder } = paginate(allPosts, 1);
+---
+
+<Layout
+  title="Journal — Tracht Digital Solutions"
+  description="Notes and articles from Julian Tracht."
+  lang="en"
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="editorial-grid items-end mb-16 lg:mb-20">
+      <div>
+        <p class="section-num mb-5">{t.blog.label}</p>
+        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
+          {t.blog.headline}
+          {" "}
+          <span class="accent-italic">{t.blog.headlineAccent}</span>
+        </h1>
+      </div>
+      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
+        <p>
+          Notes from the workshop — on software, clients, and the
+          things that happen in between.
+        </p>
+      </aside>
+    </header>
+
+    {items.length === 0 ? (
+      <p class="text-[var(--color-muted)] italic">No articles published yet.</p>
+    ) : (
+      <ul>
+        {items.map((p) => (
+          <BlogPostCard
+            slug={p.slug}
+            category={p.category}
+            title={p.title}
+            excerpt={p.excerpt}
+            publishedAt={p.publishedAt}
+            lang="en"
+          />
+        ))}
+      </ul>
+    )}
+
+    {hasOlder && (
+      <nav class="mt-16 flex justify-end">
+        <a href="/en/page/2" class="link-underline text-[var(--color-accent)] text-sm">
+          Older articles →
+        </a>
+      </nav>
+    )}
+  </main>
+</Layout>

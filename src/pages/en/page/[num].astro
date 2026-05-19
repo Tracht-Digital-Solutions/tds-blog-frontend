@@ -1,0 +1,89 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
+import { listAllPosts } from "~/lib/content-api";
+import { paginate, PAGE_SIZE } from "~/lib/pagination";
+
+export async function getStaticPaths() {
+  let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    allPosts = await listAllPosts("en");
+  } catch (err) {
+    console.error("[tds-blog] /en/page getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const pageCount = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+  const pages = [];
+  for (let n = 2; n <= pageCount; n++) {
+    pages.push({
+      params: { num: String(n) },
+      props: { allPosts, page: n },
+    });
+  }
+  return pages;
+}
+
+interface PageProps {
+  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
+  page: number;
+}
+
+const { allPosts, page } = Astro.props as PageProps;
+const t = translations.en;
+const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);
+const olderHref = page + 1 <= pageCount ? `/en/page/${page + 1}` : null;
+const newerHref = page - 1 <= 1 ? "/en/" : `/en/page/${page - 1}`;
+---
+
+<Layout
+  title={`Journal · Page ${page} — Tracht Digital Solutions`}
+  description="Notes and articles from Julian Tracht."
+  lang="en"
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="editorial-grid items-end mb-16 lg:mb-20">
+      <div>
+        <p class="section-num mb-5">{t.blog.label} · Page {page} / {pageCount}</p>
+        <h1 class="display text-5xl md:text-6xl">
+          {t.blog.headline}
+          {" "}
+          <span class="accent-italic">{t.blog.headlineAccent}</span>
+        </h1>
+      </div>
+      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
+        <p>
+          Older notes from the archive. Equally valid, just further
+          back in time.
+        </p>
+      </aside>
+    </header>
+
+    <ul>
+      {items.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="en"
+        />
+      ))}
+    </ul>
+
+    <nav class="mt-16 flex items-center justify-between text-sm">
+      {hasNewer ? (
+        <a href={newerHref} class="link-underline text-[var(--color-accent)]">
+          ← Newer articles
+        </a>
+      ) : <span></span>}
+      {olderHref && hasOlder ? (
+        <a href={olderHref} class="link-underline text-[var(--color-accent)]">
+          Older articles →
+        </a>
+      ) : <span></span>}
+    </nav>
+  </main>
+</Layout>
