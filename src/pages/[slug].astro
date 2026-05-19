@@ -1,6 +1,7 @@
 ---
 import { marked } from "marked";
 import Layout from "~/layouts/Layout.astro";
+import RelatedArticles from "~/components/RelatedArticles.astro";
 import { listAllPosts, getPost } from "~/lib/content-api";
 
 export async function getStaticPaths() {
@@ -11,14 +12,19 @@ export async function getStaticPaths() {
     console.error("[tds-blog] getStaticPaths fetch failed:", err);
     return [];
   }
+  // Hand the full list down as a prop so each page can filter for
+  // its related-articles strip without making a second API call.
   return posts.map((p) => ({
     params: { slug: p.slug },
-    props: { lang: p.lang as "de" | "en" },
+    props: { lang: p.lang as "de" | "en", allPosts: posts },
   }));
 }
 
 const { slug } = Astro.params;
-const { lang } = Astro.props as { lang: "de" | "en" };
+const { lang, allPosts } = Astro.props as {
+  lang: "de" | "en";
+  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
+};
 
 const post = await getPost(slug as string, lang);
 if (!post) {
@@ -26,6 +32,7 @@ if (!post) {
 }
 
 const html = await marked.parse(post.body);
+const sameLangPosts = allPosts.filter((p) => p.lang === lang);
 const ogImage = post.coverHint?.startsWith("http") ? post.coverHint : "/og-default.png";
 
 const dateLabel = post.publishedAt
@@ -85,12 +92,22 @@ const readingMinutes = Math.max(1, Math.round(post.body.split(/\s+/).length / 22
 
       <div class="prose-article drop-cap" set:html={html}></div>
 
+      <RelatedArticles
+        posts={sameLangPosts}
+        currentSlug={post.slug}
+        currentCategory={post.category}
+        lang={lang}
+      />
+
       <footer class="mt-20 pt-10 hairline-t flex flex-wrap items-baseline justify-between gap-4 text-sm">
-        <a href="/" class="link-underline text-[var(--color-accent)]">
+        <a
+          href={lang === "de" ? "/" : "/en/"}
+          class="link-underline text-[var(--color-accent)]"
+        >
           ← {lang === "de" ? "Alle Artikel" : "All articles"}
         </a>
         <a href="/rss.xml" class="link-underline text-[var(--color-muted)]">
-          RSS abonnieren
+          {lang === "de" ? "RSS abonnieren" : "Subscribe via RSS"}
         </a>
       </footer>
     </article>

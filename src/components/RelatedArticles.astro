@@ -1,0 +1,83 @@
+---
+import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+
+interface Props {
+  /** All posts for the current language (passed in from the page so we don't refetch). */
+  posts: Array<Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "publishedAt">>;
+  currentSlug: string;
+  currentCategory: string;
+  lang: "de" | "en";
+  limit?: number;
+}
+
+const { posts, currentSlug, currentCategory, lang, limit = 3 } = Astro.props;
+const locale = lang === "de" ? "de-DE" : "en-US";
+
+/**
+ * Pick the top-N most recent posts in the same category, excluding
+ * the current one. Falls back to the most recent posts overall if
+ * the category yields fewer than `limit` siblings so the strip never
+ * feels half-empty.
+ */
+const byDate = (a: { publishedAt: string | null }, b: { publishedAt: string | null }) =>
+  (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
+
+const sameCategory = posts
+  .filter((p) => p.slug !== currentSlug && p.category === currentCategory)
+  .sort(byDate);
+
+let picks = sameCategory.slice(0, limit);
+if (picks.length < limit) {
+  const fallback = posts
+    .filter(
+      (p) => p.slug !== currentSlug && !picks.some((q) => q.slug === p.slug),
+    )
+    .sort(byDate)
+    .slice(0, limit - picks.length);
+  picks = [...picks, ...fallback];
+}
+
+const labels = {
+  de: { eyebrow: "Weiterlesen", read: "Lesen →" },
+  en: { eyebrow: "Keep reading", read: "Read →" },
+}[lang];
+
+const articleBase = lang === "de" ? "/" : "/en/";
+---
+
+{picks.length > 0 && (
+  <aside class="hairline-t mt-20 pt-12" aria-labelledby="related-heading">
+    <p class="section-num mb-3">{labels.eyebrow}</p>
+    <h2 id="related-heading" class="display-tight text-3xl mb-10">
+      {lang === "de" ? "Ähnliche Artikel." : "Adjacent articles."}
+    </h2>
+
+    <ul class="grid md:grid-cols-3 gap-8 md:gap-10">
+      {picks.map((p) => (
+        <li>
+          <a href={`${articleBase}${p.slug}`} class="block group">
+            <p class="eyebrow mb-2">{p.category}</p>
+            <h3 class="display-tight text-xl md:text-[1.375rem] mb-2 group-hover:text-[var(--color-accent)] transition-colors">
+              {p.title}
+            </h3>
+            <p class="text-sm text-[var(--color-muted)] leading-relaxed line-clamp-3 mb-3">
+              {p.excerpt}
+            </p>
+            <div class="text-xs text-[var(--color-muted)] flex items-center justify-between gap-3">
+              {p.publishedAt && (
+                <time class="tabular" datetime={p.publishedAt}>
+                  {new Date(p.publishedAt).toLocaleDateString(locale, {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                  })}
+                </time>
+              )}
+              <span class="link-underline text-[var(--color-accent)]">{labels.read}</span>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </aside>
+)}
