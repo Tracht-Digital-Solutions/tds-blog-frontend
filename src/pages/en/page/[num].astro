@@ -4,6 +4,7 @@ import BlogPostCard from "~/components/BlogPostCard.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
 import { paginate, PAGE_SIZE } from "~/lib/pagination";
+import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
 export async function getStaticPaths() {
   let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
@@ -35,12 +36,14 @@ const t = translations.en;
 const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);
 const olderHref = page + 1 <= pageCount ? `/en/page/${page + 1}` : null;
 const newerHref = page - 1 <= 1 ? "/en/" : `/en/page/${page - 1}`;
+const jsonLd = asGraph(websiteSchema(), blogSchema("en"));
 ---
 
 <Layout
   title={`Journal · Page ${page} — Tracht Digital Solutions`}
   description="Notes and articles from Julian Tracht."
   lang="en"
+  jsonLd={jsonLd}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <header class="editorial-grid items-end mb-16 lg:mb-20">

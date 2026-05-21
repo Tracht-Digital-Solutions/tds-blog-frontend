@@ -4,8 +4,10 @@ import BlogPostCard from "~/components/BlogPostCard.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
 import { paginate } from "~/lib/pagination";
+import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
 const t = translations.de;
+const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
 
 let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
 try {
@@ -20,6 +22,7 @@ const { items, hasOlder } = paginate(allPosts, 1);
 <Layout
   title="Journal — Tracht Digital Solutions"
   description="Gedanken und Artikel von Julian Tracht."
+  jsonLd={jsonLd}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <header class="editorial-grid items-end mb-16 lg:mb-20">

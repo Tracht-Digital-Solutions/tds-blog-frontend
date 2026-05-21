@@ -1,0 +1,22 @@
+---
+/**
+ * Emits one or more Schema.org graphs as inline JSON-LD. Pass a
+ * single object or an array; each becomes its own <script> tag.
+ */
+interface Props {
+  data: object | object[];
+}
+
+const { data } = Astro.props;
+const graphs = Array.isArray(data) ? data : [data];
+---
+
+{
+  graphs.map((graph) => (
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(graph)}
+      is:inline
+    />
+  ))
+}

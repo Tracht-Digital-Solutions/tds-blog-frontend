@@ -1,0 +1,35 @@
+User-agent: *
+Allow: /
+
+# AI search crawlers are welcome — articles are meant to be cited.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# OG image endpoints are cheap to crawl but offer no human content.
+Disallow: /og/
+
+Sitemap: https://blog.tracht-digital.de/sitemap-index.xml

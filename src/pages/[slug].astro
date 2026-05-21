@@ -3,6 +3,8 @@ import { marked } from "marked";
 import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
 import { listAllPosts, getPost } from "~/lib/content-api";
+import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
 
 export async function getStaticPaths() {
   let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
@@ -45,7 +47,42 @@ const dateLabel = post.publishedAt
     })
   : null;
 
-const readingMinutes = Math.max(1, Math.round(post.body.split(/\s+/).length / 220));
+const wordCount = post.body.split(/\s+/).filter(Boolean).length;
+const readingMinutes = Math.max(1, Math.round(wordCount / 220));
+
+// JSON-LD: BlogPosting + BreadcrumbList. Image URL must be absolute
+// for Schema.org — keep in lockstep with og:image.
+const ogImagePath = explicitCover ?? `/og/${lang}/${post.slug}.png`;
+const imageUrl = ogImagePath.startsWith("http")
+  ? ogImagePath
+  : new URL(ogImagePath, siteConfig.url).toString();
+
+const journalLabel = "Journal";
+const journalHomeUrl = lang === "de" ? `${siteConfig.url}/` : `${siteConfig.url}/en/`;
+const postUrl = new URL(
+  lang === "en" ? `/en/${post.slug}` : `/${post.slug}`,
+  siteConfig.url,
+).toString();
+
+const jsonLd = [
+  blogPostingSchema({
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    body: post.body,
+    category: post.category,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt ?? null,
+    lang,
+    imageUrl,
+    wordCount,
+  }),
+  breadcrumbSchema([
+    { name: journalLabel, url: journalHomeUrl },
+    { name: post.category, url: journalHomeUrl },
+    { name: post.title, url: postUrl },
+  ]),
+];
 ---
 
 <Layout
@@ -55,10 +92,12 @@ const readingMinutes = Math.max(1, Math.round(post.body.split(/\s+/).length / 22
   ogImage={explicitCover}
   article={{
     publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt,
     author: "Julian Tracht",
     section: post.category,
     slug: post.slug,
   }}
+  jsonLd={jsonLd}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <article>
