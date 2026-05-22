@@ -1,0 +1,98 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import TagList from "~/components/TagList.astro";
+import { listAllPosts } from "~/lib/content-api";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * Tag-filtered journal index (DE). One static page per unique tag
+ * across the published DE corpus. The content-api supports a
+ * server-side `?tag=` filter, but since `listAllPosts` already pulls
+ * the full set for the static build, filtering in JS avoids a second
+ * cursor walk per tag.
+ */
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts("de");
+  } catch (err) {
+    console.error("[tds-blog] /tag getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const tagToPosts = new Map<string, typeof posts>();
+  for (const p of posts) {
+    if (!p.tags) continue;
+    for (const t of p.tags.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)) {
+      if (!tagToPosts.has(t)) tagToPosts.set(t, []);
+      tagToPosts.get(t)!.push(p);
+    }
+  }
+
+  return Array.from(tagToPosts.entries()).map(([tag, list]) => ({
+    params: { tag },
+    props: { posts: list, allPosts: posts },
+  }));
+}
+
+interface PageProps {
+  posts: Awaited<ReturnType<typeof listAllPosts>>;
+  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
+}
+
+const { posts, allPosts } = Astro.props as PageProps;
+const tag = Astro.params.tag as string;
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("de"),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: `#${tag}`, url: `${siteConfig.url}/tag/${tag}` },
+  ]),
+);
+---
+
+<Layout
+  title={`#${tag} — Journal`}
+  description={`Artikel im Journal mit dem Tag „${tag}“.`}
+  jsonLd={jsonLd}
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="editorial-grid items-end mb-16">
+      <div>
+        <p class="section-num mb-5">Journal · Tag</p>
+        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
+          #<span class="accent-italic">{tag}</span>
+        </h1>
+      </div>
+      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
+        <p>
+          {posts.length === 1
+            ? "Ein Artikel zum Thema."
+            : `${posts.length} Artikel zum Thema.`}
+        </p>
+        <p class="mt-2">
+          <a href="/" class="link-underline text-[var(--color-accent)]">← Alle Artikel</a>
+        </p>
+      </aside>
+    </header>
+
+    <TagList posts={allPosts} lang="de" activeTag={tag} label="Alle Tags" />
+
+    <ul>
+      {posts.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="de"
+        />
+      ))}
+    </ul>
+  </main>
+</Layout>

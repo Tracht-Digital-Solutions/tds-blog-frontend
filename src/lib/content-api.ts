@@ -13,7 +13,7 @@ const BASE_URL =
   import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
 
 interface ListResponse {
-  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "publishedAt">>;
+  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt">>;
   nextCursor: number | null;
 }
 

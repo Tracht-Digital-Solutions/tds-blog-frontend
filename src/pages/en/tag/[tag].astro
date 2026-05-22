@@ -1,0 +1,96 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import TagList from "~/components/TagList.astro";
+import { listAllPosts } from "~/lib/content-api";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * Tag-filtered journal index (EN). Mirror of /tag/[tag].astro
+ * against `listAllPosts("en")`.
+ */
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts("en");
+  } catch (err) {
+    console.error("[tds-blog] /en/tag getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const tagToPosts = new Map<string, typeof posts>();
+  for (const p of posts) {
+    if (!p.tags) continue;
+    for (const t of p.tags.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)) {
+      if (!tagToPosts.has(t)) tagToPosts.set(t, []);
+      tagToPosts.get(t)!.push(p);
+    }
+  }
+
+  return Array.from(tagToPosts.entries()).map(([tag, list]) => ({
+    params: { tag },
+    props: { posts: list, allPosts: posts },
+  }));
+}
+
+interface PageProps {
+  posts: Awaited<ReturnType<typeof listAllPosts>>;
+  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
+}
+
+const { posts, allPosts } = Astro.props as PageProps;
+const tag = Astro.params.tag as string;
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("en"),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name: `#${tag}`, url: `${siteConfig.url}/en/tag/${tag}` },
+  ]),
+);
+---
+
+<Layout
+  title={`#${tag} — Journal`}
+  description={`Articles tagged with “${tag}”.`}
+  lang="en"
+  jsonLd={jsonLd}
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="editorial-grid items-end mb-16">
+      <div>
+        <p class="section-num mb-5">Journal · Tag</p>
+        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
+          #<span class="accent-italic">{tag}</span>
+        </h1>
+      </div>
+      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
+        <p>
+          {posts.length === 1
+            ? "One article on the topic."
+            : `${posts.length} articles on the topic.`}
+        </p>
+        <p class="mt-2">
+          <a href="/en/" class="link-underline text-[var(--color-accent)]">← All articles</a>
+        </p>
+      </aside>
+    </header>
+
+    <TagList posts={allPosts} lang="en" activeTag={tag} label="All tags" />
+
+    <ul>
+      {posts.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="en"
+        />
+      ))}
+    </ul>
+  </main>
+</Layout>

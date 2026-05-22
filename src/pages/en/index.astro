@@ -1,6 +1,7 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
+import TagList from "~/components/TagList.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
 import { paginate } from "~/lib/pagination";
@@ -42,6 +43,8 @@ const { items, hasOlder } = paginate(allPosts, 1);
         </p>
       </aside>
     </header>
+
+    <TagList posts={allPosts} lang="en" label="Topics" />
 
     {items.length === 0 ? (
       <p class="text-[var(--color-muted)] italic">No articles published yet.</p>

@@ -1,6 +1,7 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
+import TagList from "~/components/TagList.astro";
 import { listAllPosts, getPost } from "~/lib/content-api";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
 import { renderMarkdown } from "~/lib/marked";
@@ -133,6 +134,8 @@ const jsonLd = [
       </header>
 
       <div class="prose-article drop-cap" set:html={html}></div>
+
+      <TagList tags={post.tags} lang={lang} label={lang === "de" ? "Tags" : "Tags"} />
 
       <RelatedArticles
         posts={sameLangPosts}

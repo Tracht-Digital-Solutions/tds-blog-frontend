@@ -1,0 +1,66 @@
+---
+/**
+ * Renders a horizontal strip of tag chips. Two modes:
+ *
+ *   1. Aggregate (default): given a list of posts, compute the unique
+ *      tag set across them and render each as a chip. Used above the
+ *      journal index to advertise what filters exist.
+ *
+ *   2. Per-post: given a single post's normalised `tags` string
+ *      (`"foo,bar"`), render those tags. Used below the title on the
+ *      article page so readers can jump to related work.
+ *
+ * Empty input renders nothing — no eyebrow, no blank space.
+ */
+import TagChip from "./TagChip.astro";
+
+interface Props {
+  /** Either a list of posts (aggregate mode) or null / not provided. */
+  posts?: Array<{ tags: string | null | undefined }>;
+  /** Raw tags string from a single post (`"foo,bar"`). */
+  tags?: string | null;
+  lang?: "de" | "en";
+  /** Currently-active tag (highlight it). */
+  activeTag?: string | null;
+  /** Optional eyebrow above the strip. */
+  label?: string | null;
+}
+
+const { posts, tags, lang = "de", activeTag = null, label = null } = Astro.props;
+
+function explode(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+let tagList: string[];
+if (Array.isArray(posts)) {
+  const seen = new Set<string>();
+  tagList = [];
+  for (const p of posts) {
+    for (const t of explode(p.tags)) {
+      if (!seen.has(t)) {
+        seen.add(t);
+        tagList.push(t);
+      }
+    }
+  }
+  tagList.sort();
+} else {
+  tagList = explode(tags);
+}
+---
+
+{tagList.length > 0 && (
+  <div class="mb-8">
+    {label && <p class="eyebrow mb-3">{label}</p>}
+    <div class="flex flex-wrap gap-2">
+      {tagList.map((t) => (
+        <TagChip tag={t} lang={lang} active={t === activeTag} />
+      ))}
+    </div>
+  </div>
+)}

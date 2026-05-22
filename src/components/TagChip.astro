@@ -1,0 +1,25 @@
+---
+/**
+ * Single tag chip. Renders as a link to the tag's filtered list page
+ * (`/tag/{name}` for DE, `/en/tag/{name}` for EN).
+ *
+ * `active` styles the chip as the currently-selected tag — used on
+ * the `/tag/[tag]` route itself to show which filter is applied.
+ */
+interface Props {
+  tag: string;
+  lang?: "de" | "en";
+  active?: boolean;
+}
+
+const { tag, lang = "de", active = false } = Astro.props;
+const href = lang === "en" ? `/en/tag/${tag}` : `/tag/${tag}`;
+---
+
+<a
+  href={href}
+  class:list={["chip transition-colors hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]", active && "chip-active"]}
+  data-tag={tag}
+>
+  {tag}
+</a>
