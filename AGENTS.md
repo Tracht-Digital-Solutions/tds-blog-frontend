@@ -32,7 +32,13 @@ in this repo only.
 - `src/components/BlogPostCard.astro` — list-item component (editorial-grid)
 - `src/lib/content-api.ts` — build-time fetch client (cursor-paginated)
 - `src/lib/pagination.ts` — page-window slicing
+- `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage)
+- `src/lib/jsonld.ts` — Schema.org generators (BlogPosting, Blog,
+  WebSite, BreadcrumbList)
+- `src/components/JsonLd.astro` — head-injected ld+json utility
 - `src/og/render.ts` — Satori + Resvg renderer; fonts under `src/og/fonts/`
+- `public/robots.txt` + `public/llms.txt` — discovery files for
+  search + AI crawlers
 - `scripts/og-smoke.ts` — `npm run og:smoke` for OG regression checks
 
 Markdown rendering uses `set:html` directly. Bodies are admin-only
@@ -44,6 +50,26 @@ or similar.
 - Tag filtering UI — issue #6 (content-api `?tag=` filter is in)
 - Code block syntax highlighting (Shiki) — issue #5
 
+## SEO + structured data
+
+Layout.astro renders the per-page meta (canonical, hreflang,
+OG with image dimensions, Twitter Card, `article:modified_time`,
+theme-color) and passes through an optional `jsonLd` prop.
+
+- `[slug].astro` emits `BlogPosting` (with author, publisher,
+  image, wordCount, inLanguage, datePublished, dateModified) +
+  `BreadcrumbList` (Home → category → post).
+- Index pages (DE + EN, both page 1 and `/page/[num]`) emit
+  `WebSite` + `Blog` graph.
+- Organization + Person `@id`s are anchored on `tracht-digital.de`
+  (the marketing origin), so this site references them by `@id`
+  rather than redefining them.
+
+When updating identity in tds-landingpage (street/phone/socials,
+issues #5/#6/#7 over there), mirror the change in `src/lib/seo.ts`
+here so the Organization graph stays consistent across both
+domains.
+
 ## Don't (additions)
 
 - Don't import the OG renderer from a runtime React island —
@@ -51,6 +77,8 @@ or similar.
 - Don't drop the TTFs from `src/og/fonts/`. They're OFL-licensed
   and committed deliberately because @fontsource-variable ships
   woff2 only, which Satori can't read.
+- Don't redefine Organization or Person nodes here — the marketing
+  site is the canonical home for those.
 
 ## Don't
 
