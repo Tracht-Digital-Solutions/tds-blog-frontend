@@ -15,6 +15,17 @@ and rendered to static HTML — no runtime API calls, no client-side data
 fetching. Each post also gets a per-post **OG preview image** rendered
 at build time via Satori + Resvg.
 
+Discovery surface includes Schema.org JSON-LD (`BlogPosting` with
+author, publisher, image, wordCount, datePublished, dateModified;
+`BreadcrumbList` on every post; `Blog` + `WebSite` on every index),
+canonical URLs, hreflang DE/EN/x-default, OG with image dimensions,
+Twitter Card, RSS, `robots.txt` with explicit allow-list for AI
+crawlers (GPTBot, OAI-SearchBot, PerplexityBot, ClaudeBot,
+Google-Extended, etc.) and an `llms.txt` directory file. The
+Organization + Person `@id`s are anchored on `tracht-digital.de`
+so search engines stitch both domains into one entity graph.
+See `AGENTS.md` for the layout.
+
 ---
 
 ## Quick start
@@ -138,11 +149,14 @@ src/
 │   ├── BlogPostCard.astro          # list-item: editorial-grid title + date marginalia
 │   ├── JournalHeader.astro
 │   ├── JournalFooter.astro
+│   ├── JsonLd.astro                # Inline <script type="application/ld+json"> utility
 │   └── RelatedArticles.astro       # 3-card strip on /[slug] (same-category + fallback)
-├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card
+├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card, JSON-LD pass-through
 ├── lib/
 │   ├── content-api.ts              # build-time fetch client (cursor-paginated)
-│   └── pagination.ts               # window slicing (PAGE_SIZE = 10)
+│   ├── jsonld.ts                   # Schema.org generators (BlogPosting, Blog, WebSite, BreadcrumbList)
+│   ├── pagination.ts               # window slicing (PAGE_SIZE = 10)
+│   └── seo.ts                      # Org/person identity (mirrors tds-landingpage)
 ├── og/
 │   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
 │   └── fonts/                      # Fraunces Regular + Italic + Geist Medium TTFs (~330 KB)
@@ -154,6 +168,7 @@ src/
 │   ├── en/page/[num].astro         # EN pages 2+
 │   ├── og/[lang]/[slug].png.ts     # build-time per-post OG image
 │   └── rss.xml.ts                  # feed
+├── public/                         # robots.txt, llms.txt, favicon
 ├── scripts/og-smoke.ts             # render two fixture OG images to disk
 └── styles/global.css
 ```
