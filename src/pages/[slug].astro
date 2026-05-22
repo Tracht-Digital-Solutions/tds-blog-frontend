@@ -1,9 +1,9 @@
 ---
-import { marked } from "marked";
 import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
 import { listAllPosts, getPost } from "~/lib/content-api";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
+import { renderMarkdown } from "~/lib/marked";
 import { siteConfig } from "~/lib/seo";
 
 export async function getStaticPaths() {
@@ -33,7 +33,7 @@ if (!post) {
   return new Response("Not found", { status: 404 });
 }
 
-const html = await marked.parse(post.body);
+const html = await renderMarkdown(post.body);
 const sameLangPosts = allPosts.filter((p) => p.lang === lang);
 // coverHint still wins if the post carries an explicit cover URL;
 // otherwise Layout falls back to the per-post generated /og/{lang}/{slug}.png.

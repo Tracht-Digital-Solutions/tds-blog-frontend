@@ -160,6 +160,9 @@ body {
   padding: 0.0625em 0.375em;
 }
 .prose-article pre {
+  /* Shiki sets its own background/foreground via inline `style` —
+     these defaults only apply to non-highlighted blocks (no `lang`
+     hint or unsupported language). */
   background: var(--color-black);
   color: #f5f3ec;
   padding: 1.25rem 1.5rem;
@@ -175,7 +178,12 @@ body {
   padding: 0;
   font-size: inherit;
   color: inherit;
+  font-family: var(--font-mono);
 }
+/* Shiki output: each line is a <span class="line"> — keep the
+   pre's own padding and let Shiki's inline colours render. */
+.prose-article pre.shiki .line { display: block; }
+.prose-article pre.shiki { font-family: var(--font-mono); }
 .prose-article ul, .prose-article ol { padding-left: 1.5em; margin: 1.25em 0; }
 .prose-article li { margin: 0.5em 0; }
 .prose-article hr { border: 0; border-top: 1px solid var(--color-line); margin: 3em 0; }
