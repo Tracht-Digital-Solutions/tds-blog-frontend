@@ -1,0 +1,48 @@
+name: CI
+
+# Runs on every push and PR. Distinct from build.yml — this one
+# never publishes to the `build` branch, it just gates merges by
+# making sure type-check + build pass.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tracht-digital-solutions'
+
+      - name: Install
+        run: npm ci
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build
+        # Build can do a runtime fetch against content-api; allow it
+        # to succeed even if that fetch fails since journal teaser
+        # endpoints degrade gracefully.
+        run: npm run build
