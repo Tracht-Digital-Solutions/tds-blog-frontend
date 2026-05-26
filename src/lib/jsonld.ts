@@ -15,7 +15,8 @@
  */
 import { siteConfig } from "./seo";
 
-type WithContext<T> = T & { "@context": "https://schema.org" };
+type WithContext<T extends Record<string, unknown> = Record<string, unknown>> =
+  T & { "@context": "https://schema.org" };
 
 /** @id for the Organization, anchored on the marketing domain. */
 const orgId = `${siteConfig.marketingUrl}/#organization`;
@@ -98,7 +99,7 @@ interface BlogPostingInput {
   wordCount: number;
 }
 
-export function blogPostingSchema(post: BlogPostingInput): WithContext<object> {
+export function blogPostingSchema(post: BlogPostingInput): WithContext {
   const pageUrl = new URL(
     post.lang === "en" ? `/en/${post.slug}` : `/${post.slug}`,
     siteConfig.url,
@@ -136,7 +137,7 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext<object> {
 /** BreadcrumbList helper (Home → category → post). */
 export function breadcrumbSchema(
   items: { name: string; url: string }[],
-): WithContext<object> {
+): WithContext {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -149,7 +150,7 @@ export function breadcrumbSchema(
   };
 }
 
-export function asGraph(...nodes: object[]): WithContext<object> {
+export function asGraph(...nodes: object[]): WithContext {
   return {
     "@context": "https://schema.org",
     "@graph": nodes,
