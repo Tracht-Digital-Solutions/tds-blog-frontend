@@ -170,7 +170,9 @@ src/
 │   └── rss.xml.ts                  # feed
 ├── public/                         # robots.txt, llms.txt, favicon
 ├── scripts/og-smoke.ts             # render two fixture OG images to disk
-└── styles/global.css
+├── styles/global.css
+└── types/
+    └── shared-augment.d.ts         # tds-shared@0.1.0 patch: BlogPost.tags (tds-shared#8)
 ```
 
 ## Per-post OG images

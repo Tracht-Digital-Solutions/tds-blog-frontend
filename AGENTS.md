@@ -79,6 +79,18 @@ domains.
   woff2 only, which Satori can't read.
 - Don't redefine Organization or Person nodes here — the marketing
   site is the canonical home for those.
+- Don't delete `src/types/shared-augment.d.ts` until tds-shared
+  ships `BlogPost.tags` and we bump the dep. The installed
+  `@tracht-digital-solutions/tds-shared@0.1.0` `BlogPost` type
+  is missing the field that the content-api already returns and
+  `TagList` already renders. The augmentation patches it
+  locally; tracked in tds-shared#8.
+- Don't write `WithContext<object>` on Schema.org node builders.
+  TypeScript treats `object` as too narrow to accept additional
+  named property literals (`@type`, `@graph`), and the type-check
+  fails with "Object literal may only specify known properties".
+  The alias now defaults the generic to `Record<string, unknown>`
+  — just write `WithContext` (no explicit type argument).
 
 ## Don't
 
