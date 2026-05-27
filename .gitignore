@@ -10,3 +10,18 @@ dist/
 
 # OG smoke-test outputs (the script writes here, the PNGs aren't tracked)
 scripts/og-smoke-*.png
+
+# Windows OS files
+Thumbs.db
+Desktop.ini
+
+# Editor backups
+*.swp
+*~
+
+# Test coverage
+coverage/
+
+# Cache & incremental build info
+.eslintcache
+*.tsbuildinfo
