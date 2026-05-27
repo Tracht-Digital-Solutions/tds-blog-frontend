@@ -37,20 +37,14 @@ jobs:
           scope: '@tracht-digital-solutions'
 
       - name: Install
-        run: npm ci
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Install missing rollup Linux binary
-        # Workaround for npm/cli#4828 — the Windows-generated
-        # package-lock.json only registers the win32 rollup native
-        # binary under node_modules/, so `npm ci` on Linux skips
-        # @rollup/rollup-linux-x64-gnu even though it's listed as an
-        # optional dep. Install the matching version explicitly so
-        # astro/vite can load rollup native modules.
-        run: |
-          ROLLUP_VERSION=$(node -p "require('rollup/package.json').version")
-          npm install --no-save "@rollup/rollup-linux-x64-gnu@$ROLLUP_VERSION"
+        # Using `npm install` instead of `npm ci` — the lockfile was
+        # generated on Windows and only registers win32 platform
+        # binaries (rollup, lightningcss, esbuild, sharp,
+        # tailwindcss-oxide) under node_modules/. `npm ci` would
+        # strictly follow it and skip the Linux binaries; `npm
+        # install` reconciles to package.json optional deps and
+        # picks the right platform binaries (npm/cli#4828).
+        run: npm install
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
