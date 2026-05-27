@@ -39,7 +39,7 @@ jobs:
       - name: Install
         run: npm ci
         env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Type check
         run: npm run type-check
@@ -60,7 +60,7 @@ jobs:
       - name: Publish dist to build branch
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.NPM_TOKEN }}
           publish_dir: ./dist
           publish_branch: build
           commit_message: 'build ${{ github.sha }}'
