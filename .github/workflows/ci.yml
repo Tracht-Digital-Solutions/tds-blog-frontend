@@ -38,6 +38,19 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Install missing rollup Linux binary
+        # Workaround for npm/cli#4828 — the Windows-generated
+        # package-lock.json only registers the win32 rollup native
+        # binary under node_modules/, so `npm ci` on Linux skips
+        # @rollup/rollup-linux-x64-gnu even though it's listed as an
+        # optional dep. Install the matching version explicitly so
+        # astro/vite can load rollup native modules.
+        run: |
+          ROLLUP_VERSION=$(node -p "require('rollup/package.json').version")
+          npm install --no-save "@rollup/rollup-linux-x64-gnu@$ROLLUP_VERSION"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Type check
         run: npm run type-check
 
