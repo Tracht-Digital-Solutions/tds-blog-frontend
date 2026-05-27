@@ -37,14 +37,15 @@ jobs:
           scope: '@tracht-digital-solutions'
 
       - name: Install
-        # Using `npm install` instead of `npm ci` — the lockfile was
+        # Using `npm install --no-package-lock` — the lockfile was
         # generated on Windows and only registers win32 platform
         # binaries (rollup, lightningcss, esbuild, sharp,
-        # tailwindcss-oxide) under node_modules/. `npm ci` would
-        # strictly follow it and skip the Linux binaries; `npm
-        # install` reconciles to package.json optional deps and
-        # picks the right platform binaries (npm/cli#4828).
-        run: npm install
+        # tailwindcss-oxide) under node_modules/. Both `npm ci` and
+        # `npm install` honor that and skip the Linux binaries;
+        # --no-package-lock makes npm ignore the lockfile entirely
+        # and resolve from package.json so the right platform
+        # binaries get installed (npm/cli#4828).
+        run: npm install --no-package-lock
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
