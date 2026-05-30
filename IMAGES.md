@@ -13,7 +13,15 @@ launch.
 | **Reference** | `src/layouts/Layout.astro:69` — `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` |
 | **Expected at** | `public/favicon.svg` |
 | **Status** | The link tag is wired but no file ships at the path today. Browsers fall back to the default favicon until the SVG lands. |
-| **Recommended** | Single-colour flat SVG of the future Tracht Digital logomark. Add `public/favicon.ico` for legacy browsers if needed. |
+| **Recommended set** | A small bundle, matching the landingpage so the two properties share an identity: |
+
+| File | Size | Purpose |
+|---|---|---|
+| `public/favicon.svg` | viewBox `0 0 32 32` (scalable) | Primary, modern browsers |
+| `public/favicon.ico` | 32 × 32 (multi-resolution 16 + 32 + 48) | IE / legacy fallback |
+| `public/apple-touch-icon.png` | **180 × 180** | iOS home-screen, Safari tab |
+| `public/icon-192.png` | **192 × 192** | Android home-screen, generic PWA |
+| `public/icon-512.png` | **512 × 512** | PWA splash, generic high-res |
 
 ## 2. Open Graph cards
 
@@ -21,7 +29,7 @@ launch.
 |---|---|
 | **Default** | Referenced as `/og-default.png` in `Layout.astro:43` when an article has no slug-specific card. |
 | **Per-article** | `/og/${lang}/${slug}.png` — generated at build time via Satori (see `src/og/render.ts` if the pipeline is mirrored from the landingpage). |
-| **Dimensions** | 1200 × 630 px (Open Graph spec). |
+| **Dimensions** | **1200 × 630 px** (Open Graph spec — also satisfies Twitter `summary_large_image`; LinkedIn / WhatsApp pull the same file). |
 | **Status** | Per-article cards build dynamically. The default fallback PNG should ship in `public/og-default.png`. |
 | **Recommended** | Same Satori-rendered brand card pattern used by tds-landingpage (`src/og/render.ts` + `src/pages/og/default.png.ts`) so the two properties stay visually consistent. |
 
