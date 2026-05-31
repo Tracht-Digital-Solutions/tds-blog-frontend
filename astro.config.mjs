@@ -1,14 +1,12 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
   output: "static",
   integrations: [react(), sitemap()],
   vite: {
-    plugins: [tailwindcss()],
     build: {
       // Squeeze a few more bytes out of the production CSS bundle
       // than the default esbuild minifier — relevant because the

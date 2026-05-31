@@ -32,7 +32,7 @@ See `AGENTS.md` for the layout.
 
 ```bash
 export NPM_TOKEN=ghp_yourClassicPATWithReadPackagesScope
-npm install         # generates package-lock.json on first run
+npm install         # honors the committed package-lock.json
 npm run dev         # http://localhost:4321 — fetches against production content-api
 ```
 

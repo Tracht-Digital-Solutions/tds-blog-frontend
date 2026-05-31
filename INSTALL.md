@@ -137,6 +137,13 @@ workflow" in the Actions tab.
 
 ## Troubleshooting
 
+**`Cannot find module @rollup/rollup-linux-x64-gnu` (or any other
+`*-linux-x64-gnu`) in CI.**
+The lockfile was generated on Windows and only registers win32
+platform binaries (npm/cli#4828). CI installs with `npm install
+--no-package-lock` to bypass this — if the workflow has been
+reverted to `npm ci` or plain `npm install`, this comes back.
+
 **`npm install` fails on @resvg/resvg-js postinstall.**
 The package downloads a platform-specific prebuilt native binary.
 On unusual archs (ARM Linux without prebuilt support), force the
