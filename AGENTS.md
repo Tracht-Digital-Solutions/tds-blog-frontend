@@ -22,6 +22,20 @@ favicon bundle. `<head>` preconnects to `api.tracht-digital.de` and
 `tracht-digital.de` so cross-origin fetches don't pay the full TLS
 handshake.
 
+## Page chrome
+
+* **Favicon** — `public/favicon.svg` ships the 32 × 32 brand mark
+  (primary→accent gradient + white italic "T" in Georgia). Shared
+  verbatim with tds-landingpage / admin / customer. Replace when
+  the final logomark lands; the favicon bundle table in IMAGES.md
+  documents the full set (ICO, apple-touch-icon, PWA icons) for
+  that swap.
+* **Dynamic document.title** — Layout-level inline script at the
+  bottom of `<body>` observes every `<section id="…">` and
+  prefixes the tab title with the section name as the user scrolls
+  past it. No-ops on single-post layouts (most blog pages today)
+  — kept for parity with the other frontends.
+
 ## How rebuilds get triggered
 
 When a post is published in `tds-admin`, the admin posts to

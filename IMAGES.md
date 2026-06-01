@@ -10,10 +10,10 @@ launch.
 
 | | |
 |---|---|
-| **Reference** | `src/layouts/Layout.astro:69` — `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` |
+| **Reference** | `src/layouts/Layout.astro` — `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` |
 | **Expected at** | `public/favicon.svg` |
-| **Status** | The link tag is wired but no file ships at the path today. Browsers fall back to the default favicon until the SVG lands. |
-| **Recommended set** | A small bundle, matching the landingpage so the two properties share an identity: |
+| **Status** | **Shipping**: a 32 × 32 rounded square with the brand primary→accent gradient and a white italic "T" in Georgia — same mark shared with the landingpage / admin / customer so the four properties read as one identity. Stand-in for the final logomark. |
+| **Recommended bundle** | When the real mark lands, ship this set, matching the landingpage so the two properties share an identity: |
 
 | File | Size | Purpose |
 |---|---|---|
