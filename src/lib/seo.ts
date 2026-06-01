@@ -22,7 +22,7 @@ export const siteConfig = {
     de: "TDS Journal",
     en: "TDS Journal",
   },
-  email: "hallo@tracht-digital.de",
+  email: "kontakt@tracht-digital.de",
   legalName: "Julian Tracht",
   founder: {
     name: "Julian Tracht",
