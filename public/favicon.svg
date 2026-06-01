@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Tracht Digital Solutions">
+  <title>Tracht Digital Solutions</title>
+  <defs>
+    <linearGradient id="tds-mark-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050f68"/>
+      <stop offset="100%" stop-color="#820933"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" ry="6" fill="url(#tds-mark-g)"/>
+  <text
+    x="16" y="22"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-style="italic"
+    font-weight="500"
+    font-size="20"
+    text-anchor="middle"
+    fill="#ffffff"
+  >T</text>
+</svg>

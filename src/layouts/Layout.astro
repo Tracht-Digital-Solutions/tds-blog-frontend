@@ -117,5 +117,57 @@ const altLang = lang === "de" ? "en" : "de";
     <JournalHeader />
     <slot />
     <JournalFooter />
+
+    {/* Dynamic document.title — prefixes the tab with the heading
+        of whichever `<section id="…">` is currently in the viewport.
+        No-ops when a page has fewer than two sections (single-post
+        layout, etc). */}
+    <script>
+      const ORIGINAL_TITLE = document.title;
+      const BRAND = ORIGINAL_TITLE.includes(" — ")
+        ? ORIGINAL_TITLE.split(" — ")[0]
+        : ORIGINAL_TITLE;
+
+      const sections = document.querySelectorAll<HTMLElement>("section[id]");
+      if (sections.length > 1) {
+        const labelFor = (el: HTMLElement): string => {
+          const explicit = el.dataset.title;
+          if (explicit) return explicit;
+          const eyebrow = el.querySelector(".section-num, .eyebrow");
+          if (eyebrow?.textContent) {
+            return eyebrow.textContent
+              .replace(/^[—–-]\s*(\d+\s*\/\s*)?/, "")
+              .trim();
+          }
+          const labelledById = el.getAttribute("aria-labelledby");
+          if (labelledById) {
+            const target = document.getElementById(labelledById);
+            if (target?.textContent) {
+              return target.textContent.trim().split(".")[0].trim();
+            }
+          }
+          return el.getAttribute("aria-label") || el.id;
+        };
+
+        let active: string | null = null;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              const target = entry.target as HTMLElement;
+              if (target.id === active) continue;
+              active = target.id;
+              if (target.id === "hero") {
+                document.title = ORIGINAL_TITLE;
+              } else {
+                document.title = `${labelFor(target)} · ${BRAND}`;
+              }
+            }
+          },
+          { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+        );
+        sections.forEach((s) => observer.observe(s));
+      }
+    </script>
   </body>
 </html>
