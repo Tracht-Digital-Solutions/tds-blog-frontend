@@ -1,11 +1,26 @@
 # Agent notes — tds-blog
 
-Astro 5 SSG. Public blog at `blog.tracht-digital.de`. All posts are
+Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
 Self-hosted Fraunces (opsz axis) + Geist; editorial design vocabulary
 shared with the portals (`.display`, `.section-num`, `.editorial-grid`,
 `.marginalia`, plus a brand-aware `.prose-article` long-form class).
+
+## Build pipeline
+
+Tailwind runs through `@tailwindcss/postcss` (configured in
+`postcss.config.mjs`), **not** the `@tailwindcss/vite` plugin —
+Astro 6 ships Vite 7 with rolldown and the Vite plugin's build
+hook calls `BindingViteResolvePluginConfig` with a shape missing
+`tsconfigPaths` (withastro/astro#16542). Don't add `@tailwindcss/vite`
+back. CSS minification routes through lightningcss; small stylesheets
+inline into the initial HTML via `build.inlineStylesheets: "auto"`.
+Sharp is pinned as the image service so `<Image />` consumers auto-
+emit WebP/AVIF — see `IMAGES.md` for the per-asset swap pattern and
+favicon bundle. `<head>` preconnects to `api.tracht-digital.de` and
+`tracht-digital.de` so cross-origin fetches don't pay the full TLS
+handshake.
 
 ## How rebuilds get triggered
 
