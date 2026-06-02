@@ -15,12 +15,42 @@
   --color-black: #0b0a07;
   --color-ink: #1a1a17;
 
+  /* Fixed brand surfaces — stay dark in BOTH themes so blocks that use
+     them as a fixed dark backdrop don't invert when the structural
+     tokens flip. Mirrors tds-landingpage. */
+  --color-surface-navy: #050f68;
+  --color-surface-accent: #820933;
+  --color-surface-ink: #0b0a07;
+  /* Elevated card / glass surface — flips with the theme. */
+  --color-card: #ffffff;
+
   --font-display: "Fraunces Variable", "Fraunces", ui-serif, Georgia, serif;
   --font-body: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
-html { scroll-behavior: auto; color-scheme: light; }
+/* Dark theme — mirrors tds-landingpage so the four properties
+   share the same palette in both modes. Activated by the
+   no-flash inline script in Layout.astro that sets
+   data-theme on <html> based on localStorage / OS preference. */
+:root[data-theme="dark"] {
+  --color-primary: #8aa0ff;
+  --color-accent: #ff7a9c;
+  --color-paper: #0b0a07;
+  --color-soft: #18171a;
+  --color-line: rgb(255 255 255 / 0.12);
+  --color-muted: rgb(255 255 255 / 0.55);
+  --color-accent-pink: #ff9ab6;
+  --color-black: #fafaf7;
+  --color-ink: #f1efe8;
+
+  --color-surface-ink: #18171a;
+  --color-card: #1c1b20;
+}
+
+html { scroll-behavior: auto; color-scheme: light dark; }
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);

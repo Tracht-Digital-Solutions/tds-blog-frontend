@@ -4,6 +4,8 @@
  * doubles as the back-to-main-site link; the right slot points at
  * the rest of the brand surface (main site, customer portal, RSS).
  */
+import ThemeToggle from "~/components/islands/ThemeToggle.tsx";
+
 const items = [
   { label: "Main", href: "https://tracht-digital.de" },
   { label: "Kundenportal", href: "https://kunde.tracht-digital.de" },
@@ -17,7 +19,7 @@ const items = [
       Tracht <span class="accent-italic">Journal</span>
     </a>
 
-    <nav class="flex items-center gap-6 text-sm">
+    <nav class="flex items-center gap-4 text-sm">
       {items.map((it) => (
         <a
           href={it.href}
@@ -26,6 +28,7 @@ const items = [
           {it.label}
         </a>
       ))}
+      <ThemeToggle client:load />
     </nav>
   </div>
 </header>
