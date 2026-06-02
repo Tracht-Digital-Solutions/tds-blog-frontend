@@ -24,12 +24,20 @@ handshake.
 
 ## Page chrome
 
-* **Favicon** — `public/favicon.svg` ships the 32 × 32 brand mark
-  (primary→accent gradient + white italic "T" in Georgia). Shared
-  verbatim with tds-landingpage / admin / customer. Replace when
-  the final logomark lands; the favicon bundle table in IMAGES.md
-  documents the full set (ICO, apple-touch-icon, PWA icons) for
-  that swap.
+* **Favicon** — `public/favicon.png` (901 × 901) is the real TDS
+  logomark, shared verbatim with tds-landingpage / admin / customer
+  so the four properties read as one identity. The favicon bundle
+  table in IMAGES.md documents the optional full set (ICO,
+  apple-touch-icon, PWA icons) if you ever want it.
+* **Dark mode** — `data-theme="dark"` theme shared with the other
+  three frontends. A no-flash inline script in `Layout.astro` sets
+  `data-theme` on `<html>` from the `tds-theme` localStorage key (or
+  the OS `prefers-color-scheme` fallback); the `ThemeToggle` island
+  flips and persists it. Tokens live in `src/styles/global.css`: the
+  structural tokens flip, while fixed dark surfaces use
+  `--color-surface-navy/-accent/-ink` and elevated/glass surfaces use
+  `--color-card`. The dark ground is a deep-navy family with warm
+  ivory text — keep new dark surfaces in that family.
 * **Dynamic document.title** — Layout-level inline script at the
   bottom of `<body>` observes every `<section id="…">` and
   prefixes the tab title with the section name as the user scrolls
