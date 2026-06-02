@@ -36,16 +36,24 @@
 :root[data-theme="dark"] {
   --color-primary: #8aa0ff;
   --color-accent: #ff7a9c;
-  --color-paper: #0b0a07;
-  --color-soft: #18171a;
+  /* Deep navy ground (not a warm/neutral black) so the whole dark UI
+     is built from the brand navy. Text stays warm ivory for a
+     deliberate warm-on-cool editorial contrast. */
+  --color-paper: #0a0d18;
+  --color-soft: #121627;
   --color-line: rgb(255 255 255 / 0.12);
-  --color-muted: rgb(255 255 255 / 0.55);
+  --color-muted: rgb(255 255 255 / 0.56);
   --color-accent-pink: #ff9ab6;
   --color-black: #fafaf7;
   --color-ink: #f1efe8;
 
-  --color-surface-ink: #18171a;
-  --color-card: #1c1b20;
+  /* Brand surfaces + elevation ladder, all in the navy family
+     (paper < surface-ink < soft < card). Brand navy/burgundy lifted
+     from their light values so they keep presence on the dark ground. */
+  --color-surface-ink: #0e1322;
+  --color-card: #161b2e;
+  --color-surface-navy: #16245e;
+  --color-surface-accent: #9c1342;
 }
 
 html { scroll-behavior: auto; color-scheme: light dark; }
