@@ -104,21 +104,17 @@ npm run preview        # serve dist/ for visual inspection
 
 ## 8. Production deployment
 
-Auto-SFTP was removed. The repo's `build.yml` only force-pushes
-`dist/` to a `build` branch. Deploy from there by hand:
+Deployment is automatic: every push to `main` builds `dist/`,
+force-pushes it to the `build` branch, then GET-pings the deploy webhook
+so the production host pulls that branch and goes live.
+
+One-time: add the `DEPLOY_WEBHOOK_URL` repository secret (the host's
+deploy-hook URL; the deploy token is carried inside the URL). Until it's
+set, the deploy ping is skipped and you can pull the artifact by hand:
 
 ```bash
-# Option A — build locally then SFTP
-npm run build
-# SFTP dist/ to ~/sites/blog.tracht-digital.de/releases/<TIMESTAMP>/
-curl --fail \
-  "https://blog.tracht-digital.de/install.php?action=install-static\
-&target=blog.tracht-digital.de&release=<TIMESTAMP>&token=<INSTALL_TOKEN>"
-
-# Option B — pull from the build branch
 git fetch origin build
-git worktree add ../tds-blog-build origin/build
-# SFTP ../tds-blog-build/ to the production host as above
+git worktree add ../tds-blog-build origin/build   # holds the built dist/
 ```
 
 ## 9. Rebuild-on-publish (open)

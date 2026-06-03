@@ -2,7 +2,7 @@
 
 > **Setting this up from scratch?** See [`INSTALL.md`](INSTALL.md) for
 > the step-by-step bring-up (Packages auth → npm install → OG fonts
-> → env → dev → og:smoke → build → manual deploy). This README
+> → env → dev → og:smoke → build → auto-deploy). This README
 > documents the routing, structure and OG image generator.
 
 ---
@@ -37,7 +37,7 @@ npm install         # honors the committed package-lock.json
 npm run dev         # http://localhost:4321 — fetches against production content-api
 ```
 
-For manual deploy, see [Manual deploy](#manual-deploy).
+Deploys automatically on every push to `main`; see [Deploy](#deploy).
 
 ---
 
@@ -76,23 +76,22 @@ npm run og:smoke     # render two fixture OG images to scripts/og-smoke-*.png
 
 ---
 
-## Manual deploy
+## Deploy
 
-Auto-SFTP to the production host was removed. The repo now ships
-`.github/workflows/build.yml` which only builds + force-pushes
-`dist/` to an orphan `build` branch. Deploy from there by hand:
+Deployment is automatic. On every push to `main`,
+[`.github/workflows/build.yml`](.github/workflows/build.yml) builds the
+static `dist/`, force-pushes it to an orphan `build` branch (latest
+build only), then GET-pings the deploy webhook so the production host
+pulls that branch and goes live.
+
+**Required secret:** set `DEPLOY_WEBHOOK_URL` (repository secret) to the
+host's deploy-hook URL — the deploy token is carried inside the URL.
+Without it the build still publishes the `build` branch and the deploy
+ping is skipped, so you can fall back to pulling the artifact:
 
 ```bash
-# 1. Build
-npm run build
-
-# 2. SFTP contents of dist/ to the production host at
-#    ~/sites/blog.tracht-digital.de/releases/<TIMESTAMP>/
-
-# 3. Activate by hitting
-#    https://blog.tracht-digital.de/install.php?action=install-static
-#        &target=blog.tracht-digital.de
-#        &release=<TIMESTAMP>&token=<INSTALL_TOKEN>
+git fetch origin build
+git worktree add ../tds-blog-build origin/build   # holds the built dist/
 ```
 
 ---
@@ -118,7 +117,7 @@ the API is back up, re-run `npm run build` and the pages come back.
 When `tds-admin` publishes a post, `tds-content-api` should fire a
 `workflow_dispatch` against this repo's `build.yml` so the blog
 rebuilds with the new post (which will then appear on the `build`
-branch ready for manual deploy). Implementation lives in
+branch ready to deploy). Implementation lives in
 [`tds-content-api#3`](https://github.com/Tracht-Digital-Solutions/tds-content-api/issues/3)
 (still pending).
 
