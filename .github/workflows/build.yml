@@ -1,10 +1,11 @@
 name: Build → build branch
 
-# Builds the static dist/ on every push to main and force-publishes
-# it as an orphan commit on the `build` branch. The branch always
-# holds exactly the latest build — useful for inspecting what got
-# built, for pulling the artifact into a deploy target, or for
-# diffing two builds. Deployment is manual; see README.
+# Builds the static dist/ on every push to main, force-publishes it as
+# an orphan commit on the `build` branch, then pings the deploy webhook
+# so the production host pulls that branch and goes live automatically.
+# The `build` branch always holds exactly the latest build — handy for
+# inspecting what got built or diffing two builds. See README for the
+# DEPLOY_WEBHOOK_URL secret.
 
 on:
   push:
@@ -73,3 +74,19 @@ jobs:
           publish_branch: build
           commit_message: 'build ${{ github.sha }}'
           force_orphan: true
+
+      - name: Trigger deploy webhook
+        # Ping the production host's deploy hook so it pulls the freshly
+        # published `build` branch and goes live -- no manual SFTP. The
+        # deploy token is carried inside DEPLOY_WEBHOOK_URL itself.
+        # Skips quietly when the secret isn't configured yet.
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
+            echo "DEPLOY_WEBHOOK_URL not set - skipping deploy ping."
+            exit 0
+          fi
+          echo "Pinging deploy webhook..."
+          curl -fsS --retry 3 --retry-delay 5 --max-time 30 "$DEPLOY_WEBHOOK_URL"
+          echo "Deploy webhook pinged."
