@@ -44,6 +44,8 @@
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+  /* long bare URLs shouldn't force horizontal page scroll on mobile */
+  overflow-wrap: break-word;
 }
 .prose-article a:hover { text-decoration-thickness: 2px; }
 .prose-article em {
@@ -109,8 +111,7 @@
   margin: 1.75em 0;
 }
 .prose-article :is(img, video) { border-radius: 2px; }
-.prose-article :not(pre) > code,
-.prose-article a { overflow-wrap: break-word; }
+.prose-article :not(pre) > code { overflow-wrap: break-word; }
 .prose-article table {
   display: block;
   width: 100%;
