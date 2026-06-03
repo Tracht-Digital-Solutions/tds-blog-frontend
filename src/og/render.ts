@@ -43,6 +43,7 @@ function loadFonts() {
   };
 }
 
+const SERIF = "Instrument Serif";
 const PAPER = "#fafaf7";
 const INK = "#1a1a17";
 const PRIMARY = "#050f68";
@@ -145,7 +146,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
             type: "div",
             props: {
               style: {
-                fontFamily: "Instrument Serif",
+                fontFamily: SERIF,
                 fontSize: "82px",
                 lineHeight: 1.02,
                 letterSpacing: "-0.025em",
@@ -166,7 +167,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: "Instrument Serif",
+                      fontFamily: SERIF,
                       fontStyle: "italic",
                       color: ACCENT,
                     },
@@ -218,7 +219,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: "Instrument Serif",
+                      fontFamily: SERIF,
                       fontSize: "24px",
                       color: INK,
                     },
@@ -236,13 +237,13 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
       height: 630,
       fonts: [
         {
-          name: "Instrument Serif",
+          name: SERIF,
           data: serif,
           weight: 400,
           style: "normal",
         },
         {
-          name: "Instrument Serif",
+          name: SERIF,
           data: serifItalic,
           weight: 400,
           style: "italic",
