@@ -26,19 +26,19 @@ import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
 const FONT_DIR = fileURLToPath(new URL("./fonts/", import.meta.url));
-let frauncesRegular: Buffer | null = null;
-let frauncesItalic: Buffer | null = null;
+let serifRegular: Buffer | null = null;
+let serifItalic: Buffer | null = null;
 let geistMedium: Buffer | null = null;
 
 function loadFonts() {
-  if (frauncesRegular === null) {
-    frauncesRegular = fs.readFileSync(path.join(FONT_DIR, "Fraunces-Regular.ttf"));
-    frauncesItalic = fs.readFileSync(path.join(FONT_DIR, "Fraunces-Italic.ttf"));
+  if (serifRegular === null) {
+    serifRegular = fs.readFileSync(path.join(FONT_DIR, "InstrumentSerif-Regular.woff"));
+    serifItalic = fs.readFileSync(path.join(FONT_DIR, "InstrumentSerif-Italic.woff"));
     geistMedium = fs.readFileSync(path.join(FONT_DIR, "Geist-Medium.ttf"));
   }
   return {
-    fraunces: frauncesRegular!,
-    frauncesItalic: frauncesItalic!,
+    serif: serifRegular!,
+    serifItalic: serifItalic!,
     geist: geistMedium!,
   };
 }
@@ -70,7 +70,7 @@ function splitForAccent(title: string): { head: string; accent: string } {
 }
 
 export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
-  const { fraunces, frauncesItalic, geist } = loadFonts();
+  const { serif, serifItalic, geist } = loadFonts();
 
   const { head, accent } = splitForAccent(opts.title);
   const locale = opts.lang === "de" ? "de-DE" : "en-US";
@@ -140,12 +140,12 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
               ],
             },
           },
-          // Headline — Fraunces, head in primary, last word italic burgundy
+          // Headline — Instrument Serif, head in primary, last word italic burgundy
           {
             type: "div",
             props: {
               style: {
-                fontFamily: "Fraunces",
+                fontFamily: "Instrument Serif",
                 fontSize: "82px",
                 lineHeight: 1.02,
                 letterSpacing: "-0.025em",
@@ -166,7 +166,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: "Fraunces",
+                      fontFamily: "Instrument Serif",
                       fontStyle: "italic",
                       color: ACCENT,
                     },
@@ -218,7 +218,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: "Fraunces",
+                      fontFamily: "Instrument Serif",
                       fontSize: "24px",
                       color: INK,
                     },
@@ -236,14 +236,14 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
       height: 630,
       fonts: [
         {
-          name: "Fraunces",
-          data: fraunces,
+          name: "Instrument Serif",
+          data: serif,
           weight: 400,
           style: "normal",
         },
         {
-          name: "Fraunces",
-          data: frauncesItalic,
+          name: "Instrument Serif",
+          data: serifItalic,
           weight: 400,
           style: "italic",
         },
