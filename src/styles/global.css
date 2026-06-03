@@ -97,3 +97,31 @@
 .prose-article ul, .prose-article ol { padding-left: 1.5em; margin: 1.25em 0; }
 .prose-article li { margin: 0.5em 0; }
 .prose-article hr { border: 0; border-top: 1px solid var(--color-line); margin: 3em 0; }
+
+/* Responsive media + overflow guards — markdown bodies can contain
+   images, embeds, GFM tables and long inline tokens (URLs, code) that
+   would otherwise blow out the page width on a phone. Constrain media
+   to the column, let wide tables scroll inside their own box, and let
+   long tokens wrap. */
+.prose-article :is(img, video, iframe) {
+  max-width: 100%;
+  height: auto;
+  margin: 1.75em 0;
+}
+.prose-article :is(img, video) { border-radius: 2px; }
+.prose-article :not(pre) > code,
+.prose-article a { overflow-wrap: break-word; }
+.prose-article table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1.75em 0;
+  font-size: 0.9375rem;
+}
+.prose-article :is(th, td) {
+  border: 1px solid var(--color-line);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.prose-article thead th { background: var(--color-soft); }
