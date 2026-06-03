@@ -3,9 +3,11 @@
 Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
-Self-hosted Fraunces (opsz axis) + Geist; editorial design vocabulary
-shared with the portals (`.display`, `.section-num`, `.editorial-grid`,
-`.marginalia`, plus a brand-aware `.prose-article` long-form class).
+Self-hosted Instrument Serif + Geist; the editorial design vocabulary
+(`.display`, `.section-num`, `.editorial-grid`, `.marginalia`, …) comes
+from `@tracht-digital-solutions/tds-shared` (`styles/base.css` +
+`styles/app.css`), shared with the portals. Only the brand-aware
+`.prose-article` long-form class is local to `src/styles/global.css`.
 
 ## Build pipeline
 

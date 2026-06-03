@@ -9,8 +9,9 @@
 
 
 Public blog at `blog.tracht-digital.de`. **Astro 5** SSG + **Tailwind v4**
-with self-hosted **Fraunces + Geist** and the shared editorial design
-language. Every post is fetched from **`tds-content-api`** at build time
+with self-hosted **Instrument Serif + Geist** and the shared editorial
+design system from **tds-shared**. Every post is fetched from
+**`tds-content-api`** at build time
 and rendered to static HTML — no runtime API calls, no client-side data
 fetching. Each post also gets a per-post **OG preview image** rendered
 at build time via Satori + Resvg.
@@ -159,7 +160,7 @@ src/
 │   └── seo.ts                      # Org/person identity (mirrors tds-landingpage)
 ├── og/
 │   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
-│   └── fonts/                      # Fraunces Regular + Italic + Geist Medium TTFs (~330 KB)
+│   └── fonts/                      # Instrument Serif Regular + Italic (woff) + Geist Medium (ttf)
 ├── pages/
 │   ├── index.astro                 # DE page 1
 │   ├── page/[num].astro            # DE pages 2+
@@ -184,7 +185,7 @@ explicit URL in `coverHint` still overrides if you ever want to
 ship a hand-designed cover.
 
 The template is editorial: hairline rule + category eyebrow →
-Fraunces display headline with the last word italic-burgundy →
+Instrument Serif display headline with the last word italic-burgundy →
 hairline footer with date · author + "Tracht Digital · Journal"
 wordmark. See `src/og/render.ts` for the JSX-object tree.
 
