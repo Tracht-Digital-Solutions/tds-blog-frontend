@@ -118,7 +118,7 @@ curl --fail \
 # Option B — pull from the build branch
 git fetch origin build
 git worktree add ../tds-blog-build origin/build
-# SFTP ../tds-blog-build/ to netcup as above
+# SFTP ../tds-blog-build/ to the production host as above
 ```
 
 ## 9. Rebuild-on-publish (open)

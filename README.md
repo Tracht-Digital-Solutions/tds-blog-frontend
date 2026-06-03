@@ -78,7 +78,7 @@ npm run og:smoke     # render two fixture OG images to scripts/og-smoke-*.png
 
 ## Manual deploy
 
-Auto-SFTP to netcup was removed. The repo now ships
+Auto-SFTP to the production host was removed. The repo now ships
 `.github/workflows/build.yml` which only builds + force-pushes
 `dist/` to an orphan `build` branch. Deploy from there by hand:
 
@@ -86,7 +86,7 @@ Auto-SFTP to netcup was removed. The repo now ships
 # 1. Build
 npm run build
 
-# 2. SFTP contents of dist/ to netcup at
+# 2. SFTP contents of dist/ to the production host at
 #    ~/sites/blog.tracht-digital.de/releases/<TIMESTAMP>/
 
 # 3. Activate by hitting

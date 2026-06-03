@@ -4,7 +4,7 @@ name: Build → build branch
 # it as an orphan commit on the `build` branch. The branch always
 # holds exactly the latest build — useful for inspecting what got
 # built, for pulling the artifact into a deploy target, or for
-# diffing two builds. Netcup deployment is manual; see README.
+# diffing two builds. Deployment is manual; see README.
 
 on:
   push:
