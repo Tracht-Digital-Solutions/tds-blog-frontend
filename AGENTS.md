@@ -16,8 +16,14 @@ Tailwind runs through `@tailwindcss/postcss` (configured in
 Astro 6 ships Vite 7 with rolldown and the Vite plugin's build
 hook calls `BindingViteResolvePluginConfig` with a shape missing
 `tsconfigPaths` (withastro/astro#16542). Don't add `@tailwindcss/vite`
-back. CSS minification routes through lightningcss; small stylesheets
-inline into the initial HTML via `build.inlineStylesheets: "auto"`.
+back. CSS minification routes through lightningcss, configured via the
+shared `tdsViteBuild` preset spread into `vite.build` (from
+`@tracht-digital-solutions/tds-shared/astro`, tds-shared 0.4.0). Don't
+hand-author the `cssTarget` — the preset pins the Safari floor that keeps
+lightningcss emitting `-webkit-backdrop-filter` on the frosted
+`.brand-header`; without it the blur silently dies in Safari ≤17
+(tds-shared#10). Small stylesheets inline into the initial HTML via
+`build.inlineStylesheets: "auto"`.
 Sharp is pinned as the image service so `<Image />` consumers auto-
 emit WebP/AVIF — see `IMAGES.md` for the per-asset swap pattern and
 favicon bundle. `<head>` preconnects to `api.tracht-digital.de` and
