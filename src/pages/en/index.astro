@@ -1,6 +1,7 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
+import ForYou from "~/components/islands/ForYou.tsx";
 import TagList from "~/components/TagList.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
@@ -44,7 +45,11 @@ const { items, hasOlder } = paginate(allPosts, 1);
       </aside>
     </header>
 
-    <TagList posts={allPosts} lang="en" label="Topics" />
+    <ForYou lang="en" client:idle />
+
+    <div id="themen" class="scroll-mt-24">
+      <TagList posts={allPosts} lang="en" label="Topics" />
+    </div>
 
     {items.length === 0 ? (
       <p class="text-[var(--color-muted)] italic">No articles published yet.</p>

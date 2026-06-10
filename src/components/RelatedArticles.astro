@@ -42,7 +42,10 @@ const labels = {
   en: { eyebrow: "Keep reading", read: "Read →" },
 }[lang];
 
-const articleBase = lang === "de" ? "/" : "/en/";
+// Article pages for BOTH languages are served from the root
+// `[slug].astro` route (there is no `/en/[slug]` page) — linking
+// `/en/{slug}` would 404. BlogPostCard follows the same convention.
+const articleBase = "/";
 ---
 
 {picks.length > 0 && (

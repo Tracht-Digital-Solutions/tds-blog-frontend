@@ -36,6 +36,27 @@ if (!post) {
 
 const html = await renderMarkdown(post.body);
 const sameLangPosts = allPosts.filter((p) => p.lang === lang);
+
+// Chronological neighbours for the prev/next footer navigation.
+// "Newer" sits left (reading direction back towards the index),
+// "older" right.
+const ordered = [...sameLangPosts].sort(
+  (a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+);
+const orderedIdx = ordered.findIndex((p) => p.slug === post.slug);
+const newerPost = orderedIdx > 0 ? ordered[orderedIdx - 1] : null;
+const olderPost =
+  orderedIdx >= 0 && orderedIdx < ordered.length - 1 ? ordered[orderedIdx + 1] : null;
+
+// Topics this article contributes to the reader's interest profile
+// (see the inline cookie script at the bottom of the page).
+const interestTopics = Array.from(
+  new Set(
+    [post.category, ...(post.tags ?? "").split(",")]
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean),
+  ),
+);
 // coverHint still wins if the post carries an explicit cover URL;
 // otherwise Layout falls back to the per-post generated /og/{lang}/{slug}.png.
 const explicitCover = post.coverHint?.startsWith("http") ? post.coverHint : undefined;
@@ -100,6 +121,16 @@ const jsonLd = [
   }}
   jsonLd={jsonLd}
 >
+  {/* Reading progress — thin accent bar pinned above the sticky
+      header. Driven by the passive scroll listener at the bottom of
+      the page; scaleX keeps it off the layout/paint hot path. */}
+  <div
+    id="reading-progress"
+    class="fixed top-0 left-0 z-50 h-[3px] w-full origin-left scale-x-0 bg-[var(--color-accent)]"
+    aria-hidden="true"
+  >
+  </div>
+
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <article>
       <div class="text-sm mb-10">
@@ -144,7 +175,33 @@ const jsonLd = [
         lang={lang}
       />
 
-      <footer class="mt-20 pt-10 hairline-t flex flex-wrap items-baseline justify-between gap-4 text-sm">
+      {(newerPost || olderPost) && (
+        <nav
+          class="mt-16 grid sm:grid-cols-2 gap-4"
+          aria-label={lang === "de" ? "Artikel-Navigation" : "Article navigation"}
+        >
+          {newerPost ? (
+            <a href={`/${newerPost.slug}`} class="block hairline rounded-sm px-5 py-4 group transition-colors hover:border-[var(--color-accent)]">
+              <p class="eyebrow mb-2">← {lang === "de" ? "Neuerer Artikel" : "Newer article"}</p>
+              <p class="display-tight text-lg group-hover:text-[var(--color-accent)] transition-colors">
+                {newerPost.title}
+              </p>
+            </a>
+          ) : (
+            <span class="hidden sm:block" aria-hidden="true"></span>
+          )}
+          {olderPost && (
+            <a href={`/${olderPost.slug}`} class="block hairline rounded-sm px-5 py-4 group transition-colors hover:border-[var(--color-accent)] sm:text-right">
+              <p class="eyebrow mb-2">{lang === "de" ? "Älterer Artikel" : "Older article"} →</p>
+              <p class="display-tight text-lg group-hover:text-[var(--color-accent)] transition-colors">
+                {olderPost.title}
+              </p>
+            </a>
+          )}
+        </nav>
+      )}
+
+      <footer class="mt-12 pt-8 hairline-t flex flex-wrap items-baseline justify-between gap-4 text-sm">
         <a
           href={lang === "de" ? "/" : "/en/"}
           class="link-underline text-[var(--color-accent)]"
@@ -157,4 +214,62 @@ const jsonLd = [
       </footer>
     </article>
   </main>
+
+  <script>
+    // Reading progress: scale the fixed top bar with overall scroll
+    // position. Passive listener + transform only, so it never blocks
+    // scrolling.
+    const bar = document.getElementById("reading-progress");
+    if (bar) {
+      const update = () => {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        bar.style.transform = `scaleX(${max > 0 ? doc.scrollTop / max : 0})`;
+      };
+      addEventListener("scroll", update, { passive: true });
+      addEventListener("resize", update, { passive: true });
+      update();
+    }
+  </script>
+
+  <script is:inline define:vars={{ interestTopics }}>
+    // Interest profile: accumulate this article's category + tags as
+    // weights in a first-party cookie. The "Für dich" island on the
+    // index pages reads it to rank recommendations. Stays entirely in
+    // the browser — nothing is sent to a server. Counts are capped and
+    // the profile is trimmed to the 12 strongest topics so the cookie
+    // stays small.
+    (function () {
+      try {
+        var match = document.cookie.match(/(?:^|; )tds-interests=([^;]*)/);
+        var weights = {};
+        if (match) {
+          try {
+            weights = JSON.parse(decodeURIComponent(match[1])) || {};
+          } catch (e) {
+            weights = {};
+          }
+        }
+        interestTopics.forEach(function (t) {
+          weights[t] = Math.min((weights[t] || 0) + 1, 50);
+        });
+        var trimmed = {};
+        Object.keys(weights)
+          .sort(function (a, b) {
+            return weights[b] - weights[a];
+          })
+          .slice(0, 12)
+          .forEach(function (k) {
+            trimmed[k] = weights[k];
+          });
+        document.cookie =
+          "tds-interests=" +
+          encodeURIComponent(JSON.stringify(trimmed)) +
+          "; Max-Age=" + 180 * 24 * 3600 +
+          "; Path=/; SameSite=Lax";
+      } catch (e) {
+        /* cookies disabled — recommendations simply stay generic */
+      }
+    })();
+  </script>
 </Layout>

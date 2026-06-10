@@ -67,12 +67,25 @@ in this repo only.
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail
-  with date / reading time / author, RelatedArticles strip
+  with date / reading time / author, RelatedArticles strip, reading-
+  progress bar, chronological prev/next footer nav, and the inline
+  interest-cookie script (see below)
 - `src/pages/og/[lang]/[slug].png.ts` — build-time per-post OG image
   via the renderer in `src/og/render.ts` (Satori → Resvg)
 - `src/pages/rss.xml.ts` — RSS feed
 - `src/components/RelatedArticles.astro` — 3-card same-category strip
-  with fallback to most-recent overall
+  with fallback to most-recent overall (links `/{slug}` for BOTH
+  languages — there is no `/en/[slug]` route)
+- `src/pages/interests-index.json.ts` — build-time static JSON index
+  of all posts (slug/lang/category/title/excerpt/tags/publishedAt)
+  for the recommendations island
+- `src/components/islands/ForYou.tsx` — "Für dich" strip on the DE/EN
+  index pages. Reads the `tds-interests` cookie (topic → weight map,
+  written by an inline script on every article page from category +
+  tags; 180 days, SameSite=Lax, capped at 12 topics), fetches the
+  static interests-index.json (never the content-api), scores by
+  topic overlap + recency, renders top 3 with a transparency note and
+  a reset action. Renders nothing without a profile.
 - `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome
 - `src/components/BlogPostCard.astro` — list-item component (editorial-grid)
 - `src/lib/content-api.ts` — build-time fetch client (cursor-paginated)
@@ -92,8 +105,7 @@ or similar.
 
 ## Open
 
-- Tag filtering UI — issue #6 (content-api `?tag=` filter is in)
-- Code block syntax highlighting (Shiki) — issue #5
+- (nothing tracked here right now — check the GitHub issues)
 
 ## SEO + structured data
 
