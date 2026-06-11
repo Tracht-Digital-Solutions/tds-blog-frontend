@@ -5,6 +5,7 @@ import TagList from "~/components/TagList.astro";
 import { listAllPosts, getPost } from "~/lib/content-api";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
 import { renderMarkdown } from "~/lib/marked";
+import { splitSections } from "~/lib/sections";
 import { siteConfig } from "~/lib/seo";
 
 export async function getStaticPaths() {
@@ -35,6 +36,11 @@ if (!post) {
 }
 
 const html = await renderMarkdown(post.body);
+// Collapsible sections + TOC (design-system article layout): split the
+// rendered HTML at h2 boundaries. Articles without h2s render as one
+// plain body, no TOC.
+const { intro, sections } = splitSections(html);
+const showToc = sections.length >= 2;
 const sameLangPosts = allPosts.filter((p) => p.lang === lang);
 
 // Chronological neighbours for the prev/next footer navigation.
@@ -120,53 +126,113 @@ const jsonLd = [
     slug: post.slug,
   }}
   jsonLd={jsonLd}
+  sidebar
 >
-  {/* Reading progress — thin accent bar pinned above the sticky
-      header. Driven by the passive scroll listener at the bottom of
-      the page; scaleX keeps it off the layout/paint hot path. */}
+  {/* Reading progress — thin accent bar pinned to the top edge. On
+      lg+ it starts right of the article sidebar (see global.css).
+      Driven by the passive scroll listener at the bottom of the page;
+      scaleX keeps it off the layout/paint hot path. */}
   <div
     id="reading-progress"
-    class="fixed top-0 left-0 z-50 h-[3px] w-full origin-left scale-x-0 bg-[var(--color-accent)]"
+    class="fixed top-0 left-0 right-0 z-50 h-[3px] origin-left scale-x-0 bg-[var(--color-accent)]"
     aria-hidden="true"
   >
   </div>
 
-  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+  <main id="main" class="max-w-5xl mx-auto px-6 py-10 lg:py-12">
     <article>
-      <div class="text-sm mb-10">
-        <a href="/" class="link-underline text-[var(--color-muted)]">
-          ← {lang === "de" ? "Journal" : "Journal"}
+      <header class="max-w-[46rem] mb-7">
+        <a href={lang === "de" ? "/" : "/en/"} class="btn-back">
+          <span aria-hidden="true">←</span>
+          {lang === "de" ? "Alle Beiträge" : "All posts"}
         </a>
-      </div>
-
-      <header class="editorial-grid items-end mb-14">
-        <div>
-          <p class="section-num mb-5">{post.category}</p>
-          <h1 class="display text-5xl md:text-6xl lg:text-7xl">
-            {post.title}
-          </h1>
+        <div class="flex flex-wrap items-center gap-3.5 mt-6 mb-3.5">
+          <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
+          <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)]"></span>
+          <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">
+            {dateLabel && <>{dateLabel} · </>}~{readingMinutes} {lang === "de" ? "Min. Lesezeit" : "min read"}
+          </p>
         </div>
-        <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)] space-y-3">
-          {dateLabel && (
-            <div>
-              <p class="eyebrow">Erschienen</p>
-              <p class="mt-0.5 tabular"><strong>{dateLabel}</strong></p>
-            </div>
-          )}
-          <div>
-            <p class="eyebrow">Lesezeit</p>
-            <p class="mt-0.5 tabular"><strong>~{readingMinutes} Min.</strong></p>
-          </div>
-          <div>
-            <p class="eyebrow">Verfasst von</p>
-            <p class="mt-0.5"><strong>Julian Tracht</strong></p>
-          </div>
-        </aside>
+        <h1 class="display text-4xl md:text-5xl" style="text-wrap: balance;">
+          {post.title}
+        </h1>
+        <p class="lead mt-3.5 text-[var(--color-muted)]" style="text-wrap: pretty;">
+          {post.excerpt}
+        </p>
+        <p class="mt-4 inline-flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            class="w-7 h-7 inline-flex items-center justify-center text-[11px] font-semibold tracking-wide"
+            style="background: var(--flat-tint); color: var(--color-primary);"
+          >JT</span>
+          <span class="text-[0.8125rem] font-medium">Julian Tracht</span>
+        </p>
       </header>
 
-      <div class="prose-article drop-cap" set:html={html}></div>
+      <div
+        class:list={[
+          "mt-4",
+          showToc && "lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-9 lg:items-start",
+        ]}
+      >
+        {showToc && (
+          <nav class="toc hidden lg:block sticky top-6" aria-label={lang === "de" ? "Inhalt" : "Contents"}>
+            <p class="eyebrow mb-3.5">{lang === "de" ? "Inhalt" : "Contents"}</p>
+            {sections.map((sec) => (
+              <a href={`#${sec.id}`} data-toc={sec.id}>{sec.heading}</a>
+            ))}
+          </nav>
+        )}
 
-      <TagList tags={post.tags} lang={lang} label={lang === "de" ? "Tags" : "Tags"} />
+        <div class="max-w-[46rem]">
+          {intro.trim().length > 0 && (
+            <div class="prose-article drop-cap" set:html={intro}></div>
+          )}
+          {sections.map((sec) => (
+            <section class="article-sec">
+              <h2 id={sec.id}>
+                <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
+                  <span>{sec.heading}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                </button>
+              </h2>
+              <div class="sec-body" id={`${sec.id}-body`}>
+                <div class="sec-body-inner">
+                  <div class="prose-article" set:html={sec.html}></div>
+                </div>
+              </div>
+            </section>
+          ))}
+
+          {/* Author bio — flat colour block */}
+          <aside
+            class="grid grid-cols-[64px_1fr] gap-5 items-start mt-9 p-5"
+            style="background: var(--color-soft);"
+          >
+            <span
+              aria-hidden="true"
+              class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
+              style="background: var(--color-surface-navy); font-family: var(--font-display);"
+            >JT</span>
+            <div>
+              <p class="eyebrow mb-2">{lang === "de" ? "Über den Autor" : "About the author"}</p>
+              <p class="font-semibold">
+                Julian Tracht
+                <span class="font-normal text-sm text-[var(--color-muted)]">
+                  · {lang === "de" ? "Inhaber, Tracht Digital Solutions" : "Owner, Tracht Digital Solutions"}
+                </span>
+              </p>
+              <p class="text-sm leading-relaxed text-[var(--color-muted)] mt-2" style="text-wrap: pretty;">
+                {lang === "de"
+                  ? "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg."
+                  : "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg."}
+              </p>
+            </div>
+          </aside>
+
+          <TagList tags={post.tags} lang={lang} label={lang === "de" ? "Tags" : "Tags"} />
+        </div>
+      </div>
 
       <RelatedArticles
         posts={sameLangPosts}
@@ -181,9 +247,9 @@ const jsonLd = [
           aria-label={lang === "de" ? "Artikel-Navigation" : "Article navigation"}
         >
           {newerPost ? (
-            <a href={`/${newerPost.slug}`} class="block hairline rounded-sm px-5 py-4 group transition-colors hover:border-[var(--color-accent)]">
+            <a href={`/${newerPost.slug}`} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)]">
               <p class="eyebrow mb-2">← {lang === "de" ? "Neuerer Artikel" : "Newer article"}</p>
-              <p class="display-tight text-lg group-hover:text-[var(--color-accent)] transition-colors">
+              <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
                 {newerPost.title}
               </p>
             </a>
@@ -191,9 +257,9 @@ const jsonLd = [
             <span class="hidden sm:block" aria-hidden="true"></span>
           )}
           {olderPost && (
-            <a href={`/${olderPost.slug}`} class="block hairline rounded-sm px-5 py-4 group transition-colors hover:border-[var(--color-accent)] sm:text-right">
+            <a href={`/${olderPost.slug}`} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)] sm:text-right">
               <p class="eyebrow mb-2">{lang === "de" ? "Älterer Artikel" : "Older article"} →</p>
-              <p class="display-tight text-lg group-hover:text-[var(--color-accent)] transition-colors">
+              <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
                 {olderPost.title}
               </p>
             </a>
@@ -214,6 +280,51 @@ const jsonLd = [
       </footer>
     </article>
   </main>
+
+  <script>
+    // Collapsible sections: every h2 is a toggle button; the body
+    // animates via the grid-rows trick in global.css. Clicking a TOC
+    // entry re-opens a closed section before jumping to it.
+    const heads = document.querySelectorAll<HTMLButtonElement>(".sec-head");
+    heads.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const body = document.getElementById(btn.getAttribute("aria-controls") ?? "");
+        if (!body) return;
+        const closed = body.classList.toggle("closed");
+        btn.setAttribute("aria-expanded", String(!closed));
+      });
+    });
+
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>(".toc a[data-toc]");
+    tocLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        const id = link.dataset.toc ?? "";
+        const body = document.getElementById(`${id}-body`);
+        const head = document.querySelector<HTMLButtonElement>(`#${CSS.escape(id)} .sec-head`);
+        if (body?.classList.contains("closed")) {
+          body.classList.remove("closed");
+          head?.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
+
+    // Scrollspy: highlight the TOC entry of the last section heading
+    // above the reading line.
+    if (tocLinks.length > 0) {
+      const ids = Array.from(tocLinks).map((l) => l.dataset.toc ?? "");
+      const spy = () => {
+        let current = ids[0];
+        for (const id of ids) {
+          const el = document.getElementById(id);
+          if (el && el.getBoundingClientRect().top <= 140) current = id;
+        }
+        tocLinks.forEach((l) => l.classList.toggle("on", l.dataset.toc === current));
+      };
+      spy();
+      addEventListener("scroll", spy, { passive: true });
+      addEventListener("resize", spy, { passive: true });
+    }
+  </script>
 
   <script>
     // Reading progress: scale the fixed top bar with overall scroll

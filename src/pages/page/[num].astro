@@ -45,24 +45,20 @@ const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
   jsonLd={jsonLd}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
-    <header class="editorial-grid items-end mb-16 lg:mb-20">
-      <div>
-        <p class="section-num mb-5">{t.blog.label} · Seite {page} / {pageCount}</p>
-        <h1 class="display text-5xl md:text-6xl">
-          {t.blog.headline}
-          {" "}
-          <span class="accent-italic">{t.blog.headlineAccent}</span>
-        </h1>
-      </div>
-      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
-        <p>
-          Ältere Notizen aus dem Archiv. Inhaltlich nicht weniger
-          gültig, nur zeitlich weiter zurück.
-        </p>
-      </aside>
+    <header class="mb-10">
+      <p class="section-num mb-4">{t.blog.label} · Seite {page} / {pageCount}</p>
+      <h1 class="display text-4xl md:text-5xl">
+        {t.blog.headline}
+        {" "}
+        <span class="accent-italic">{t.blog.headlineAccent}</span>
+      </h1>
+      <p class="marginalia mt-3 max-w-prose">
+        Ältere Notizen aus dem Archiv. Inhaltlich nicht weniger
+        gültig, nur zeitlich weiter zurück.
+      </p>
     </header>
 
-    <ul>
+    <ul class="list-none p-0 m-0">
       {items.map((p) => (
         <BlogPostCard
           slug={p.slug}

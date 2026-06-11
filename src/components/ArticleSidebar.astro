@@ -1,0 +1,127 @@
+---
+/**
+ * Fixed left sidebar for article pages (lg+ only — small screens keep
+ * the top nav). From the design-system blog template: logo + wordmark,
+ * collapse toggle, search, nav links, DE/EN toggle and the primary
+ * CTA. Collapsed it narrows to an icon rail and the CTA becomes a
+ * phone icon. State persists in localStorage (`tds-blog-sidenav`).
+ */
+import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
+
+interface Props {
+  lang?: "de" | "en";
+}
+
+const { lang = "de" } = Astro.props;
+const home = lang === "de" ? "/" : "/en/";
+const items = [
+  { label: lang === "de" ? "Hauptseite" : "Main site", href: "https://tracht-digital.de" },
+  { label: "Journal", href: home, current: true },
+  { label: lang === "de" ? "Kundenportal" : "Customer portal", href: "https://app.tracht-digital.de" },
+  { label: "RSS", href: "/rss.xml" },
+];
+const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
+const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
+const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navigation";
+---
+
+<aside class="blog-sidebar" id="article-sidebar">
+  <div class="flex items-center justify-between gap-2 mb-5 sidebar-head">
+    <a href={home} class="brand-wordmark text-[1.0625rem] tracking-tight no-underline sidebar-hide-collapsed" style="color: var(--color-ink);">
+      Tracht <span class="accent-italic">Journal</span>
+    </a>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label={toggleCollapse} aria-expanded="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+  </div>
+
+  <div class="nav-search mb-4 sidebar-hide-collapsed">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+      <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+    </svg>
+    <input
+      type="search"
+      id="sidebar-search"
+      placeholder={searchPlaceholder}
+      aria-label={searchPlaceholder}
+      data-index-url={home}
+    />
+  </div>
+
+  <nav class="flex flex-col gap-1 sidebar-hide-collapsed" aria-label="Navigation">
+    {items.map((it) => (
+      <a href={it.href} class="snav-item" aria-current={it.current ? "page" : undefined}>
+        {it.label}
+      </a>
+    ))}
+  </nav>
+
+  <div class="flex-1"></div>
+
+  <div class="flex justify-center mb-3">
+    <ThemeToggle client:load />
+  </div>
+
+  <div class="lang-toggle mb-2.5 sidebar-hide-collapsed" role="group" aria-label="Sprache / Language">
+    <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+    <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+  </div>
+
+  <a href="https://tracht-digital.de/#contact" class="btn-flat sidebar-hide-collapsed">{cta}</a>
+
+  {/* Collapsed CTA: phone icon, same target */}
+  <a
+    href="https://tracht-digital.de/#contact"
+    class="btn-flat sidebar-show-collapsed self-center"
+    title={cta}
+    aria-label={cta}
+    style="width: 40px; height: 40px; padding: 0; justify-content: center;"
+  >
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    </svg>
+  </a>
+</aside>
+
+{/* Apply the saved collapse state before first paint so the layout
+    doesn't jump. Runs synchronously right after the markup above. */}
+<script is:inline>
+  (function () {
+    try {
+      if (localStorage.getItem("tds-blog-sidenav") === "collapsed") {
+        document.getElementById("article-sidebar").classList.add("collapsed");
+        var shift = document.getElementById("page-shift");
+        if (shift) shift.classList.add("nav-collapsed");
+        var btn = document.getElementById("sidebar-toggle");
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      }
+    } catch (e) {
+      /* storage disabled — start expanded */
+    }
+  })();
+</script>
+
+<script>
+  const aside = document.getElementById("article-sidebar");
+  const toggle = document.getElementById("sidebar-toggle");
+  const shift = document.getElementById("page-shift");
+
+  toggle?.addEventListener("click", () => {
+    const collapsed = aside?.classList.toggle("collapsed") ?? false;
+    shift?.classList.toggle("nav-collapsed", collapsed);
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    try {
+      localStorage.setItem("tds-blog-sidenav", collapsed ? "collapsed" : "open");
+    } catch {
+      /* storage disabled */
+    }
+  });
+
+  const input = document.getElementById("sidebar-search") as HTMLInputElement | null;
+  input?.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || !input.value.trim()) return;
+    const target = input.dataset.indexUrl || "/";
+    location.href = `${target}?q=${encodeURIComponent(input.value.trim())}`;
+  });
+</script>

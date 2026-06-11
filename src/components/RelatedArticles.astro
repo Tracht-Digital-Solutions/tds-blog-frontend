@@ -1,9 +1,12 @@
 ---
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+import PostCard from "~/components/PostCard.tsx";
 
 interface Props {
   /** All posts for the current language (passed in from the page so we don't refetch). */
-  posts: Array<Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "publishedAt">>;
+  posts: Array<
+    Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "publishedAt" | "coverHint">
+  >;
   currentSlug: string;
   currentCategory: string;
   lang: "de" | "en";
@@ -11,7 +14,6 @@ interface Props {
 }
 
 const { posts, currentSlug, currentCategory, lang, limit = 3 } = Astro.props;
-const locale = lang === "de" ? "de-DE" : "en-US";
 
 /**
  * Pick the top-N most recent posts in the same category, excluding
@@ -38,47 +40,23 @@ if (picks.length < limit) {
 }
 
 const labels = {
-  de: { eyebrow: "Weiterlesen", read: "Lesen →" },
-  en: { eyebrow: "Keep reading", read: "Read →" },
+  de: { eyebrow: "Weiterlesen" },
+  en: { eyebrow: "Keep reading" },
 }[lang];
-
-// Article pages for BOTH languages are served from the root
-// `[slug].astro` route (there is no `/en/[slug]` page) — linking
-// `/en/{slug}` would 404. BlogPostCard follows the same convention.
-const articleBase = "/";
 ---
 
 {picks.length > 0 && (
-  <aside class="hairline-t mt-20 pt-12" aria-labelledby="related-heading">
+  <aside class="mt-16 pt-2" aria-labelledby="related-heading">
     <p class="section-num mb-3">{labels.eyebrow}</p>
-    <h2 id="related-heading" class="display-tight text-3xl mb-10">
+    <h2 id="related-heading" class="display-tight text-3xl mb-6">
       {lang === "de" ? "Ähnliche Artikel." : "Adjacent articles."}
     </h2>
 
-    <ul class="grid md:grid-cols-3 gap-8 md:gap-10">
+    <ul class="grid md:grid-cols-3 gap-5 list-none p-0 m-0">
       {picks.map((p) => (
-        <li>
-          <a href={`${articleBase}${p.slug}`} class="block group">
-            <p class="eyebrow mb-2">{p.category}</p>
-            <h3 class="display-tight text-xl md:text-[1.375rem] mb-2 group-hover:text-[var(--color-accent)] transition-colors">
-              {p.title}
-            </h3>
-            <p class="text-sm text-[var(--color-muted)] leading-relaxed line-clamp-3 mb-3">
-              {p.excerpt}
-            </p>
-            <div class="text-xs text-[var(--color-muted)] flex items-center justify-between gap-3">
-              {p.publishedAt && (
-                <time class="tabular" datetime={p.publishedAt}>
-                  {new Date(p.publishedAt).toLocaleDateString(locale, {
-                    year: "numeric",
-                    month: "short",
-                    day: "2-digit",
-                  })}
-                </time>
-              )}
-              <span class="link-underline text-[var(--color-accent)]">{labels.read}</span>
-            </div>
-          </a>
+        <li class="flex">
+          {/* Static render of the flat design-system card — no hydration. */}
+          <PostCard post={p} lang={lang} />
         </li>
       ))}
     </ul>

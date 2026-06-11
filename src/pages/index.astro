@@ -1,14 +1,11 @@
 ---
 import Layout from "~/layouts/Layout.astro";
-import BlogPostCard from "~/components/BlogPostCard.astro";
+import BlogIndex from "~/components/islands/BlogIndex.tsx";
 import ForYou from "~/components/islands/ForYou.tsx";
-import TagList from "~/components/TagList.astro";
-import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
-import { paginate } from "~/lib/pagination";
+import { PAGE_SIZE } from "~/lib/pagination";
 import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
-const t = translations.de;
 const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
 
 let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
@@ -17,8 +14,6 @@ try {
 } catch (err) {
   console.error("[tds-blog] failed to fetch posts at build time:", err);
 }
-
-const { items, hasOlder } = paginate(allPosts, 1);
 ---
 
 <Layout
@@ -26,53 +21,14 @@ const { items, hasOlder } = paginate(allPosts, 1);
   description="Gedanken und Artikel von Julian Tracht."
   jsonLd={jsonLd}
 >
-  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
-    <header class="editorial-grid items-end mb-16 lg:mb-20">
-      <div>
-        <p class="section-num mb-5">{t.blog.label}</p>
-        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
-          {t.blog.headline}
-          {" "}
-          <span class="accent-italic">{t.blog.headlineAccent}</span>
-        </h1>
-      </div>
-      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
-        <p>
-          Notizen aus der Werkstatt — über Software, Auftraggeber und
-          das, was zwischen den beiden passiert.
-        </p>
-      </aside>
-    </header>
+  <main id="main">
+    {/* Hero + category sidebar + card grid + live search — the
+        design-system blog index. Posts are baked in at build time;
+        the island only filters client-side. */}
+    <BlogIndex posts={allPosts} lang="de" pageSize={PAGE_SIZE} client:load />
 
-    <ForYou lang="de" client:idle />
-
-    <div id="themen" class="scroll-mt-24">
-      <TagList posts={allPosts} lang="de" label="Themen" />
+    <div class="max-w-5xl mx-auto px-6 pb-14">
+      <ForYou lang="de" client:idle />
     </div>
-
-    {items.length === 0 ? (
-      <p class="text-[var(--color-muted)] italic">Noch keine Artikel veröffentlicht.</p>
-    ) : (
-      <ul>
-        {items.map((p) => (
-          <BlogPostCard
-            slug={p.slug}
-            category={p.category}
-            title={p.title}
-            excerpt={p.excerpt}
-            publishedAt={p.publishedAt}
-            lang="de"
-          />
-        ))}
-      </ul>
-    )}
-
-    {hasOlder && (
-      <nav class="mt-16 flex justify-end">
-        <a href="/page/2" class="link-underline text-[var(--color-accent)] text-sm">
-          Ältere Artikel →
-        </a>
-      </nav>
-    )}
   </main>
 </Layout>

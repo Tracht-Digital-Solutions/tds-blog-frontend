@@ -1,14 +1,116 @@
 ---
+/**
+ * Footer pair from the design-system blog kit: the inverse newsletter
+ * panel followed by a fixed navy footer block — brand blurb +
+ * Schwarzenbek on the left, link columns on the right. Both surfaces
+ * use the surface-* tokens so they stay dark in dark mode.
+ */
+import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
+
+interface Props {
+  lang?: "de" | "en";
+}
+
+const { lang = "de" } = Astro.props;
 const year = new Date().getFullYear();
+
+const blurb =
+  lang === "de"
+    ? "Software, Web und Digitalisierung für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg."
+    : "Software, web, and digitalization for small and medium-sized businesses — based in Schwarzenbek near Hamburg.";
+
+const groups =
+  lang === "de"
+    ? [
+        {
+          head: "Navigation",
+          items: [
+            { label: "Hauptseite", href: "https://tracht-digital.de" },
+            { label: "Journal", href: "/" },
+            { label: "Kundenportal", href: "https://app.tracht-digital.de" },
+          ],
+        },
+        {
+          head: "Ressourcen",
+          items: [
+            { label: "RSS", href: "/rss.xml" },
+            { label: "English edition", href: "/en/" },
+          ],
+        },
+        {
+          head: "Rechtliches",
+          items: [
+            { label: "Impressum", href: "https://tracht-digital.de/legal/impressum" },
+            { label: "Datenschutz", href: "https://tracht-digital.de/legal/datenschutz" },
+          ],
+        },
+      ]
+    : [
+        {
+          head: "Navigation",
+          items: [
+            { label: "Main site", href: "https://tracht-digital.de" },
+            { label: "Journal", href: "/en/" },
+            { label: "Customer portal", href: "https://app.tracht-digital.de" },
+          ],
+        },
+        {
+          head: "Resources",
+          items: [
+            { label: "RSS", href: "/rss.xml" },
+            { label: "Deutsche Ausgabe", href: "/" },
+          ],
+        },
+        {
+          head: "Legal",
+          items: [
+            { label: "Imprint", href: "https://tracht-digital.de/legal/impressum" },
+            { label: "Privacy", href: "https://tracht-digital.de/legal/datenschutz" },
+          ],
+        },
+      ];
 ---
 
-<footer class="border-t border-[var(--color-line)] mt-24">
-  <div class="max-w-5xl mx-auto px-6 py-12 flex flex-wrap items-baseline justify-between gap-4 text-xs text-[var(--color-muted)]">
-    <p>© {year} Tracht Digital Solutions · Journal</p>
-    <nav class="flex gap-6">
-      <a class="link-underline" href="/rss.xml">RSS</a>
-      <a class="link-underline" href="https://tracht-digital.de/legal/impressum">Impressum</a>
-      <a class="link-underline" href="https://tracht-digital.de/legal/datenschutz">Datenschutz</a>
-    </nav>
+<NewsletterSignup lang={lang} client:visible />
+
+<footer class="blog-footer" style="background: var(--color-surface-navy); color: #fff; padding: 48px 0 28px;">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="grid gap-9 sm:grid-cols-2 lg:[grid-template-columns:1.4fr_repeat(3,1fr)]">
+      <div>
+        <p class="brand-wordmark text-lg mb-3" style="color: #fff;">
+          Tracht <span style="font-style: italic; color: var(--color-accent-pink);">Digital</span>
+        </p>
+        <p class="text-sm leading-relaxed" style="color: rgb(255 255 255 / 0.65); max-width: 32ch;">
+          {blurb}
+        </p>
+        <p class="mt-5 text-[0.8125rem]" style="font-family: var(--font-mono); color: rgb(255 255 255 / 0.5);">
+          Schwarzenbek
+        </p>
+      </div>
+      {groups.map((g) => (
+        <div>
+          <p class="eyebrow mb-4" style="color: rgb(255 255 255 / 0.5);">{g.head}</p>
+          <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
+            {g.items.map((it) => (
+              <li>
+                <a
+                  href={it.href}
+                  class="text-sm no-underline text-white/75 hover:text-white transition-colors"
+                >
+                  {it.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <div
+      class="mt-9 pt-4 flex flex-wrap justify-between items-center gap-4 text-xs"
+      style="border-top: 1px solid rgb(255 255 255 / 0.1); font-family: var(--font-mono); color: rgb(255 255 255 / 0.5);"
+    >
+      <p>© {year} Tracht Digital Solutions</p>
+      <p>DE / EN</p>
+    </div>
   </div>
 </footer>

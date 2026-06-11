@@ -2,6 +2,7 @@
 import "~/styles/global.css";
 import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
+import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
 
 interface Props {
@@ -26,6 +27,9 @@ interface Props {
   jsonLd?: object | object[];
   /** Set `noindex` for draft / non-public pages. */
   noindex?: boolean;
+  /** Article chrome: fixed collapsible sidebar on lg+ instead of the
+   *  top nav (which stays for small screens). */
+  sidebar?: boolean;
 }
 
 const {
@@ -37,6 +41,7 @@ const {
   article,
   jsonLd,
   noindex = false,
+  sidebar = false,
 } = Astro.props;
 
 const resolvedOgImage =
@@ -134,9 +139,24 @@ const altLang = lang === "de" ? "en" : "de";
     <a href="#main" class="absolute -top-full left-0 z-50 px-6 py-3 bg-[var(--color-surface-navy)] text-white text-sm font-semibold focus:top-0 transition-all">
       Skip to content
     </a>
-    <JournalHeader />
-    <slot />
-    <JournalFooter />
+    {
+      sidebar ? (
+        <>
+          <ArticleSidebar lang={lang} />
+          <div class="with-sidebar" id="page-shift">
+            <JournalHeader lang={lang} />
+            <slot />
+            <JournalFooter lang={lang} />
+          </div>
+        </>
+      ) : (
+        <>
+          <JournalHeader lang={lang} />
+          <slot />
+          <JournalFooter lang={lang} />
+        </>
+      )
+    }
 
     {/* Dynamic document.title — prefixes the tab with the heading
         of whichever `<section id="…">` is currently in the viewport.

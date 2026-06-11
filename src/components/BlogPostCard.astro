@@ -1,4 +1,9 @@
 ---
+/**
+ * Flat editorial list row from the design-system blog kit: colour
+ * block instead of rule lines — meta column left, serif title +
+ * excerpt centre, arrow right. Used on the pagination and tag pages.
+ */
 interface Props {
   slug: string;
   category: string;
@@ -12,20 +17,12 @@ const { slug, category, title, excerpt, publishedAt, lang = "de" } = Astro.props
 const locale = lang === "de" ? "de-DE" : "en-US";
 ---
 
-<li class="hairline-b last:border-b-0 py-10">
-  <a href={`/${slug}`} class="block group editorial-grid items-start">
-    <div>
-      <p class="eyebrow mb-3">{category}</p>
-      <h2 class="display-tight text-3xl md:text-4xl mb-3 group-hover:text-[var(--color-accent)] transition-colors">
-        {title}
-      </h2>
-      <p class="text-[var(--color-muted)] leading-relaxed max-w-prose">
-        {excerpt}
-      </p>
-    </div>
-    <aside class="marginalia lg:pt-2">
+<li class="list-none">
+  <a href={`/${slug}`} class="post-row">
+    <div class="flex flex-col gap-2.5">
+      <p class="eyebrow" style="color: var(--color-accent);">{category}</p>
       {publishedAt && (
-        <time class="tabular block" datetime={publishedAt}>
+        <time class="tabular text-[0.8125rem] text-[var(--color-muted)]" datetime={publishedAt}>
           {new Date(publishedAt).toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
@@ -33,9 +30,13 @@ const locale = lang === "de" ? "de-DE" : "en-US";
           })}
         </time>
       )}
-      <p class="mt-1">
-        <span class="link-underline text-[var(--color-accent)]">Lesen →</span>
+    </div>
+    <div>
+      <h2 class="row-title">{title}</h2>
+      <p class="text-[0.9375rem] leading-relaxed text-[var(--color-muted)] m-0 max-w-prose" style="text-wrap: pretty;">
+        {excerpt}
       </p>
-    </aside>
+    </div>
+    <span class="row-arrow hidden md:block" aria-hidden="true">→</span>
   </a>
 </li>

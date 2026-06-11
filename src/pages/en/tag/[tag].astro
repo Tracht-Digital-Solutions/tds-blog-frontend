@@ -59,28 +59,24 @@ const jsonLd = asGraph(
   jsonLd={jsonLd}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
-    <header class="editorial-grid items-end mb-16">
-      <div>
-        <p class="section-num mb-5">Journal · Tag</p>
-        <h1 class="display text-5xl md:text-6xl lg:text-7xl">
-          #<span class="accent-italic">{tag}</span>
-        </h1>
-      </div>
-      <aside class="marginalia lg:pl-6 lg:border-l lg:border-[var(--color-line)]">
-        <p>
-          {posts.length === 1
-            ? "One article on the topic."
-            : `${posts.length} articles on the topic.`}
-        </p>
-        <p class="mt-2">
-          <a href="/en/" class="link-underline text-[var(--color-accent)]">← All articles</a>
-        </p>
-      </aside>
+    <header class="mb-10">
+      <a href="/en/" class="btn-back mb-6">
+        <span aria-hidden="true">←</span> All posts
+      </a>
+      <p class="section-num mb-4 mt-6">Journal · Tag</p>
+      <h1 class="display text-4xl md:text-5xl">
+        #<span class="accent-italic">{tag}</span>
+      </h1>
+      <p class="marginalia mt-3">
+        {posts.length === 1
+          ? "One article on the topic."
+          : `${posts.length} articles on the topic.`}
+      </p>
     </header>
 
     <TagList posts={allPosts} lang="en" activeTag={tag} label="All tags" />
 
-    <ul>
+    <ul class="list-none p-0 m-0">
       {posts.map((p) => (
         <BlogPostCard
           slug={p.slug}

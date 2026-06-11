@@ -3,11 +3,22 @@
 Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
-Self-hosted Instrument Serif + Geist; the editorial design vocabulary
-(`.display`, `.section-num`, `.editorial-grid`, `.marginalia`, …) comes
-from `@tracht-digital-solutions/tds-shared` (`styles/base.css` +
-`styles/app.css`), shared with the portals. Only the brand-aware
-`.prose-article` long-form class is local to `src/styles/global.css`.
+Self-hosted Instrument Serif + Geist; the editorial type vocabulary
+(`.display`, `.section-num`, `.marginalia`, …) comes from
+`@tracht-digital-solutions/tds-shared` (`styles/base.css` +
+`styles/app.css`), shared with the portals.
+
+**Surface design: flat/"kantig"** (from the Tracht design-system
+handoff, 2026-06): no border radii or hairline cards — separation via
+colour blocks (`--color-soft`), fixed dark panels (hero, newsletter,
+footer) on the `--color-surface-*` tokens so dark mode never inverts
+them. The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
+`.toc`, `.btn-flat`, `.btn-back`, `.sec-head`/`.sec-body`,
+`.blog-sidebar`/`.with-sidebar`, `.nav-search`, `.lang-toggle`) and the
+brand-aware `.prose-article` long-form class live in
+`src/styles/global.css`. The design bundle's Google-font substitutes
+(Hanken Grotesk etc.) were deliberately NOT adopted — Instrument Serif
++ Geist stay canonical.
 
 ## Build pipeline
 
@@ -63,7 +74,28 @@ in this repo only.
 
 ## Status
 
-- `src/pages/index.astro` + `src/pages/en/index.astro` — page 1 (10 newest)
+- `src/pages/index.astro` + `src/pages/en/index.astro` — design-system
+  index: featured-post hero (fixed navy), category sidebar with post
+  counters (collapsible), flat card grid, live full-text search —
+  all in the `BlogIndex` island (posts baked in as build-time props,
+  filtering is client-side only; `?q=` round-trips in the URL). The
+  nav search field (JournalHeader) drives it via `tds-blog-search`
+  CustomEvents; on non-index pages Enter navigates to `/?q=…`.
+  Hero + 9 grid cards mirror page 1 of the static pagination
+- `src/components/PostCard.tsx` + `Covers.tsx` — flat card + the six
+  abstract brand-geometry covers (slug-hashed variant; photo cover
+  when `coverHint` is an http URL). Also rendered statically (no
+  hydration) inside `RelatedArticles.astro`
+- `src/components/islands/NewsletterSignup.tsx` — newsletter block in
+  the footer; posts a well-formed message to tds-contact-api (no
+  dedicated newsletter backend — Julian gets a signup mail)
+- `src/components/ArticleSidebar.astro` — fixed collapsible left nav
+  on article pages (lg+ only; small screens keep the top nav via the
+  `sidebar` Layout prop). Collapsed = 64px icon rail, CTA becomes a
+  phone icon; state persists in localStorage `tds-blog-sidenav`
+- `src/lib/sections.ts` — splits rendered article HTML at h2
+  boundaries for the collapsible sections + scrollspy TOC on
+  `[slug].astro` (TOC renders only with ≥2 sections)
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail

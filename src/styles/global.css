@@ -11,6 +11,428 @@
 @import "@tracht-digital-solutions/tds-shared/styles/base.css";
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
 
+/* === Flat blog design ("kantig") ===================================
+   From the Tracht design system handoff: the blog surface is flat and
+   angular — no border radii, no shadows, separation through colour
+   blocks (--color-soft) instead of hairlines, compact spacing. Brand
+   fonts + tokens stay the shared ones so dark mode keeps working;
+   fixed dark blocks (hero, newsletter, footer) use the surface-*
+   tokens that never flip. */
+
+:root {
+  /* blue-50 analog — active nav / chip tint that follows the theme */
+  --flat-tint: color-mix(in srgb, var(--color-primary) 9%, var(--color-paper));
+  /* one step darker than --color-soft, for hovers on soft surfaces */
+  --flat-hover: color-mix(in srgb, var(--color-soft) 70%, var(--color-line));
+}
+
+/* ---- Top nav pieces ---- */
+.nav-divider {
+  width: 5px;
+  height: 5px;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+.jnav-item {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  text-decoration: none;
+  padding: 0.5rem 0.8125rem;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+.jnav-item:hover {
+  color: var(--color-ink);
+  background: var(--color-soft);
+}
+.jnav-item[aria-current="page"] {
+  color: var(--color-primary);
+  background: var(--flat-tint);
+  font-weight: 600;
+}
+
+.nav-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--color-muted);
+}
+.nav-search svg {
+  position: absolute;
+  left: 0.75rem;
+  pointer-events: none;
+}
+.nav-search input {
+  height: 2.25rem;
+  width: 10.5rem;
+  padding: 0 0.75rem 0 2.125rem;
+  border: 0;
+  background: var(--color-soft);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  transition: width 180ms ease, background-color 180ms ease;
+}
+.nav-search input::placeholder { color: var(--color-muted); }
+.nav-search input:hover { background: var(--flat-hover); }
+.nav-search input:focus {
+  outline: none;
+  width: 14rem;
+  background: var(--flat-tint);
+}
+.nav-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: var(--color-soft);
+}
+.lang-toggle a {
+  display: inline-flex;
+  align-items: center;
+  height: 1.625rem;
+  padding: 0 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.lang-toggle a:hover { color: var(--color-ink); }
+.lang-toggle a.on {
+  background: var(--color-surface-navy);
+  color: #fff;
+}
+
+/* ---- Angular buttons / chips ---- */
+.btn-flat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  border: 0;
+  cursor: pointer;
+  background: var(--color-surface-navy);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 180ms ease;
+}
+.btn-flat:hover {
+  background: color-mix(in srgb, var(--color-surface-navy) 85%, black);
+}
+.btn-flat:active {
+  background: color-mix(in srgb, var(--color-surface-navy) 70%, black);
+}
+
+.chip-flat {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.875rem;
+  border: 0;
+  cursor: pointer;
+  background: var(--color-soft);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.chip-flat:hover { background: var(--flat-hover); }
+.chip-flat.on {
+  background: var(--color-surface-navy);
+  color: #fff;
+}
+
+/* ---- Flat post cards (index grid, related strip) ---- */
+.post-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-soft);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 180ms ease;
+}
+.post-card:hover { background: var(--flat-hover); }
+.post-card .card-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.375rem;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--color-black);
+  margin: 0;
+  text-wrap: pretty;
+  transition: color 180ms ease;
+}
+.post-card:hover .card-title { color: var(--color-primary); }
+
+/* ---- Flat editorial rows (pagination + tag lists) ---- */
+.post-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 6px;
+  background: var(--color-soft);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 180ms ease;
+}
+@media (min-width: 768px) {
+  .post-row { grid-template-columns: 150px 1fr auto; gap: 1.75rem; }
+}
+.post-row:hover { background: var(--flat-hover); }
+.post-row .row-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-black);
+  margin: 0 0 0.5rem;
+  text-wrap: pretty;
+  transition: color 180ms ease;
+}
+.post-row:hover .row-title { color: var(--color-primary); }
+.post-row .row-arrow {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  transition: color 180ms ease, transform 180ms ease;
+}
+.post-row:hover .row-arrow {
+  color: var(--color-accent);
+  transform: translateX(4px);
+}
+
+/* ---- Category sidebar (index) ---- */
+.sidenav { position: sticky; top: 5.25rem; }
+.sidenav .sidenav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 0.875rem;
+}
+.sidenav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: 0;
+  cursor: pointer;
+  background: var(--color-soft);
+  color: var(--color-muted);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.sidenav-toggle:hover { background: var(--flat-hover); color: var(--color-ink); }
+.sidenav button.sidenav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 4px;
+  border: 0;
+  background: var(--color-soft);
+  color: var(--color-muted);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+.sidenav button.sidenav-item:hover { background: var(--flat-hover); color: var(--color-ink); }
+.sidenav button.sidenav-item.on {
+  background: var(--color-surface-navy);
+  color: #fff;
+}
+.sidenav .cnt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+.sidenav button.sidenav-item.on .cnt { color: rgb(255 255 255 / 0.7); }
+
+/* ---- Article: back button ---- */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--color-soft);
+  color: var(--color-ink);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 180ms ease;
+}
+.btn-back:hover { background: var(--flat-hover); }
+
+/* ---- Article: collapsible sections ---- */
+.article-sec h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  font-size: 1.875rem;
+  line-height: 1.15;
+  margin: 2.25rem 0 0.75rem;
+  scroll-margin-top: 3rem;
+  color: var(--color-black);
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+}
+.sec-head svg {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  transition: transform 180ms ease, color 180ms ease;
+}
+.sec-head:hover svg { color: var(--color-primary); }
+.sec-head[aria-expanded="false"] svg { transform: rotate(-90deg); }
+
+/* Animated body — grid-rows trick animates to/from auto height */
+.sec-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 320ms ease;
+}
+.sec-body.closed { grid-template-rows: 0fr; }
+.sec-body > .sec-body-inner { overflow: hidden; min-height: 0; }
+
+/* ---- Article: TOC (left column) ---- */
+.toc a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 4px;
+  background: var(--color-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+.toc a:hover { background: var(--flat-hover); color: var(--color-ink); }
+.toc a.on {
+  background: var(--color-surface-navy);
+  color: #fff;
+}
+
+/* ---- Article: fixed collapsible sidebar (lg+) ---- */
+.blog-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 264px;
+  z-index: 40;
+  background: var(--color-soft);
+  display: none;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  transition: width 320ms ease, padding 320ms ease;
+}
+@media (min-width: 1024px) {
+  .blog-sidebar { display: flex; }
+  .with-sidebar { margin-left: 264px; transition: margin-left 320ms ease; }
+  .with-sidebar.nav-collapsed { margin-left: 64px; }
+  .with-sidebar #reading-progress { left: 264px; transition: left 320ms ease; }
+  .with-sidebar.nav-collapsed #reading-progress { left: 64px; }
+  .with-sidebar .brand-header { display: none; }
+}
+.blog-sidebar.collapsed { width: 64px; padding: 1.25rem 0.75rem; }
+.blog-sidebar.collapsed .sidebar-hide-collapsed { display: none; }
+.blog-sidebar .sidebar-show-collapsed { display: none; }
+.blog-sidebar.collapsed .sidebar-show-collapsed { display: inline-flex; }
+.blog-sidebar.collapsed .sidebar-head { justify-content: center; }
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: var(--color-paper);
+  color: var(--color-muted);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.sidebar-toggle:hover { background: var(--flat-tint); color: var(--color-primary); }
+.sidebar-toggle svg { transition: transform 320ms ease; }
+.blog-sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+.blog-sidebar a.snav-item {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+.blog-sidebar a.snav-item:hover { color: var(--color-ink); background: var(--flat-hover); }
+.blog-sidebar a.snav-item[aria-current="page"] {
+  color: var(--color-primary);
+  background: var(--flat-tint);
+  font-weight: 600;
+}
+.blog-sidebar .nav-search { width: 100%; }
+.blog-sidebar .nav-search input { width: 100%; background: var(--color-paper); }
+.blog-sidebar .nav-search input:focus { width: 100%; background: var(--flat-tint); }
+.blog-sidebar .lang-toggle { display: flex; width: 100%; background: var(--color-paper); }
+.blog-sidebar .lang-toggle a { flex: 1; justify-content: center; height: 1.875rem; }
+.blog-sidebar .btn-flat { width: 100%; justify-content: center; }
+
+/* ---- Newsletter ---- */
+.newsletter-input {
+  height: 3rem;
+  padding: 0 1rem;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  transition: background-color 180ms ease;
+}
+.newsletter-input::placeholder { color: rgb(255 255 255 / 0.45); }
+.newsletter-input:focus {
+  outline: none;
+  background: rgb(255 255 255 / 0.2);
+}
+
 /* Article prose — applied to MDX body content. Blog-specific, so it
    stays local rather than in the shared library. */
 .prose-article {
@@ -53,32 +475,30 @@
   color: var(--color-accent);
 }
 .prose-article strong { color: var(--color-black); font-weight: 600; }
+/* Flat colour-block quote (kantig — surface instead of a rule line) */
 .prose-article blockquote {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 1.5rem;
   line-height: 1.35;
   color: var(--color-primary);
-  border-left: 2px solid var(--color-accent);
-  margin: 2em 0;
-  padding: 0.25em 0 0.25em 1.25em;
+  background: var(--flat-tint);
+  margin: 1.5em 0;
+  padding: 1.25rem 1.5rem;
 }
 .prose-article code {
   font-family: var(--font-mono);
   font-size: 0.875em;
   background: var(--color-soft);
-  border: 1px solid var(--color-line);
-  border-radius: 2px;
   padding: 0.0625em 0.375em;
 }
 .prose-article pre {
   /* Shiki sets its own background/foreground via inline `style` —
      these defaults only apply to non-highlighted blocks (no `lang`
      hint or unsupported language). */
-  background: var(--color-black);
+  background: var(--color-surface-ink);
   color: #f5f3ec;
   padding: 1.25rem 1.5rem;
-  border-radius: 2px;
   overflow-x: auto;
   margin: 1.75em 0;
   font-size: 0.875rem;
@@ -110,7 +530,6 @@
   height: auto;
   margin: 1.75em 0;
 }
-.prose-article :is(img, video) { border-radius: 2px; }
 .prose-article :not(pre) > code { overflow-wrap: break-word; }
 .prose-article table {
   display: block;

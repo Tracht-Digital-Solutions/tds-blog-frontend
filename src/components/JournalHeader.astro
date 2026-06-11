@@ -1,35 +1,98 @@
 ---
 /**
- * Slim editorial header for the public journal. Wordmark on the left
- * doubles as the back-to-main-site link; the right slot points at
- * the rest of the brand surface (main site, customer portal, RSS).
+ * Flat top nav from the design-system blog kit: logomark + wordmark,
+ * bordeaux divider square, angular nav items, live search field,
+ * DE/EN segmented toggle and the primary CTA.
+ *
+ * The search field drives the BlogIndex island when one is on the
+ * page (CustomEvent `tds-blog-search`, flagged via
+ * `data-blog-live-search` on <html>); everywhere else Enter navigates
+ * to the index with `?q=` so the island picks the query up on load.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
 
+interface Props {
+  lang?: "de" | "en";
+  class?: string;
+}
+
+const { lang = "de", class: className } = Astro.props;
+
+const home = lang === "de" ? "/" : "/en/";
 const items = [
-  { label: "Hauptseite", href: "https://tracht-digital.de" },
-  { label: "Themen", href: "/#themen" },
-  { label: "Kundenportal", href: "https://app.tracht-digital.de" },
-  { label: "RSS", href: "/rss.xml" },
+  { label: lang === "de" ? "Hauptseite" : "Main site", href: "https://tracht-digital.de" },
+  { label: "Journal", href: home, current: true },
+  { label: lang === "de" ? "Kundenportal" : "Customer portal", href: "https://app.tracht-digital.de" },
 ];
+const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
+const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 ---
 
-<header class="brand-header">
-  <div class="max-w-5xl mx-auto px-6 min-h-16 py-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-    <a href="/" class="brand-wordmark text-[1.0625rem] tracking-tight">
+<header class:list={["brand-header", className]}>
+  <div class="max-w-5xl mx-auto px-6 min-h-15 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+    <a href={home} class="brand-wordmark text-[1.0625rem] tracking-tight shrink-0">
       Tracht <span class="accent-italic">Journal</span>
     </a>
+    <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
 
-    <nav class="flex items-center gap-x-4 gap-y-1 text-sm flex-wrap">
+    <nav class="flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
       {items.map((it) => (
         <a
           href={it.href}
-          class="link-underline text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors"
+          class="jnav-item whitespace-nowrap"
+          aria-current={it.current ? "page" : undefined}
         >
           {it.label}
         </a>
       ))}
-      <ThemeToggle client:load />
     </nav>
+
+    <div class="nav-search hidden md:flex">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+        <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      </svg>
+      <input
+        type="search"
+        id="jnl-search"
+        placeholder={searchPlaceholder}
+        aria-label={searchPlaceholder}
+        data-index-url={home}
+      />
+    </div>
+
+    <div class="lang-toggle" role="group" aria-label="Sprache / Language">
+      <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+      <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    </div>
+
+    <ThemeToggle client:load />
+
+    <a href="https://tracht-digital.de/#contact" class="btn-flat hidden lg:inline-flex" style="height: 2.25rem;">
+      {cta}
+    </a>
   </div>
 </header>
+
+<script>
+  const input = document.getElementById("jnl-search") as HTMLInputElement | null;
+  if (input) {
+    // Pre-fill from ?q= so the field mirrors an active search.
+    const q = new URLSearchParams(location.search).get("q");
+    if (q) input.value = q;
+
+    input.addEventListener("input", () => {
+      if (document.documentElement.dataset.blogLiveSearch) {
+        document.dispatchEvent(new CustomEvent("tds-blog-search", { detail: input.value }));
+      }
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (document.documentElement.dataset.blogLiveSearch) return; // island filters live
+      const target = input.dataset.indexUrl || "/";
+      if (input.value.trim()) {
+        location.href = `${target}?q=${encodeURIComponent(input.value.trim())}`;
+      }
+    });
+  }
+</script>
