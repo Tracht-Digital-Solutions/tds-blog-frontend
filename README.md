@@ -8,12 +8,16 @@
 ---
 
 
-Public blog at `blog.tracht-digital.de`. **Astro 5** SSG + **Tailwind v4**
-with self-hosted **Instrument Serif + Geist** and the shared editorial
-design system from **tds-shared**. Every post is fetched from
-**`tds-content-api`** at build time
-and rendered to static HTML — no runtime API calls, no client-side data
-fetching. Each post also gets a per-post **OG preview image** rendered
+Public blog at `blog.tracht-digital.de`. **Astro** SSG + **Tailwind v4**
+with self-hosted **Instrument Serif + Geist** on the shared token
+system from **tds-shared**. The surface design is the **flat/"kantig"
+blog design** from the Tracht design-system handoff: no border radii,
+colour blocks instead of hairlines, compact spacing, fixed dark panels
+(hero, newsletter, footer) on the `--color-surface-*` tokens. Every
+post is fetched from **`tds-content-api`** at build time and rendered
+to static HTML — no runtime API calls for content; the only
+client-side work is filtering (search/categories) over data baked into
+the page. Each post also gets a per-post **OG preview image** rendered
 at build time via Satori + Resvg.
 
 Discovery surface includes Schema.org JSON-LD (`BlogPosting` with
@@ -125,18 +129,26 @@ branch ready to deploy). Implementation lives in
 
 ## Pages
 
-All pages share `JournalHeader.astro` + `JournalFooter.astro`
-(wordmark + cross-links to main site, customer portal, RSS).
+All pages share `JournalHeader.astro` (flat top nav: wordmark, nav
+items, live search field, DE/EN toggle, CTA) and
+`JournalFooter.astro` (newsletter panel + navy footer block with link
+columns and the Schwarzenbek location). Article pages additionally get
+`ArticleSidebar.astro` — a fixed, collapsible left nav on `lg+` (the
+top nav stays for small screens) that minimises to an icon rail with a
+phone-icon CTA.
 
 | Path | Source | Purpose |
 |---|---|---|
-| `/` | `src/pages/index.astro` | DE index — page 1 of the journal (newest 10) |
-| `/page/[num]` | `src/pages/page/[num].astro` | DE pages 2..N |
-| `/[slug]` | `src/pages/[slug].astro` | Article page (DE + EN both routed through here via `lang` prop); drop-cap on first paragraph, marginalia rail with date + reading time + author, and a `RelatedArticles` strip at the bottom |
+| `/` | `src/pages/index.astro` | DE index — `BlogIndex` island: featured-post hero on fixed navy, collapsible category sidebar with post counters, flat card grid (abstract brand-geometry covers), live full-text search (`?q=` round-trips) |
+| `/page/[num]` | `src/pages/page/[num].astro` | DE pages 2..N — flat editorial rows |
+| `/[slug]` | `src/pages/[slug].astro` | Article page (DE + EN both routed through here via `lang` prop); back button, scrollspy TOC, collapsible h2 sections, drop-cap intro, author-bio block, flat prev/next + `RelatedArticles` card strip |
+| `/tag/[tag]` | `src/pages/tag/[tag].astro` | DE tag-filtered list |
 | `/en/` | `src/pages/en/index.astro` | EN index — mirror of the DE index against `listAllPosts("en")` |
 | `/en/page/[num]` | `src/pages/en/page/[num].astro` | EN pagination |
+| `/en/tag/[tag]` | `src/pages/en/tag/[tag].astro` | EN tag-filtered list |
 | `/og/[lang]/[slug].png` | `src/pages/og/[lang]/[slug].png.ts` | Per-post OG preview image, 1200×630, rendered at build time |
 | `/rss.xml` | `src/pages/rss.xml.ts` | RSS 2.0 feed |
+| `/interests-index.json` | `src/pages/interests-index.json.ts` | Static post index for the "Für dich" island |
 | `/sitemap-index.xml` | `@astrojs/sitemap` | Auto-generated |
 
 ---
@@ -146,31 +158,42 @@ All pages share `JournalHeader.astro` + `JournalFooter.astro`
 ```
 src/
 ├── components/
-│   ├── BlogPostCard.astro          # list-item: editorial-grid title + date marginalia
-│   ├── JournalHeader.astro
-│   ├── JournalFooter.astro
+│   ├── ArticleSidebar.astro        # fixed collapsible left nav on /[slug] (lg+), phone icon when collapsed
+│   ├── BlogPostCard.astro          # flat editorial list row (pagination + tag pages)
+│   ├── Covers.tsx                  # 6 abstract brand-geometry covers (slug-hashed) + photo cover
+│   ├── PostCard.tsx                # flat post card (island + static render in RelatedArticles)
+│   ├── JournalHeader.astro         # flat top nav with live search, DE/EN toggle, CTA
+│   ├── JournalFooter.astro         # newsletter panel + navy footer block
 │   ├── JsonLd.astro                # Inline <script type="application/ld+json"> utility
-│   └── RelatedArticles.astro       # 3-card strip on /[slug] (same-category + fallback)
-├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card, JSON-LD pass-through
+│   ├── RelatedArticles.astro       # 3-card strip on /[slug] (same-category + fallback)
+│   ├── TagChip.astro / TagList.astro
+│   └── islands/
+│       ├── BlogIndex.tsx           # hero + category sidebar + grid + live search
+│       ├── ForYou.tsx              # interest-based recommendations
+│       └── NewsletterSignup.tsx    # newsletter block → tds-contact-api
+├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card, JSON-LD pass-through, sidebar chrome prop
 ├── lib/
 │   ├── content-api.ts              # build-time fetch client (cursor-paginated)
 │   ├── jsonld.ts                   # Schema.org generators (BlogPosting, Blog, WebSite, BreadcrumbList)
+│   ├── marked.ts                   # markdown → HTML with Shiki-highlighted code blocks
 │   ├── pagination.ts               # window slicing (PAGE_SIZE = 10)
+│   ├── sections.ts                 # split article HTML at h2s for collapsible sections + TOC
 │   └── seo.ts                      # Org/person identity (mirrors tds-landingpage)
 ├── og/
 │   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
 │   └── fonts/                      # Instrument Serif Regular + Italic (woff) + Geist Medium (ttf)
 ├── pages/
-│   ├── index.astro                 # DE page 1
+│   ├── index.astro                 # DE index (BlogIndex island)
 │   ├── page/[num].astro            # DE pages 2+
 │   ├── [slug].astro                # article (DE + EN)
-│   ├── en/index.astro              # EN page 1
-│   ├── en/page/[num].astro         # EN pages 2+
+│   ├── tag/[tag].astro             # DE tag pages
+│   ├── en/…                        # EN mirrors (index, page, tag)
+│   ├── interests-index.json.ts     # static post index for ForYou
 │   ├── og/[lang]/[slug].png.ts     # build-time per-post OG image
 │   └── rss.xml.ts                  # feed
 ├── public/                         # robots.txt, llms.txt, favicon
 ├── scripts/og-smoke.ts             # render two fixture OG images to disk
-├── styles/global.css
+├── styles/global.css               # flat design vocabulary + .prose-article
 └── types/
     └── shared-augment.d.ts         # tds-shared@0.1.0 patch: BlogPost.tags (tds-shared#8)
 ```
@@ -197,8 +220,8 @@ to `scripts/og-smoke-*.png` for quick regression checks.
 
 | Issue | Status |
 |---|---|
-| Tag filtering UI | blocked — `tds-content-api#7` (tags model) ships first |
-| Code block syntax highlighting (Shiki) | not yet — issue #5 |
+| Rebuild-on-publish dispatch | pending — `tds-content-api#3`; until then rebuilds run on push to `main` only |
+| Newsletter backend | none — the signup posts a contact message via tds-contact-api (Julian gets a notification mail), no actual mailing list yet |
 
 ---
 
