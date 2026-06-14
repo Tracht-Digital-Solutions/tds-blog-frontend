@@ -90,7 +90,7 @@ function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t
             {lang === "de" ? "Einblicke für den Mittelstand" : "Insights for the Mittelstand"}
           </span>
         </div>
-        <div className="grid lg:grid-cols-2 items-center" style={{ gap: 44 }}>
+        <div className="grid md:grid-cols-2 items-center gap-8 md:gap-11">
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
               <span
@@ -151,7 +151,7 @@ function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t
               {t.readArticle} <span aria-hidden="true">→</span>
             </a>
           </div>
-          <div className="hidden lg:block" style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
+          <div className="hidden md:block" style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
             <PostCover
               slug={post.slug}
               coverHint={post.coverHint}
@@ -185,6 +185,7 @@ function Chevron({ left }: { left?: boolean }) {
 
 function CategorySidebar({
   posts,
+  cats,
   value,
   onChange,
   collapsed,
@@ -192,16 +193,13 @@ function CategorySidebar({
   t,
 }: {
   posts: IndexPost[];
+  cats: string[];
   value: string;
   onChange: (c: string) => void;
   collapsed: boolean;
   onToggle: () => void;
   t: Labels;
 }) {
-  const cats = useMemo(
-    () => Array.from(new Set(posts.map((p) => p.category))).sort((a, b) => a.localeCompare(b)),
-    [posts],
-  );
   const count = (c: string) =>
     c === "all" ? posts.length : posts.filter((p) => p.category === c).length;
 
@@ -263,6 +261,13 @@ export default function BlogIndex({
   const [catsCollapsed, setCatsCollapsed] = useState(false);
   const [q, setQ] = useState("");
 
+  // Category list — shared by the desktop sidebar and the mobile/tablet
+  // chip strip (the sidebar is lg-only, so small screens need their own).
+  const cats = useMemo(
+    () => Array.from(new Set(posts.map((p) => p.category))).sort((a, b) => a.localeCompare(b)),
+    [posts],
+  );
+
   // Pick up ?q= on mount and live queries from the nav search.
   useEffect(() => {
     const initial = new URLSearchParams(location.search).get("q");
@@ -323,6 +328,7 @@ export default function BlogIndex({
         >
           <CategorySidebar
             posts={posts}
+            cats={cats}
             value={cat}
             onChange={setCat}
             collapsed={catsCollapsed}
@@ -331,6 +337,24 @@ export default function BlogIndex({
           />
         </div>
         <div className="min-w-0 flex-1">
+          {/* Mobile + tablet category filter — the sidebar is lg-only, so
+              small screens get a horizontally scrollable chip strip. */}
+          <div className="lg:hidden -mx-6 px-6 mb-6 overflow-x-auto blog-cat-strip">
+            <div className="flex gap-2 w-max">
+              {["all", ...cats].map((c) => (
+                <button
+                  type="button"
+                  key={c}
+                  className={`chip-flat${cat === c ? " on" : ""}`}
+                  onClick={() => setCat(c)}
+                  aria-pressed={cat === c}
+                >
+                  {c === "all" ? t.all : c}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {searching && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>

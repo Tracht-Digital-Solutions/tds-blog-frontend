@@ -151,6 +151,16 @@
   color: #fff;
 }
 
+/* Mobile/tablet category strip (BlogIndex, <lg) — horizontal scroll
+   without a visible scrollbar so the chips read as a clean filter row. */
+.blog-cat-strip {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.blog-cat-strip::-webkit-scrollbar {
+  display: none;
+}
+
 /* ---- Flat post cards (index grid, related strip) ---- */
 .post-card {
   display: flex;
