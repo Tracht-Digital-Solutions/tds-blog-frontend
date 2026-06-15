@@ -8,6 +8,7 @@
  */
 
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+import { DEMO_MODE, demoPost, demoPostList } from "./demoContent";
 
 const BASE_URL =
   import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
@@ -18,6 +19,9 @@ interface ListResponse {
 }
 
 export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["posts"]> {
+  // No-API demo build: serve demo posts instead of fetching.
+  if (DEMO_MODE) return demoPostList(lang);
+
   const all: ListResponse["posts"] = [];
   let cursor: number | null = null;
 
@@ -40,6 +44,8 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
 }
 
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
+  if (DEMO_MODE) return demoPost(slug, lang);
+
   const url = new URL(`${BASE_URL}/blog/${encodeURIComponent(slug)}`);
   url.searchParams.set("lang", lang);
 
