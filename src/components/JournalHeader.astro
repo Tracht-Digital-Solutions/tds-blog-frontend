@@ -20,7 +20,6 @@ const { lang = "de", class: className } = Astro.props;
 
 const home = lang === "de" ? "/" : "/en/";
 const items = [
-  { label: lang === "de" ? "Hauptseite" : "Main site", href: "https://tracht-digital.de" },
   { label: "Journal", href: home, current: true },
   { label: lang === "de" ? "Kundenportal" : "Customer portal", href: "https://app.tracht-digital.de" },
 ];

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-@import "@fontsource/instrument-serif/400.css";
-@import "@fontsource/instrument-serif/400-italic.css";
-@import "@fontsource-variable/geist/index.css";
+/* Tracht Design System typefaces — this app only. The landing page
+   intentionally keeps Instrument Serif + Geist (see tds-shared). */
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 /* Brand design system + shared application chrome. The tokens, dark
    theme, base resets, type primitives, chips, header shell and
@@ -10,6 +10,21 @@
    stays consistent. See @tracht-digital-solutions/tds-shared/styles. */
 @import "@tracht-digital-solutions/tds-shared/styles/base.css";
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
+
+/* === Tracht Design System type stack ===============================
+   Adopt the grotesk display + humanist body from the design handoff
+   (colors_and_type.css). Overrides the shared --font-* tokens for this
+   app; the landing page keeps the serif-editorial stack. The blog's own
+   title/heading weights are bumped at the end of this file (they were
+   tuned for a serif at weight 400). */
+:root {
+  --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+.display { font-weight: 800; letter-spacing: -0.03em; }
+.display-tight { font-weight: 700; letter-spacing: -0.02em; }
+.eyebrow { font-family: var(--font-display); font-weight: 600; }
 
 /* === Flat blog design ("kantig") ===================================
    From the Tracht design system handoff: the blog surface is flat and
@@ -555,3 +570,15 @@
   text-align: left;
 }
 .prose-article thead th { background: var(--color-soft); }
+
+/* === Grotesk heading weights =======================================
+   The card/row/article headings above were tuned for Instrument Serif
+   (which reads fine at weight 400). With the design-system grotesk
+   display face they need real weight to register as headings. Placed
+   last so it wins over the definitions above. */
+.post-card .card-title,
+.post-row .row-title { font-weight: 700; }
+.article-sec h2,
+.prose-article h2 { font-weight: 700; }
+.prose-article h3 { font-weight: 600; }
+.prose-article blockquote { font-weight: 600; }
