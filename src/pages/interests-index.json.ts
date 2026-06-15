@@ -1,7 +1,7 @@
 /**
  * Build-time recommendation index. Bakes the lightweight metadata of
  * every published post (both languages) into a single static JSON
- * file. The "Für dich" island fetches THIS file at runtime — never the
+ * file. The "Für Sie" island fetches THIS file at runtime — never the
  * content-api — so personalised recommendations stay SSG-conform.
  *
  * A failed content-api fetch emits an empty array so the build never

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * "Für dich" — interest-based recommendations on the journal index.
+ * "Für Sie" — interest-based recommendations on the journal index.
  *
  * Reads the `tds-interests` cookie (written by the inline script on
  * every article page: topic → weight), fetches the build-time
@@ -30,9 +30,9 @@ const COOKIE = "tds-interests";
 
 const LABELS = {
   de: {
-    eyebrow: "Für dich",
-    heading: "Weil du dafür gelesen hast.",
-    note: "Basiert auf den Themen der Artikel, die du hier gelesen hast — gespeichert nur in deinem Browser.",
+    eyebrow: "Für Sie",
+    heading: "Weil Sie dafür gelesen haben.",
+    note: "Basiert auf den Themen der Artikel, die Sie hier gelesen haben — gespeichert nur in Ihrem Browser.",
     reset: "Zurücksetzen",
     read: "Lesen →",
   },

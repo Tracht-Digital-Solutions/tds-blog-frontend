@@ -22,25 +22,33 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
   // No-API demo build: serve demo posts instead of fetching.
   if (DEMO_MODE) return demoPostList(lang);
 
-  const all: ListResponse["posts"] = [];
-  let cursor: number | null = null;
+  try {
+    const all: ListResponse["posts"] = [];
+    let cursor: number | null = null;
 
-  do {
-    const url = new URL(`${BASE_URL}/blog`);
-    url.searchParams.set("limit", "50");
-    if (lang) url.searchParams.set("lang", lang);
-    if (cursor !== null) url.searchParams.set("cursor", String(cursor));
+    do {
+      const url = new URL(`${BASE_URL}/blog`);
+      url.searchParams.set("limit", "50");
+      if (lang) url.searchParams.set("lang", lang);
+      if (cursor !== null) url.searchParams.set("cursor", String(cursor));
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`content-api ${url.pathname} → ${res.status}`);
-    }
-    const data: ListResponse = await res.json();
-    all.push(...data.posts);
-    cursor = data.nextCursor;
-  } while (cursor !== null);
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`content-api ${url.pathname} → ${res.status}`);
+      }
+      const data: ListResponse = await res.json();
+      all.push(...data.posts);
+      cursor = data.nextCursor;
+    } while (cursor !== null);
 
-  return all;
+    return all;
+  } catch (err) {
+    // No content API reachable at build time → ship demo posts instead of
+    // an empty blog. A *connected* API that returns 0 posts stays empty
+    // (that path returns [] without throwing).
+    console.warn("[tds-blog] content-api unreachable — serving demo posts:", err);
+    return demoPostList(lang);
+  }
 }
 
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
@@ -49,11 +57,18 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost
   const url = new URL(`${BASE_URL}/blog/${encodeURIComponent(slug)}`);
   url.searchParams.set("lang", lang);
 
-  const res = await fetch(url);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    throw new Error(`content-api ${url.pathname} → ${res.status}`);
+  try {
+    const res = await fetch(url);
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      throw new Error(`content-api ${url.pathname} → ${res.status}`);
+    }
+    const { post } = (await res.json()) as { post: BlogPost };
+    return post;
+  } catch (err) {
+    // API down → serve the matching demo post (keeps demo slugs from
+    // listAllPosts() renderable). Returns null for an unknown slug.
+    console.warn("[tds-blog] content-api unreachable — serving demo post:", err);
+    return demoPost(slug, lang);
   }
-  const { post } = (await res.json()) as { post: BlogPost };
-  return post;
 }

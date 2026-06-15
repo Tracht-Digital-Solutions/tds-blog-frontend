@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* Tracht Design System typefaces — this app only. The landing page
-   intentionally keeps Instrument Serif + Geist (see tds-shared). */
-@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+/* Tracht Design System typefaces — self-hosted, this app only. The
+   landing page intentionally keeps Instrument Serif + Geist (tds-shared). */
+@import "@fontsource-variable/hanken-grotesk/index.css";
+@import "@fontsource-variable/plus-jakarta-sans/index.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
 
 /* Brand design system + shared application chrome. The tokens, dark
    theme, base resets, type primitives, chips, header shell and
@@ -18,9 +20,9 @@
    title/heading weights are bumped at the end of this file (they were
    tuned for a serif at weight 400). */
 :root {
-  --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Hanken Grotesk Variable", "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 .display { font-weight: 800; letter-spacing: -0.03em; }
 .display-tight { font-weight: 700; letter-spacing: -0.02em; }
