@@ -30,6 +30,8 @@ interface Props {
   /** Article chrome: fixed collapsible sidebar on lg+ instead of the
    *  top nav (which stays for small screens). */
   sidebar?: boolean;
+  /** Render only the slot — no header/footer/sidebar. Used by error pages. */
+  bare?: boolean;
 }
 
 const {
@@ -42,6 +44,7 @@ const {
   jsonLd,
   noindex = false,
   sidebar = false,
+  bare = false,
 } = Astro.props;
 
 const resolvedOgImage =
@@ -140,7 +143,9 @@ const altLang = lang === "de" ? "en" : "de";
       Skip to content
     </a>
     {
-      sidebar ? (
+      bare ? (
+        <slot />
+      ) : sidebar ? (
         <>
           <ArticleSidebar lang={lang} />
           <div class="with-sidebar" id="page-shift">
