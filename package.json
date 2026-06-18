@@ -24,7 +24,6 @@
     "@tailwindcss/postcss": "~4.2.4",
     "@tracht-digital-solutions/tds-shared": "^0.4.0",
     "astro": "^6.4.2",
-    "lucide-react": "^1.14.0",
     "marked": "^18.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

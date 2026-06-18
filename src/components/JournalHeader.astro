@@ -65,7 +65,7 @@ const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
       <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
     </div>
 
-    <ThemeToggle client:load />
+    <ThemeToggle client:idle />
 
     <a href="https://tracht-digital.de/#contact" class="btn-flat hidden lg:inline-flex" style="height: 2.25rem;">
       {cta}
