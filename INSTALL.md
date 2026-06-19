@@ -12,7 +12,7 @@
 
 | Tool | Version | Why |
 |---|---|---|
-| Node.js | 20 LTS or 22 LTS | Astro 5 baseline |
+| Node.js | 22.12+ | Astro 6 baseline (Node 18/20 unsupported) |
 | npm | 10+ | Bundled with Node 20 |
 | Git | any | Repo hosting |
 | Classic GitHub PAT | with `read:packages` | Install `@tracht-digital-solutions/tds-shared` |

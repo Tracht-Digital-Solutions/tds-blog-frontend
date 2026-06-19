@@ -170,7 +170,7 @@ domains.
   site is the canonical home for those.
 - Don't delete `src/types/shared-augment.d.ts` until tds-shared
   ships `BlogPost.tags` and we bump the dep. The installed
-  `@tracht-digital-solutions/tds-shared@0.1.0` `BlogPost` type
+  `@tracht-digital-solutions/tds-shared@0.4.0` `BlogPost` type
   is missing the field that the content-api already returns and
   `TagList` already renders. The augmentation patches it
   locally; tracked in tds-shared#8.

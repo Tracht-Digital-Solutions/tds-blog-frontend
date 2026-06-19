@@ -49,8 +49,8 @@ Deploys automatically on every push to `main`; see [Deploy](#deploy).
 
 | Tool | Version | Why |
 |---|---|---|
-| Node.js | 20 LTS or 22 LTS | Astro 5 baseline |
-| npm | 10+ | Bundled with Node 20 |
+| Node.js | 22.12+ | Astro 6 baseline (Node 18/20 unsupported) |
+| npm | 10+ | Bundled with Node 22 |
 
 ### GitHub Packages authentication
 
