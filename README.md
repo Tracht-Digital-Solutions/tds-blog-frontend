@@ -141,7 +141,8 @@ phone-icon CTA.
 |---|---|---|
 | `/` | `src/pages/index.astro` | DE index — `BlogIndex` island: featured-post hero on fixed navy, collapsible category sidebar with post counters, flat card grid (abstract brand-geometry covers), live full-text search (`?q=` round-trips) |
 | `/page/[num]` | `src/pages/page/[num].astro` | DE pages 2..N — flat editorial rows |
-| `/[slug]` | `src/pages/[slug].astro` | Article page (DE + EN both routed through here via `lang` prop); back button, scrollspy TOC, collapsible h2 sections, drop-cap intro, author-bio block, flat prev/next + `RelatedArticles` card strip |
+| `/[slug]` | `src/pages/[slug].astro` | DE article page (shared `Article.astro`); back button, scrollspy TOC, collapsible h2 sections, drop-cap intro, author-bio block, flat prev/next + `RelatedArticles` card strip |
+| `/en/[slug]` | `src/pages/en/[slug].astro` | EN article page (same `Article.astro`). If the post isn't authored in EN it's DeepL-translated at build time (see below) |
 | `/tag/[tag]` | `src/pages/tag/[tag].astro` | DE tag-filtered list |
 | `/en/` | `src/pages/en/index.astro` | EN index — mirror of the DE index against `listAllPosts("en")` |
 | `/en/page/[num]` | `src/pages/en/page/[num].astro` | EN pagination |
@@ -153,11 +154,27 @@ phone-icon CTA.
 
 ---
 
+## Multilingual posts (DeepL fallback)
+
+Every post is reachable in both languages: DE at `/[slug]`, EN at `/en/[slug]`
+(same slug = the two language versions of one post). If a post is authored in
+only one language, the other is **machine-translated at build time** via DeepL
+(`src/lib/translate.ts` + `src/lib/localizedPost.ts`) — translations are memoised
+per build and the page carries a "machine-translated" notice.
+
+Set `DEEPL_API_KEY` (free-tier keys end with `:fx`) in the build environment to
+enable it. **Optional**: with no key, a missing-language post simply renders in
+its authored language — the build never fails on translation. Cost scales with
+untranslated content, so authoring both languages avoids translation entirely.
+
+---
+
 ## Project structure
 
 ```
 src/
 ├── components/
+│   ├── Article.astro               # shared full article view for /[slug] + /en/[slug] (lang-prefixed links)
 │   ├── ArticleSidebar.astro        # fixed collapsible left nav on /[slug] (lg+), phone icon when collapsed
 │   ├── BlogPostCard.astro          # flat editorial list row (pagination + tag pages)
 │   ├── Covers.tsx                  # 6 abstract brand-geometry covers (slug-hashed) + photo cover
@@ -174,6 +191,8 @@ src/
 ├── layouts/Layout.astro            # canonical, hreflang, OG (auto-resolves to /og/...), Twitter Card, JSON-LD pass-through, sidebar chrome prop
 ├── lib/
 │   ├── content-api.ts              # build-time fetch client (cursor-paginated)
+│   ├── localizedPost.ts            # resolve a post in a target lang (authored, or DeepL-translated)
+│   ├── translate.ts                # build-time DeepL client (text + HTML), in-build cache, graceful fallback
 │   ├── jsonld.ts                   # Schema.org generators (BlogPosting, Blog, WebSite, BreadcrumbList)
 │   ├── marked.ts                   # markdown → HTML with Shiki-highlighted code blocks
 │   ├── pagination.ts               # window slicing (PAGE_SIZE = 10)

@@ -106,8 +106,21 @@ in this repo only.
   via the renderer in `src/og/render.ts` (Satori → Resvg)
 - `src/pages/rss.xml.ts` — RSS feed
 - `src/components/RelatedArticles.astro` — 3-card same-category strip
-  with fallback to most-recent overall (links `/{slug}` for BOTH
-  languages — there is no `/en/[slug]` route)
+  with fallback to most-recent overall (links are language-prefixed:
+  `/{slug}` for DE, `/en/{slug}` for EN)
+- **Language-aware posts** — every post is reachable in both DE
+  (`src/pages/[slug].astro`) and EN (`src/pages/en/[slug].astro`), both thin
+  wrappers over the shared `src/components/Article.astro`. A post authored in
+  only one language is **machine-translated into the other at build time via
+  DeepL** (`src/lib/translate.ts` + `src/lib/localizedPost.ts`): the route
+  asks `resolveLocalizedPost(slug, lang)`, which returns the authored version
+  or a DeepL-translated one (title/excerpt as text, the rendered HTML with
+  `tag_handling=html` so code blocks stay verbatim). Translations are memoised
+  per build; a translated page shows a "machine-translated" notice. **Graceful
+  fallback**: with `DEEPL_API_KEY` unset or on any API error, the page renders
+  the authored-language content — still static, build-time only, build never
+  breaks. (Same-slug rows in DE + EN are treated as the two language versions
+  of one post.)
 - `src/pages/interests-index.json.ts` — build-time static JSON index
   of all posts (slug/lang/category/title/excerpt/tags/publishedAt)
   for the recommendations island
