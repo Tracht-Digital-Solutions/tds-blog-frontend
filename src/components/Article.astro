@@ -1,0 +1,363 @@
+---
+/**
+ * Full article view, shared by the DE (`/[slug]`) and EN (`/en/[slug]`)
+ * routes. Receives an already-localized post (authored or machine-
+ * translated, see lib/localizedPost.ts) plus the distinct-slug post list
+ * for the related/prev-next strips. All in-blog links are prefixed by the
+ * current language so DE and EN stay on their own URL space.
+ */
+import Layout from "~/layouts/Layout.astro";
+import RelatedArticles from "~/components/RelatedArticles.astro";
+import TagList from "~/components/TagList.astro";
+import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
+import { splitSections } from "~/lib/sections";
+import { siteConfig } from "~/lib/seo";
+import type { LocalizedPost } from "~/lib/localizedPost";
+import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+
+interface Props {
+  localized: LocalizedPost;
+  lang: "de" | "en";
+  /** One entry per distinct slug, for related + prev/next. */
+  posts: Array<Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt">>;
+}
+
+const { localized, lang, posts } = Astro.props;
+const { post, bodyHtml, translated, sourceLang } = localized;
+
+const pfx = lang === "en" ? "/en" : "";
+const postHref = (slug: string) => `${pfx}/${slug}`;
+
+const { intro, sections } = splitSections(bodyHtml);
+const showToc = sections.length >= 2;
+
+// Chronological neighbours over the distinct-slug list (every post is
+// reachable in this language, authored or translated).
+const ordered = [...posts].sort(
+  (a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+);
+const orderedIdx = ordered.findIndex((p) => p.slug === post.slug);
+const newerPost = orderedIdx > 0 ? ordered[orderedIdx - 1] : null;
+const olderPost =
+  orderedIdx >= 0 && orderedIdx < ordered.length - 1 ? ordered[orderedIdx + 1] : null;
+
+const interestTopics = Array.from(
+  new Set(
+    [post.category, ...(post.tags ?? "").split(",")]
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean),
+  ),
+);
+const explicitCover = post.coverHint?.startsWith("http") ? post.coverHint : undefined;
+
+const dateLabel = post.publishedAt
+  ? new Date(post.publishedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  : null;
+
+// Word count from the rendered (possibly translated) HTML.
+const plain = bodyHtml.replace(/<[^>]+>/g, " ");
+const wordCount = plain.split(/\s+/).filter(Boolean).length;
+const readingMinutes = Math.max(1, Math.round(wordCount / 220));
+
+const ogImagePath = explicitCover ?? `/og/${lang}/${post.slug}.png`;
+const imageUrl = ogImagePath.startsWith("http")
+  ? ogImagePath
+  : new URL(ogImagePath, siteConfig.url).toString();
+
+const journalLabel = "Journal";
+const journalHomeUrl = `${siteConfig.url}${pfx}/`;
+const postUrl = new URL(postHref(post.slug), siteConfig.url).toString();
+
+const jsonLd = [
+  blogPostingSchema({
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    body: plain,
+    category: post.category,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt ?? null,
+    lang,
+    imageUrl,
+    wordCount,
+  }),
+  breadcrumbSchema([
+    { name: journalLabel, url: journalHomeUrl },
+    { name: post.category, url: journalHomeUrl },
+    { name: post.title, url: postUrl },
+  ]),
+];
+
+const tx = lang === "de"
+  ? {
+      back: "Alle Beiträge", read: "Min. Lesezeit", contents: "Inhalt",
+      aboutAuthor: "Über den Autor", owner: "Inhaber, Tracht Digital Solutions",
+      bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
+      newer: "Neuerer Artikel", older: "Älterer Artikel", nav: "Artikel-Navigation",
+      allArticles: "Alle Artikel", rss: "RSS abonnieren",
+      machine: "Automatisch übersetzt — das Original ist auf Deutsch verfasst.",
+    }
+  : {
+      back: "All posts", read: "min read", contents: "Contents",
+      aboutAuthor: "About the author", owner: "Owner, Tracht Digital Solutions",
+      bio: "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg.",
+      newer: "Newer article", older: "Older article", nav: "Article navigation",
+      allArticles: "All articles", rss: "Subscribe via RSS",
+      machine: "Machine-translated — the original is written in German.",
+    };
+---
+
+<Layout
+  title={`${post.title} — Journal`}
+  description={post.excerpt}
+  lang={lang}
+  ogImage={explicitCover}
+  article={{
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt,
+    author: "Julian Tracht",
+    section: post.category,
+    slug: post.slug,
+  }}
+  jsonLd={jsonLd}
+  sidebar
+>
+  <div
+    id="reading-progress"
+    class="fixed top-0 left-0 right-0 z-50 h-[3px] origin-left scale-x-0 bg-[var(--color-accent)]"
+    aria-hidden="true"
+  >
+  </div>
+
+  <main id="main" class="max-w-5xl mx-auto px-6 py-10 lg:py-12">
+    <article>
+      <header class="max-w-[46rem] mb-7">
+        <a href={`${pfx}/`} class="btn-back">
+          <span aria-hidden="true">←</span>
+          {tx.back}
+        </a>
+        <div class="flex flex-wrap items-center gap-3.5 mt-6 mb-3.5">
+          <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
+          <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)]"></span>
+          <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">
+            {dateLabel && <>{dateLabel} · </>}~{readingMinutes} {tx.read}
+          </p>
+        </div>
+        <h1 class="display text-4xl md:text-5xl" style="text-wrap: balance;">
+          {post.title}
+        </h1>
+        <p class="lead mt-3.5 text-[var(--color-muted)]" style="text-wrap: pretty;">
+          {post.excerpt}
+        </p>
+        <p class="mt-4 inline-flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            class="w-7 h-7 inline-flex items-center justify-center text-[11px] font-semibold tracking-wide"
+            style="background: var(--flat-tint); color: var(--color-primary);"
+          >JT</span>
+          <span class="text-[0.8125rem] font-medium">Julian Tracht</span>
+        </p>
+        {translated && (
+          <p
+            class="mt-4 text-[0.8125rem] text-[var(--color-muted)] border-l-2 pl-3"
+            style="border-color: var(--color-accent);"
+          >
+            <span aria-hidden="true">🌐 </span>{tx.machine}
+          </p>
+        )}
+      </header>
+
+      <div
+        class:list={[
+          "mt-4",
+          showToc && "lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-9 lg:items-start",
+        ]}
+      >
+        {showToc && (
+          <nav class="toc hidden lg:block sticky top-6" aria-label={tx.contents}>
+            <p class="eyebrow mb-3.5">{tx.contents}</p>
+            {sections.map((sec) => (
+              <a href={`#${sec.id}`} data-toc={sec.id}>{sec.heading}</a>
+            ))}
+          </nav>
+        )}
+
+        <div class="max-w-[46rem]">
+          {intro.trim().length > 0 && (
+            <div class="prose-article drop-cap" set:html={intro}></div>
+          )}
+          {sections.map((sec) => (
+            <section class="article-sec">
+              <h2 id={sec.id}>
+                <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
+                  <span>{sec.heading}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                </button>
+              </h2>
+              <div class="sec-body" id={`${sec.id}-body`}>
+                <div class="sec-body-inner">
+                  <div class="prose-article" set:html={sec.html}></div>
+                </div>
+              </div>
+            </section>
+          ))}
+
+          <aside
+            class="grid grid-cols-[64px_1fr] gap-5 items-start mt-9 p-5"
+            style="background: var(--color-soft);"
+          >
+            <span
+              aria-hidden="true"
+              class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
+              style="background: var(--color-surface-navy); font-family: var(--font-display);"
+            >JT</span>
+            <div>
+              <p class="eyebrow mb-2">{tx.aboutAuthor}</p>
+              <p class="font-semibold">
+                Julian Tracht
+                <span class="font-normal text-sm text-[var(--color-muted)]">· {tx.owner}</span>
+              </p>
+              <p class="text-sm leading-relaxed text-[var(--color-muted)] mt-2" style="text-wrap: pretty;">
+                {tx.bio}
+              </p>
+            </div>
+          </aside>
+
+          <TagList tags={post.tags} lang={lang} label="Tags" />
+        </div>
+      </div>
+
+      <RelatedArticles
+        posts={posts}
+        currentSlug={post.slug}
+        currentCategory={post.category}
+        lang={lang}
+      />
+
+      {(newerPost || olderPost) && (
+        <nav class="mt-16 grid sm:grid-cols-2 gap-4" aria-label={tx.nav}>
+          {newerPost ? (
+            <a href={postHref(newerPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)]">
+              <p class="eyebrow mb-2">← {tx.newer}</p>
+              <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
+                {newerPost.title}
+              </p>
+            </a>
+          ) : (
+            <span class="hidden sm:block" aria-hidden="true"></span>
+          )}
+          {olderPost && (
+            <a href={postHref(olderPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)] sm:text-right">
+              <p class="eyebrow mb-2">{tx.older} →</p>
+              <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
+                {olderPost.title}
+              </p>
+            </a>
+          )}
+        </nav>
+      )}
+
+      <footer class="mt-12 pt-8 hairline-t flex flex-wrap items-baseline justify-between gap-4 text-sm">
+        <a href={`${pfx}/`} class="link-underline text-[var(--color-accent)]">
+          ← {tx.allArticles}
+        </a>
+        <a href="/rss.xml" class="link-underline text-[var(--color-muted)]">
+          {tx.rss}
+        </a>
+      </footer>
+    </article>
+  </main>
+
+  <script>
+    const heads = document.querySelectorAll<HTMLButtonElement>(".sec-head");
+    heads.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const body = document.getElementById(btn.getAttribute("aria-controls") ?? "");
+        if (!body) return;
+        const closed = body.classList.toggle("closed");
+        btn.setAttribute("aria-expanded", String(!closed));
+      });
+    });
+
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>(".toc a[data-toc]");
+    tocLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        const id = link.dataset.toc ?? "";
+        const body = document.getElementById(`${id}-body`);
+        const head = document.querySelector<HTMLButtonElement>(`#${CSS.escape(id)} .sec-head`);
+        if (body?.classList.contains("closed")) {
+          body.classList.remove("closed");
+          head?.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
+
+    if (tocLinks.length > 0) {
+      const ids = Array.from(tocLinks).map((l) => l.dataset.toc ?? "");
+      const spy = () => {
+        let current = ids[0];
+        for (const id of ids) {
+          const el = document.getElementById(id);
+          if (el && el.getBoundingClientRect().top <= 140) current = id;
+        }
+        tocLinks.forEach((l) => l.classList.toggle("on", l.dataset.toc === current));
+      };
+      spy();
+      addEventListener("scroll", spy, { passive: true });
+      addEventListener("resize", spy, { passive: true });
+    }
+  </script>
+
+  <script>
+    const bar = document.getElementById("reading-progress");
+    if (bar) {
+      const update = () => {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        bar.style.transform = `scaleX(${max > 0 ? doc.scrollTop / max : 0})`;
+      };
+      addEventListener("scroll", update, { passive: true });
+      addEventListener("resize", update, { passive: true });
+      update();
+    }
+  </script>
+
+  <script is:inline define:vars={{ interestTopics }}>
+    (function () {
+      try {
+        var match = document.cookie.match(/(?:^|; )tds-interests=([^;]*)/);
+        var weights = {};
+        if (match) {
+          try {
+            weights = JSON.parse(decodeURIComponent(match[1])) || {};
+          } catch (e) {
+            weights = {};
+          }
+        }
+        interestTopics.forEach(function (t) {
+          weights[t] = Math.min((weights[t] || 0) + 1, 50);
+        });
+        var trimmed = {};
+        Object.keys(weights)
+          .sort(function (a, b) {
+            return weights[b] - weights[a];
+          })
+          .slice(0, 12)
+          .forEach(function (k) {
+            trimmed[k] = weights[k];
+          });
+        document.cookie =
+          "tds-interests=" +
+          encodeURIComponent(JSON.stringify(trimmed)) +
+          "; Max-Age=" + 180 * 24 * 3600 +
+          "; Path=/; SameSite=Lax";
+      } catch (e) {
+        /* cookies disabled — recommendations simply stay generic */
+      }
+    })();
+  </script>
+</Layout>

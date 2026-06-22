@@ -70,7 +70,7 @@ export default function PostCard({
   large?: boolean;
 }) {
   return (
-    <a className="post-card" href={`/${post.slug}`}>
+    <a className="post-card" href={`${lang === "en" ? "/en" : ""}/${post.slug}`}>
       <div style={{ aspectRatio: large ? "16 / 8.2" : "16 / 9", position: "relative" }}>
         <PostCover
           slug={post.slug}

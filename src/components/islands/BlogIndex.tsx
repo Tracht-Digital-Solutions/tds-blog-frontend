@@ -104,7 +104,7 @@ function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t
                 {post.category}
               </span>
             </div>
-            <a href={`/${post.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+            <a href={`${lang === "en" ? "/en" : ""}/${post.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
               <h2
                 className="display"
                 style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", margin: 0, textWrap: "balance" }}
@@ -133,7 +133,7 @@ function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t
               )}
             </div>
             <a
-              href={`/${post.slug}`}
+              href={`${lang === "en" ? "/en" : ""}/${post.slug}`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
