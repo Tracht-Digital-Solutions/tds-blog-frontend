@@ -5,8 +5,8 @@ name: CI
 # making sure type-check + build pass.
 
 on:
-  push:
-    branches: [main]
+  # PR-only — push-to-main correctness is covered by build.yml (single
+  # build per push). This gates merges without duplicating the build.
   pull_request:
     branches: [main]
 

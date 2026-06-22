@@ -34,6 +34,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '22'
+          cache: 'npm'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@tracht-digital-solutions'
 
@@ -52,6 +53,9 @@ jobs:
 
       - name: Type check
         run: npm run type-check
+
+      - name: OG smoke
+        run: npm run og:smoke
 
       - name: Build
         run: npm run build
