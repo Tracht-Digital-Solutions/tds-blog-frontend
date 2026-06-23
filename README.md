@@ -82,21 +82,21 @@ npm run og:smoke     # render two fixture OG images to scripts/og-smoke-*.png
 
 ## Deploy
 
-Deployment is automatic. On every push to `main`,
-[`.github/workflows/build.yml`](.github/workflows/build.yml) builds the
-static `dist/`, force-pushes it to an orphan `build` branch (latest
-build only), then GET-pings the deploy webhook so the production host
-pulls that branch and goes live.
+Two-track branch model (the old `build` branch is gone):
 
-**Required secret:** set `DEPLOY_WEBHOOK_URL` (repository secret) to the
-host's deploy-hook URL — the deploy token is carried inside the URL.
-Without it the build still publishes the `build` branch and the deploy
-ping is skipped, so you can fall back to pulling the artifact:
+- **`dev`** — [`dev.yml`](.github/workflows/dev.yml) builds the static `dist/`
+  with the Staging/Demo config (`PUBLIC_DEMO_MODE=true`) on **every push to
+  `main`** and force-pushes it to the orphan **`dev`** branch. **Not deployed** —
+  the continuously-built developer version + the push-to-main build gate.
+- **`release`** — [`release.yml`](.github/workflows/release.yml) builds with the
+  real production config and force-pushes to the **`release`** branch **only on
+  the manual Actions button** (*Actions → Release → Run workflow*), then GET-pings
+  the deploy webhook so the host pulls `release` and goes live.
 
-```bash
-git fetch origin build
-git worktree add ../tds-blog-build origin/build   # holds the built dist/
-```
+**Required secret:** `DEPLOY_WEBHOOK_URL` (the host's deploy-hook URL; token is
+inside the URL) — used only by `release.yml`. The production host pulls the
+**`release`** branch. Fall back to the artifact with
+`git fetch origin release && git worktree add ../tds-blog-release origin/release`.
 
 ---
 

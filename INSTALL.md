@@ -104,25 +104,28 @@ npm run preview        # serve dist/ for visual inspection
 
 ## 8. Production deployment
 
-Deployment is automatic: every push to `main` builds `dist/`,
-force-pushes it to the `build` branch, then GET-pings the deploy webhook
-so the production host pulls that branch and goes live.
+Two branches (the old `build` branch is gone):
 
-One-time: add the `DEPLOY_WEBHOOK_URL` repository secret (the host's
-deploy-hook URL; the deploy token is carried inside the URL). Until it's
-set, the deploy ping is skipped and you can pull the artifact by hand:
+- **`dev`** — every push to `main` auto-builds `dist/` (Staging/Demo config) to
+  the orphan `dev` branch. Not deployed.
+- **`release`** — the manual *Actions → Release → Run workflow* button builds the
+  production `dist/` to the `release` branch and GET-pings the deploy webhook so
+  the host pulls `release` and goes live.
+
+One-time: add the `DEPLOY_WEBHOOK_URL` repository secret (host deploy-hook URL;
+token inside the URL) — used only by the release run. Pull by hand with:
 
 ```bash
-git fetch origin build
-git worktree add ../tds-blog-build origin/build   # holds the built dist/
+git fetch origin release
+git worktree add ../tds-blog-release origin/release   # holds the built dist/
 ```
 
-## 9. Rebuild-on-publish (open)
+## 9. Rebuild-on-publish
 
-When `tds-admin` publishes a post, `tds-content-api` should fire a
-`workflow_dispatch` against this repo's `build.yml` so the new
-post + its OG image land on the `build` branch automatically.
-Implementation lives in
+When `tds-admin` publishes a post, `tds-content-api` fires a
+`workflow_dispatch` against this repo's `dev.yml` so the new post + its OG image
+land on the `dev` branch automatically (production picks it up on the next
+manual Release). Implementation lives in
 [`tds-content-api#3`](https://github.com/Tracht-Digital-Solutions/tds-content-api/issues/3).
 Until then, push a trivial commit to this repo's main, or hit "Run
 workflow" in the Actions tab.
