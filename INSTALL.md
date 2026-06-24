@@ -109,7 +109,7 @@ Two branches (the old `build` branch is gone):
 - **`dev`** — every push to `main` auto-builds `dist/` (Staging/Demo config) to
   the orphan `dev` branch. Not deployed.
 - **`release`** — the manual *Actions → Release → Run workflow* button builds the
-  production `dist/` to the `release` branch and GET-pings the deploy webhook so
+  production `dist/` to the `release` branch and POST-pings the deploy webhook so
   the host pulls `release` and goes live.
 
 One-time: add the `DEPLOY_WEBHOOK_URL` repository secret (host deploy-hook URL;
