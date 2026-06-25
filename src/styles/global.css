@@ -51,21 +51,47 @@
   flex-shrink: 0;
 }
 .jnav-item {
+  position: relative;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-muted);
   text-decoration: none;
   padding: 0.5rem 0.8125rem;
-  transition: color 180ms ease, background-color 180ms ease;
+  transition: color 180ms ease;
+}
+/* Flat hover/active — a crisp accent underline instead of a filled pill,
+   to match the angular blog kit. The ::after line is absolutely positioned
+   so toggling it never shifts layout. */
+.jnav-item::after {
+  content: "";
+  position: absolute;
+  left: 0.8125rem;
+  right: 0.8125rem;
+  bottom: 0.25rem;
+  height: 2px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
 }
 .jnav-item:hover {
   color: var(--color-ink);
-  background: var(--color-soft);
+}
+.jnav-item:hover::after,
+.jnav-item:focus-visible::after {
+  transform: scaleX(1);
 }
 .jnav-item[aria-current="page"] {
   color: var(--color-primary);
-  background: var(--flat-tint);
   font-weight: 600;
+}
+.jnav-item[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .jnav-item::after {
+    transition: none;
+  }
 }
 
 .nav-search {
@@ -314,6 +340,36 @@
 }
 .btn-back:hover { background: var(--flat-hover); }
 
+/* ---- Aktuelle Themen (current topics) cards ---- */
+.topic-card {
+  display: block;
+  height: 100%;
+  padding: 1.25rem 1.375rem;
+  background: var(--color-soft);
+  border-left: 2px solid var(--color-accent);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 180ms ease;
+}
+a.topic-card:hover,
+a.topic-card:focus-visible {
+  background: var(--flat-hover);
+}
+.topic-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.25;
+  margin: 0 0 0.35rem;
+  color: var(--color-ink);
+}
+.topic-desc {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+  margin: 0;
+  text-wrap: pretty;
+}
+
 /* ---- Article: collapsible sections ---- */
 .article-sec h2 {
   font-family: var(--font-display);
@@ -426,13 +482,20 @@
   font-weight: 500;
   color: var(--color-muted);
   text-decoration: none;
-  transition: color 180ms ease, background-color 180ms ease;
+  /* Flat: a left accent bar via inset box-shadow (no fill, no layout shift)
+     to match the angular kit, instead of the old soft-tint background. */
+  box-shadow: inset 2px 0 0 transparent;
+  transition: color 180ms ease, box-shadow 180ms ease;
 }
-.blog-sidebar a.snav-item:hover { color: var(--color-ink); background: var(--flat-hover); }
+.blog-sidebar a.snav-item:hover,
+.blog-sidebar a.snav-item:focus-visible {
+  color: var(--color-ink);
+  box-shadow: inset 2px 0 0 var(--color-line);
+}
 .blog-sidebar a.snav-item[aria-current="page"] {
   color: var(--color-primary);
-  background: var(--flat-tint);
   font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-accent);
 }
 .blog-sidebar .nav-search { width: 100%; }
 .blog-sidebar .nav-search input { width: 100%; background: var(--color-paper); }

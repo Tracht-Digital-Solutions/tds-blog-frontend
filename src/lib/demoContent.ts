@@ -107,6 +107,44 @@ export function demoPostList(lang?: "de" | "en"): PostSummary[] {
   return out;
 }
 
+/** One curated "Aktuelle Themen" entry (mirrors the content-api topics shape). */
+export interface TopicItem {
+  title: string;
+  description?: string;
+  href?: string;
+}
+
+/** The curated current-topics block for one language. */
+export interface TopicsBlock {
+  headline: string;
+  intro?: string;
+  items: TopicItem[];
+}
+
+/** Demo "Aktuelle Themen" for a no-API build, per language. */
+export function demoTopics(lang: "de" | "en"): TopicsBlock {
+  if (lang === "en") {
+    return {
+      headline: "Current topics",
+      intro: "What I'm thinking and writing about right now.",
+      items: [
+        { title: "Static delivery", description: "Astro + SSG for fast, low-maintenance sites.", href: "/en/tag/ssg" },
+        { title: "Design tokens", description: "One source of truth for colour and type.", href: "/en/tag/design-system" },
+        { title: "Headless CMS", description: "Editing that bakes to static HTML.", href: "/en/tag/cms" },
+      ],
+    };
+  }
+  return {
+    headline: "Aktuelle Themen",
+    intro: "Worüber ich gerade nachdenke und schreibe.",
+    items: [
+      { title: "Statisch ausliefern", description: "Astro + SSG für schnelle, wartungsarme Seiten.", href: "/tag/ssg" },
+      { title: "Design-Tokens", description: "Eine Quelle der Wahrheit für Farbe und Typografie.", href: "/tag/design-system" },
+      { title: "Headless-CMS", description: "Redaktion, die statisches HTML einbäckt.", href: "/tag/cms" },
+    ],
+  };
+}
+
 export function demoPost(slug: string, lang: "de" | "en"): BlogPost | null {
   const seed = SEEDS.find((s) => s.slug === slug);
   if (!seed) return null;

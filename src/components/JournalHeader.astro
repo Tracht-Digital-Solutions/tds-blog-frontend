@@ -16,6 +16,7 @@
  * panel field behave identically (only one is visible at a time).
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
+import { navItems, isActiveNav } from "~/lib/nav";
 
 interface Props {
   lang?: "de" | "en";
@@ -25,10 +26,8 @@ interface Props {
 const { lang = "de", class: className } = Astro.props;
 
 const home = lang === "de" ? "/" : "/en/";
-const items = [
-  { label: "Journal", href: home, current: true },
-  { label: lang === "de" ? "Kundenportal" : "Customer portal", href: "https://app.tracht-digital.de" },
-];
+const items = navItems(lang);
+const path = Astro.url.pathname;
 const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
@@ -46,7 +45,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
         <a
           href={it.href}
           class="jnav-item whitespace-nowrap"
-          aria-current={it.current ? "page" : undefined}
+          aria-current={isActiveNav(it.href, path) ? "page" : undefined}
         >
           {it.label}
         </a>
@@ -126,7 +125,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
             href={it.href}
             data-menu-link
             class="jnav-item jnav-item--block"
-            aria-current={it.current ? "page" : undefined}
+            aria-current={isActiveNav(it.href, path) ? "page" : undefined}
           >
             {it.label}
           </a>

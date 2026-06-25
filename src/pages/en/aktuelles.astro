@@ -1,0 +1,98 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { listAllPosts, listTopics } from "~/lib/content-api";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * /en/aktuelles (EN) — English mirror of /aktuelles: curated "current topics"
+ * (admin-maintained content-api block) plus the newest posts, baked at build
+ * time with a graceful fallback to just the post list.
+ */
+const lang = "en";
+
+let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+let topics: Awaited<ReturnType<typeof listTopics>> = null;
+try {
+  [posts, topics] = await Promise.all([listAllPosts(lang), listTopics(lang)]);
+} catch (err) {
+  console.error("[tds-blog] /en/aktuelles build fetch failed:", err);
+}
+
+const latest = [...posts]
+  .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+  .slice(0, 6);
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("en"),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name: "Latest", url: `${siteConfig.url}/en/aktuelles` },
+  ]),
+);
+---
+
+<Layout
+  title="Latest — Journal"
+  description="Current topics and the newest posts from the journal."
+  jsonLd={jsonLd}
+  lang="en"
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="mb-12">
+      <p class="section-num mb-4">Journal · Latest</p>
+      <h1 class="display text-4xl md:text-5xl">
+        Current <span class="accent-italic">topics</span>
+      </h1>
+      <p class="marginalia mt-3 max-w-prose">
+        What I'm thinking about — and the newest posts.
+      </p>
+    </header>
+
+    {topics && topics.items.length > 0 && (
+      <section class="mb-16" aria-labelledby="topics-heading">
+        <h2 id="topics-heading" class="display text-2xl md:text-3xl mb-2">{topics.headline}</h2>
+        {topics.intro && <p class="marginalia mb-6 max-w-prose">{topics.intro}</p>}
+        <ul class="list-none p-0 m-0 grid gap-3 sm:grid-cols-2">
+          {topics.items.map((t) => (
+            <li class="list-none">
+              {t.href ? (
+                <a href={t.href} class="topic-card">
+                  <h3 class="topic-title">{t.title}</h3>
+                  {t.description && <p class="topic-desc">{t.description}</p>}
+                </a>
+              ) : (
+                <div class="topic-card topic-card--static">
+                  <h3 class="topic-title">{t.title}</h3>
+                  {t.description && <p class="topic-desc">{t.description}</p>}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section aria-labelledby="latest-heading">
+      <h2 id="latest-heading" class="display text-2xl md:text-3xl mb-6">Latest posts</h2>
+      {latest.length === 0 ? (
+        <p class="marginalia">No posts yet.</p>
+      ) : (
+        <ul class="list-none p-0 m-0">
+          {latest.map((p) => (
+            <BlogPostCard
+              slug={p.slug}
+              category={p.category}
+              title={p.title}
+              excerpt={p.excerpt}
+              publishedAt={p.publishedAt}
+              lang="en"
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  </main>
+</Layout>

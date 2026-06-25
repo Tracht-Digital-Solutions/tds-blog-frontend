@@ -8,7 +8,9 @@
  */
 
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
-import { DEMO_MODE, demoPost, demoPostList } from "./demoContent";
+import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
+
+export type { TopicItem, TopicsBlock } from "./demoContent";
 
 const BASE_URL =
   import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
@@ -48,6 +50,31 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
     // (that path returns [] without throwing).
     console.warn("[tds-blog] content-api unreachable — serving demo posts:", err);
     return demoPostList(lang);
+  }
+}
+
+/**
+ * Curated "Aktuelle Themen" block for the /aktuelles page. Returns null when
+ * the API is reachable but nothing is maintained yet (page then shows only
+ * the newest posts). On an unreachable API at build time, falls back to the
+ * demo block — same graceful pattern as listAllPosts.
+ */
+export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null> {
+  if (DEMO_MODE) return demoTopics(lang);
+
+  const url = new URL(`${BASE_URL}/topics`);
+  url.searchParams.set("lang", lang);
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`content-api ${url.pathname} → ${res.status}`);
+    }
+    const data = (await res.json()) as { lang: string; topics: TopicsBlock | null };
+    return data.topics ?? null;
+  } catch (err) {
+    console.warn("[tds-blog] content-api unreachable — serving demo topics:", err);
+    return demoTopics(lang);
   }
 }
 

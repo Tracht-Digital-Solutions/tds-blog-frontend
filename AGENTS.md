@@ -131,9 +131,21 @@ in this repo only.
   static interests-index.json (never the content-api), scores by
   topic overlap + recency, renders top 3 with a transparency note and
   a reset action. Renders nothing without a profile.
-- `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome
+- `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome.
+  Below `md` the section links/search/CTA collapse into a flat slide-down
+  panel behind a hamburger. Nav links come from `src/lib/nav.ts` (the single
+  source shared with `ArticleSidebar.astro`): **Journal**, **Aktuelles**,
+  **RSS** — "Kundenportal" lives in the footer only. Active/hover is a flat
+  accent underline (`.jnav-item`) / left bar (`.snav-item`), no filled pill.
+- `src/pages/aktuelles.astro` + `src/pages/en/aktuelles.astro` — the
+  **"Aktuelles"** page: curated "Aktuelle Themen" (the content-api `topics`
+  block, admin-maintained, fetched via `listTopics`) rendered as flat
+  `.topic-card`s, followed by the newest ~6 posts (`BlogPostCard`). A
+  missing/unreachable topics block degrades to just the post list.
 - `src/components/BlogPostCard.astro` — list-item component (editorial-grid)
-- `src/lib/content-api.ts` — build-time fetch client (cursor-paginated)
+- `src/lib/content-api.ts` — build-time fetch client (cursor-paginated);
+  `listTopics(lang)` fetches the `/topics` block for `/aktuelles`
+- `src/lib/nav.ts` — shared public-nav item list + active-state helper
 - `src/lib/pagination.ts` — page-window slicing
 - `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage)
 - `src/lib/jsonld.ts` — Schema.org generators (BlogPosting, Blog,
