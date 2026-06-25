@@ -215,7 +215,7 @@
   color: inherit;
   transition: background-color 180ms ease;
 }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .post-row { grid-template-columns: 150px 1fr auto; gap: 1.75rem; }
 }
 .post-row:hover { background: var(--flat-hover); }
@@ -442,6 +442,16 @@
 .blog-sidebar .btn-flat { width: 100%; justify-content: center; }
 
 /* ---- Newsletter ---- */
+/* Email + submit on one row; stacks to full-width on the narrowest
+   phones so the button never gets squeezed off the line. */
+.newsletter-form {
+  display: flex;
+  gap: 12px;
+}
+@media (max-width: 419px) {
+  .newsletter-form { flex-direction: column; }
+  .newsletter-form .btn-flat { width: 100%; }
+}
 .newsletter-input {
   height: 3rem;
   padding: 0 1rem;
@@ -451,7 +461,8 @@
   background: rgb(255 255 255 / 0.12);
   color: #fff;
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  /* 16px so iOS Safari doesn't auto-zoom the page on focus. */
+  font-size: 1rem;
   transition: background-color 180ms ease;
 }
 .newsletter-input::placeholder { color: rgb(255 255 255 / 0.45); }
@@ -572,6 +583,23 @@
   text-align: left;
 }
 .prose-article thead th { background: var(--color-soft); }
+
+/* Phone widths: the generous desktop padding on quote/code/table blocks
+   eats into the already-narrow reading column. Trim it (and the oversized
+   pull-quote) so these blocks breathe on small screens. `pre`/`table`
+   keep their own `overflow-x: auto` for wide content. */
+@media (max-width: 640px) {
+  .prose-article blockquote {
+    font-size: 1.25rem;
+    padding: 1rem 1.125rem;
+  }
+  .prose-article pre {
+    padding: 1rem 1.125rem;
+  }
+  .prose-article :is(th, td) {
+    padding: 0.4em 0.6em;
+  }
+}
 
 /* === Grotesk heading weights =======================================
    The card/row/article headings above were tuned for Instrument Serif

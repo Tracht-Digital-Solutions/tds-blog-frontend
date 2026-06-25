@@ -52,7 +52,7 @@ const labels = {
       {lang === "de" ? "Ähnliche Artikel." : "Adjacent articles."}
     </h2>
 
-    <ul class="grid md:grid-cols-3 gap-5 list-none p-0 m-0">
+    <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
       {picks.map((p) => (
         <li class="flex">
           {/* Static render of the flat design-system card — no hydration. */}

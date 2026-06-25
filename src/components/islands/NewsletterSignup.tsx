@@ -104,7 +104,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
               {t.done}
             </p>
           ) : (
-            <form onSubmit={submit} style={{ display: "flex", gap: 12 }}>
+            <form onSubmit={submit} className="newsletter-form">
               <input
                 className="newsletter-input"
                 type="email"

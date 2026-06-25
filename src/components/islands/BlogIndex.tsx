@@ -151,7 +151,7 @@ function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t
               {t.readArticle} <span aria-hidden="true">→</span>
             </a>
           </div>
-          <div className="hidden md:block" style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
+          <div className="hidden sm:block" style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
             <PostCover
               slug={post.slug}
               coverHint={post.coverHint}
