@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import PostCard, { AuthorChip, formatPostDate, type CardPost } from "../PostCard";
-import { PostCover } from "../Covers";
+import PostCard, { type CardPost } from "../PostCard";
+import HeroSlider from "./HeroSlider";
 
 /**
  * Journal index from the design-system blog template ("Hero + Grid"):
@@ -73,96 +73,6 @@ function matchesQuery(post: IndexPost, q: string): boolean {
   if (!query) return true;
   const text = searchText(post);
   return query.split(/\s+/).every((word) => text.includes(word));
-}
-
-function FeaturedHero({ post, lang, t }: { post: IndexPost; lang: "de" | "en"; t: Labels }) {
-  return (
-    <section style={{ background: "var(--color-surface-navy)", color: "#fff" }}>
-      <div className="max-w-5xl mx-auto px-6" style={{ paddingTop: 40, paddingBottom: 44 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 26 }}>
-          <h1
-            className="display"
-            style={{ fontSize: 17, letterSpacing: "0.14em", textTransform: "uppercase", margin: 0 }}
-          >
-            Journal
-          </h1>
-          <span style={{ fontSize: 14, color: "rgba(255,255,255,.55)" }}>
-            {lang === "de" ? "Einblicke für den Mittelstand" : "Insights for the Mittelstand"}
-          </span>
-        </div>
-        <div className="grid md:grid-cols-2 items-center gap-8 md:gap-11">
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-              <span
-                className="eyebrow"
-                style={{ color: "var(--color-accent-pink)" }}
-              >
-                {t.featured}
-              </span>
-              <span aria-hidden="true" style={{ width: 4, height: 4, background: "rgba(255,255,255,.4)" }} />
-              <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,.6)" }}>
-                {post.category}
-              </span>
-            </div>
-            <a href={`${lang === "en" ? "/en" : ""}/${post.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-              <h2
-                className="display"
-                style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", margin: 0, textWrap: "balance" }}
-              >
-                {post.title}
-              </h2>
-            </a>
-            <p
-              style={{
-                fontSize: 17,
-                lineHeight: 1.6,
-                color: "rgba(255,255,255,.75)",
-                margin: "14px 0 0",
-                maxWidth: "54ch",
-                textWrap: "pretty",
-              }}
-            >
-              {post.excerpt}
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 18 }}>
-              <AuthorChip inverse />
-              {post.publishedAt && (
-                <span className="tabular" style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
-                  {formatPostDate(post.publishedAt, lang)}
-                </span>
-              )}
-            </div>
-            <a
-              href={`${lang === "en" ? "/en" : ""}/${post.slug}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                marginTop: 22,
-                height: 48,
-                padding: "0 24px",
-                background: "#fff",
-                color: "var(--color-surface-navy)",
-                textDecoration: "none",
-                fontSize: 15,
-                fontWeight: 600,
-              }}
-            >
-              {t.readArticle} <span aria-hidden="true">→</span>
-            </a>
-          </div>
-          <div className="hidden sm:block" style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
-            <PostCover
-              slug={post.slug}
-              coverHint={post.coverHint}
-              title={post.title}
-              style={{ position: "absolute", inset: 0 }}
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function Chevron({ left }: { left?: boolean }) {
@@ -249,10 +159,12 @@ function CategorySidebar({
 
 export default function BlogIndex({
   posts,
+  popular = [],
   lang,
   pageSize = 10,
 }: {
   posts: IndexPost[];
+  popular?: IndexPost[];
   lang: "de" | "en";
   pageSize?: number;
 }) {
@@ -316,7 +228,9 @@ export default function BlogIndex({
 
   return (
     <div id="blog-index-island">
-      {!searching && featured && <FeaturedHero post={featured} lang={lang} t={t} />}
+      {!searching && featured && (
+        <HeroSlider latest={posts} popular={popular} lang={lang} />
+      )}
 
       <section
         className="max-w-5xl mx-auto px-6 lg:flex lg:items-start lg:gap-8"

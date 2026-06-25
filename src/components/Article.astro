@@ -109,6 +109,13 @@ const tx = lang === "de"
       allArticles: "All articles", rss: "Subscribe via RSS",
       machine: "Machine-translated — the original is written in German.",
     };
+
+// Public, fire-and-forget view beacon. PUBLIC_ env so the inline script
+// below can read it (the build-time CONTENT_API_URL isn't exposed to the
+// browser); falls back to the production gateway. Disabled on demo builds.
+const beaconBase =
+  import.meta.env.PUBLIC_CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
+const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 ---
 
 <Layout
@@ -357,6 +364,33 @@ const tx = lang === "de"
           "; Path=/; SameSite=Lax";
       } catch (e) {
         /* cookies disabled — recommendations simply stay generic */
+      }
+    })();
+  </script>
+
+  {/* Fire-and-forget view beacon — bumps the post's view_count so the
+      hero's "Populär" tab reflects real reads. Once per session per post,
+      best-effort, never blocks. */}
+  <script is:inline define:vars={{ viewSlug: post.slug, viewLang: lang, viewApiBase: beaconBase, viewDisabled: beaconDisabled }}>
+    (function () {
+      if (viewDisabled) return;
+      try {
+        var key = "tds-viewed:" + viewLang + ":" + viewSlug;
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, "1");
+      } catch (e) {
+        /* no sessionStorage — fall through and count the view anyway */
+      }
+      try {
+        var url =
+          viewApiBase + "/blog/" + encodeURIComponent(viewSlug) + "/view?lang=" + viewLang;
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url);
+        } else {
+          fetch(url, { method: "POST", keepalive: true, mode: "no-cors" });
+        }
+      } catch (e) {
+        /* best-effort analytics — ignore failures */
       }
     })();
   </script>

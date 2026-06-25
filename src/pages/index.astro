@@ -2,15 +2,16 @@
 import Layout from "~/layouts/Layout.astro";
 import BlogIndex from "~/components/islands/BlogIndex.tsx";
 import ForYou from "~/components/islands/ForYou.tsx";
-import { listAllPosts } from "~/lib/content-api";
+import { listAllPosts, listPopular } from "~/lib/content-api";
 import { PAGE_SIZE } from "~/lib/pagination";
 import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
 const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
 
 let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
+let popular: Awaited<ReturnType<typeof listPopular>> = [];
 try {
-  allPosts = await listAllPosts("de");
+  [allPosts, popular] = await Promise.all([listAllPosts("de"), listPopular("de", 6)]);
 } catch (err) {
   console.error("[tds-blog] failed to fetch posts at build time:", err);
 }
@@ -25,7 +26,7 @@ try {
     {/* Hero + category sidebar + card grid + live search — the
         design-system blog index. Posts are baked in at build time;
         the island only filters client-side. */}
-    <BlogIndex posts={allPosts} lang="de" pageSize={PAGE_SIZE} client:load />
+    <BlogIndex posts={allPosts} popular={popular} lang="de" pageSize={PAGE_SIZE} client:load />
 
     <div class="max-w-5xl mx-auto px-6 pb-14">
       <ForYou lang="de" client:idle />

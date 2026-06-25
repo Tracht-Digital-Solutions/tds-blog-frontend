@@ -54,6 +54,33 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
 }
 
 /**
+ * Most-viewed published posts for the blog hero's "Populär" tab. Baked
+ * at build time (the popularity ordering refreshes on each rebuild);
+ * view counts themselves accrue at runtime via the article-page beacon.
+ * Falls back to the newest demo/posts on a DEMO build or a build-time
+ * outage so the slider always has a populated tab.
+ */
+export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListResponse["posts"]> {
+  if (DEMO_MODE) return demoPostList(lang).slice(0, limit);
+
+  const url = new URL(`${BASE_URL}/blog/popular`);
+  url.searchParams.set("lang", lang);
+  url.searchParams.set("limit", String(limit));
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`content-api ${url.pathname} → ${res.status}`);
+    }
+    const data = (await res.json()) as { posts: ListResponse["posts"] };
+    return data.posts ?? [];
+  } catch (err) {
+    console.warn("[tds-blog] content-api unreachable — serving demo popular:", err);
+    return demoPostList(lang).slice(0, limit);
+  }
+}
+
+/**
  * Curated "Aktuelle Themen" block for the /aktuelles page. Returns null when
  * the API is reachable but nothing is maintained yet (or the endpoint isn't
  * deployed) — the page then shows only the newest posts. Demo content is only
