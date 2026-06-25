@@ -8,6 +8,12 @@
  * page (CustomEvent `tds-blog-search`, flagged via
  * `data-blog-live-search` on <html>); everywhere else Enter navigates
  * to the index with `?q=` so the island picks the query up on load.
+ *
+ * Below `md` the section links, search and CTA collapse into a flat
+ * slide-down panel behind a hamburger toggle, so none of them get cut
+ * off on a phone. The script binds the search behaviour to every
+ * `.js-blog-search` input, so the desktop bar field and the mobile
+ * panel field behave identically (only one is visible at a time).
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
 
@@ -25,16 +31,17 @@ const items = [
 ];
 const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
+const menuLabel = lang === "en" ? "Menu" : "Menü";
 ---
 
 <header class:list={["brand-header", className]}>
-  <div class="max-w-5xl mx-auto px-6 min-h-15 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+  <div class="max-w-5xl mx-auto px-6 min-h-15 py-2.5 flex items-center gap-x-4">
     <a href={home} class="brand-wordmark text-[1.0625rem] tracking-tight shrink-0">
       Tracht <span class="accent-italic">Journal</span>
     </a>
     <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
 
-    <nav class="flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
+    <nav class="hidden md:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
       {items.map((it) => (
         <a
           href={it.href}
@@ -54,31 +61,176 @@ const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
       <input
         type="search"
         id="jnl-search"
+        class="js-blog-search"
         placeholder={searchPlaceholder}
         aria-label={searchPlaceholder}
         data-index-url={home}
       />
     </div>
 
-    <div class="lang-toggle" role="group" aria-label="Sprache / Language">
-      <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-      <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    {/* Right-hand controls. `ml-auto` pins them to the edge on mobile
+        where the flex-1 nav is hidden; harmless on desktop. */}
+    <div class="flex items-center gap-2 ml-auto md:ml-0">
+      <div class="lang-toggle" role="group" aria-label="Sprache / Language">
+        <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+        <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+      </div>
+
+      <ThemeToggle client:idle />
+
+      <a href="https://tracht-digital.de/#contact" class="btn-flat hidden md:inline-flex" style="height: 2.25rem;">
+        {cta}
+      </a>
+
+      <button
+        id="jnl-menu-toggle"
+        type="button"
+        class="jnl-menu-toggle md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
+        aria-controls="jnl-mobile-menu"
+        aria-expanded="false"
+        aria-label={menuLabel}
+      >
+        <span class="jnl-menu-bar jnl-menu-bar-top" aria-hidden="true"></span>
+        <span class="jnl-menu-bar jnl-menu-bar-mid" aria-hidden="true"></span>
+        <span class="jnl-menu-bar jnl-menu-bar-bot" aria-hidden="true"></span>
+      </button>
     </div>
+  </div>
 
-    <ThemeToggle client:idle />
+  {/* Mobile panel — flat slide-down holding the links, search and CTA
+      that are hidden from the bar below md. */}
+  <div
+    id="jnl-mobile-menu"
+    class="jnl-mobile-menu md:hidden"
+    aria-hidden="true"
+  >
+    <div class="max-w-5xl mx-auto px-6 py-3">
+      <div class="nav-search nav-search--block">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <input
+          type="search"
+          id="jnl-search-mobile"
+          class="js-blog-search"
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
+          data-index-url={home}
+        />
+      </div>
 
-    <a href="https://tracht-digital.de/#contact" class="btn-flat hidden md:inline-flex" style="height: 2.25rem;">
-      {cta}
-    </a>
+      <nav class="mt-3 flex flex-col" aria-label="Navigation">
+        {items.map((it) => (
+          <a
+            href={it.href}
+            data-menu-link
+            class="jnav-item jnav-item--block"
+            aria-current={it.current ? "page" : undefined}
+          >
+            {it.label}
+          </a>
+        ))}
+      </nav>
+
+      <a
+        href="https://tracht-digital.de/#contact"
+        data-menu-link
+        class="btn-flat mt-3 w-full justify-center"
+      >
+        {cta}
+      </a>
+    </div>
   </div>
 </header>
 
+<style>
+  /* Animated hamburger ↔ × — mirrors the landingpage header so the two
+     public surfaces feel the same. Three absolutely-positioned bars
+     transform on aria-expanded. */
+  .jnl-menu-bar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 1.75px;
+    background-color: currentColor;
+    transform-origin: center;
+    transform: translate(-50%, -50%);
+    transition:
+      transform 220ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 180ms ease;
+  }
+  .jnl-menu-bar-top {
+    transform: translate(-50%, calc(-50% - 6px));
+  }
+  .jnl-menu-bar-bot {
+    transform: translate(-50%, calc(-50% + 6px));
+  }
+  .jnl-menu-toggle[aria-expanded="true"] .jnl-menu-bar-top {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .jnl-menu-toggle[aria-expanded="true"] .jnl-menu-bar-mid {
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleX(0.6);
+  }
+  .jnl-menu-toggle[aria-expanded="true"] .jnl-menu-bar-bot {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  /* Flat slide-down panel — kept angular to match the blog kit. Closed:
+     collapsed + transparent + untouchable; open: full height. */
+  .jnl-mobile-menu {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    border-top: 0 solid transparent;
+    background: color-mix(in srgb, var(--color-paper) 96%, transparent);
+    pointer-events: none;
+    transition:
+      max-height 240ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 180ms ease;
+  }
+  .jnl-mobile-menu[data-open="true"] {
+    max-height: 28rem;
+    opacity: 1;
+    border-top: 1px solid var(--color-line);
+    pointer-events: auto;
+  }
+
+  /* Full-width variants of the shared bar pieces for use inside the panel. */
+  .nav-search--block {
+    display: flex;
+    width: 100%;
+  }
+  .nav-search--block input {
+    width: 100%;
+  }
+  .nav-search--block input:focus {
+    width: 100%;
+  }
+  .jnav-item--block {
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .jnl-mobile-menu,
+    .jnl-menu-bar {
+      transition-duration: 0.01ms;
+    }
+  }
+</style>
+
 <script>
-  const input = document.getElementById("jnl-search") as HTMLInputElement | null;
-  if (input) {
-    // Pre-fill from ?q= so the field mirrors an active search.
-    const q = new URLSearchParams(location.search).get("q");
-    if (q) input.value = q;
+  // Live search — bind to every search field (desktop bar + mobile
+  // panel) so the behaviour is identical wherever the visitor types.
+  const inputs = document.querySelectorAll<HTMLInputElement>(".js-blog-search");
+  const initialQ = new URLSearchParams(location.search).get("q");
+  inputs.forEach((input) => {
+    if (initialQ) input.value = initialQ;
 
     input.addEventListener("input", () => {
       if (document.documentElement.dataset.blogLiveSearch) {
@@ -92,6 +244,37 @@ const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
       if (input.value.trim()) {
         location.href = `${target}?q=${encodeURIComponent(input.value.trim())}`;
       }
+    });
+  });
+
+  // Mobile menu toggle — mirrors the landingpage header behaviour.
+  const toggle = document.getElementById("jnl-menu-toggle");
+  const menu = document.getElementById("jnl-mobile-menu");
+  if (toggle && menu) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      menu.dataset.open = open ? "true" : "false";
+      menu.setAttribute("aria-hidden", open ? "false" : "true");
+    };
+
+    toggle.addEventListener("click", () => {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+
+    menu.querySelectorAll<HTMLAnchorElement>("[data-menu-link]").forEach((link) => {
+      link.addEventListener("click", () => setOpen(false));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+        setOpen(false);
+      }
+    });
+
+    // Close automatically when crossing into the desktop (md / 768px) nav.
+    const mq = window.matchMedia("(min-width: 768px)");
+    mq.addEventListener("change", (e) => {
+      if (e.matches) setOpen(false);
     });
   }
 </script>
