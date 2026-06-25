@@ -55,9 +55,11 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
 
 /**
  * Curated "Aktuelle Themen" block for the /aktuelles page. Returns null when
- * the API is reachable but nothing is maintained yet (page then shows only
- * the newest posts). On an unreachable API at build time, falls back to the
- * demo block — same graceful pattern as listAllPosts.
+ * the API is reachable but nothing is maintained yet (or the endpoint isn't
+ * deployed) — the page then shows only the newest posts. Demo content is only
+ * served for an explicit DEMO build or a genuine connection failure at build
+ * time; a *reachable* API that errors stays null so we never bake demo topics
+ * onto a production page.
  */
 export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null> {
   if (DEMO_MODE) return demoTopics(lang);
@@ -67,12 +69,12 @@ export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null>
 
   try {
     const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`content-api ${url.pathname} → ${res.status}`);
-    }
+    if (!res.ok) return null; // reachable but 404/5xx → no curated topics
     const data = (await res.json()) as { lang: string; topics: TopicsBlock | null };
     return data.topics ?? null;
   } catch (err) {
+    // Host unreachable at build time → demo block (keeps a local/no-API
+    // build from rendering an empty section), same as listAllPosts.
     console.warn("[tds-blog] content-api unreachable — serving demo topics:", err);
     return demoTopics(lang);
   }
