@@ -148,6 +148,17 @@
   background: var(--color-surface-navy);
   color: #fff;
 }
+/* Phones (<sm): trim the segmented DE|EN toggle so the top bar
+   (wordmark + lang + theme + hamburger) fits without horizontal overflow
+   on narrow screens. Scoped to <640px, so the desktop bar and the lg
+   blog-sidebar variant (which sets the toggle full-width) are untouched. */
+@media (max-width: 639px) {
+  .lang-toggle a {
+    height: 1.5rem;
+    padding: 0 0.5rem;
+    font-size: 0.625rem;
+  }
+}
 
 /* ---- Angular buttons / chips ---- */
 .btn-flat {

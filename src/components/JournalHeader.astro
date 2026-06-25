@@ -34,8 +34,8 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
 ---
 
 <header class:list={["brand-header", className]}>
-  <div class="max-w-5xl mx-auto px-6 min-h-15 py-2.5 flex items-center gap-x-4">
-    <a href={home} class="brand-wordmark text-[1.0625rem] tracking-tight shrink-0">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 min-h-15 py-2.5 flex items-center gap-x-3 sm:gap-x-4">
+    <a href={home} class="brand-wordmark text-[1rem] sm:text-[1.0625rem] tracking-tight shrink-0">
       Tracht <span class="accent-italic">Journal</span>
     </a>
     <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
@@ -69,7 +69,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
 
     {/* Right-hand controls. `ml-auto` pins them to the edge on mobile
         where the flex-1 nav is hidden; harmless on desktop. */}
-    <div class="flex items-center gap-2 ml-auto md:ml-0">
+    <div class="flex items-center gap-1.5 sm:gap-2 ml-auto md:ml-0">
       <div class="lang-toggle" role="group" aria-label="Sprache / Language">
         <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
         <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
@@ -103,7 +103,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
     class="jnl-mobile-menu md:hidden"
     aria-hidden="true"
   >
-    <div class="max-w-5xl mx-auto px-6 py-3">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3">
       <div class="nav-search nav-search--block">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
