@@ -274,7 +274,7 @@ export default function HeroSlider({
           {sets.length > 1 && (
             <div
               role="tablist"
-              aria-label="Journal-Auswahl"
+              aria-label={lang === "de" ? "Journal-Auswahl" : "Journal selection"}
               className="flex items-center"
               style={{ gap: 4 }}
               onKeyDown={(e) => {

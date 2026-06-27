@@ -653,9 +653,6 @@ a.topic-card:focus-visible {
   font-weight: 600;
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
-.blog-sidebar .nav-search { width: 100%; }
-.blog-sidebar .nav-search input { width: 100%; background: var(--color-paper); }
-.blog-sidebar .nav-search input:focus { width: 100%; background: var(--flat-tint); }
 .blog-sidebar .lang-toggle { display: flex; width: 100%; background: var(--color-paper); }
 .blog-sidebar .lang-toggle a { flex: 1; justify-content: center; height: 1.875rem; }
 .blog-sidebar .btn-flat { width: 100%; justify-content: center; }
