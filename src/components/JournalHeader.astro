@@ -4,19 +4,27 @@
  * bordeaux divider square, angular nav items, live search field,
  * DE/EN segmented toggle and the primary CTA.
  *
- * The search field drives the BlogIndex island when one is on the
- * page (CustomEvent `tds-blog-search`, flagged via
- * `data-blog-live-search` on <html>); everywhere else Enter navigates
- * to the index with `?q=` so the island picks the query up on load.
+ * The primary nav is Journal · Entdecken ▾ · RSS. "Entdecken" opens a flat
+ * disclosure panel grouping the corpus into Kategorien · Beliebte Tags ·
+ * Aktuelle Themen (all built from `getTaxonomy()` at build time). Below
+ * `md` it collapses — with the search and CTA — into the slide-down drawer,
+ * where Entdecken becomes an accordion instead of a hover panel.
  *
- * Below `md` the section links, search and CTA collapse into a flat
- * slide-down panel behind a hamburger toggle, so none of them get cut
- * off on a phone. The script binds the search behaviour to every
- * `.js-blog-search` input, so the desktop bar field and the mobile
- * panel field behave identically (only one is visible at a time).
+ * The search field drives the BlogIndex island when one is on the page
+ * (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search` on
+ * <html>); everywhere else Enter navigates to the index with `?q=`.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
-import { navItems, isActiveNav } from "~/lib/nav";
+import {
+  primaryNav,
+  isActiveNav,
+  isEntdeckenActive,
+  entdeckenLabels,
+  categoryHref,
+  tagHref,
+  topicsHref,
+} from "~/lib/nav";
+import { getTaxonomy } from "~/lib/taxonomy";
 
 interface Props {
   lang?: "de" | "en";
@@ -26,8 +34,11 @@ interface Props {
 const { lang = "de", class: className } = Astro.props;
 
 const home = lang === "de" ? "/" : "/en/";
-const items = navItems(lang);
+const nav = primaryNav(lang);
 const path = Astro.url.pathname;
+const labels = entdeckenLabels(lang);
+const { categories, topTags } = await getTaxonomy(lang);
+const entdeckenActive = isEntdeckenActive(path);
 const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
@@ -38,8 +49,8 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
 const navIcons: Record<string, string> = {
   journal:
     '<path d="M3 4.5h6a2.5 2.5 0 0 1 2.5 2.5v12.5a2 2 0 0 0-2-2H3z"/><path d="M21 4.5h-6A2.5 2.5 0 0 0 12.5 7v12.5a2 2 0 0 1 2-2H21z"/>',
-  aktuelles:
-    '<path d="M12 2.5v3.5M12 18v3.5M2.5 12h3.5M18 12h3.5M5.1 5.1l2.5 2.5M16.4 16.4l2.5 2.5M18.9 5.1l-2.5 2.5M7.6 16.4l-2.5 2.5"/>',
+  entdecken:
+    '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
   rss: '<path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.4"/>',
 };
 ---
@@ -57,15 +68,68 @@ const navIcons: Record<string, string> = {
     <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
 
     <nav class="hidden md:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
-      {items.map((it) => (
-        <a
-          href={it.href}
-          class="jnav-item whitespace-nowrap"
-          aria-current={isActiveNav(it.href, path) ? "page" : undefined}
-        >
-          {it.label}
-        </a>
-      ))}
+      {nav.map((node) =>
+        node.kind === "link" ? (
+          <a
+            href={node.href}
+            class="jnav-item whitespace-nowrap"
+            aria-current={isActiveNav(node.href, path) ? "page" : undefined}
+          >
+            {node.label}
+          </a>
+        ) : (
+          <div class="jnav-dd" id="jnl-entdecken">
+            <button
+              type="button"
+              id="jnl-entdecken-btn"
+              class="jnav-item jnav-dd-btn whitespace-nowrap"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="jnl-entdecken-panel"
+              aria-current={entdeckenActive ? "true" : undefined}
+            >
+              <span>{node.label}</span>
+              <svg class="jnav-dd-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </button>
+            <div id="jnl-entdecken-panel" class="jnav-dropdown" data-open="false" role="group" aria-label={node.label}>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.categories}</p>
+                {categories.length === 0 ? (
+                  <p class="jnav-dd-empty">—</p>
+                ) : (
+                  <div class="jnav-dd-links">
+                    {categories.map((c) => (
+                      <a href={categoryHref(lang, c.slug)} class="jnav-dd-link">
+                        <span>{c.name}</span>
+                        <span class="jnav-dd-count">{c.count}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.tags}</p>
+                {topTags.length === 0 ? (
+                  <p class="jnav-dd-empty">—</p>
+                ) : (
+                  <div class="jnav-dd-chips">
+                    {topTags.map((t) => (
+                      <a href={tagHref(lang, t.name)} class="chip-flat chip-flat--sm">#{t.name}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.topics}</p>
+                <a href={topicsHref(lang)} class="jnav-dd-link jnav-dd-link--lead">
+                  <span>{labels.topics}</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )
+      )}
     </nav>
 
     <div class="nav-search hidden md:flex">
@@ -136,7 +200,7 @@ const navIcons: Record<string, string> = {
 
   {/* Mobile drawer — flat off-canvas panel sliding in from the right,
       holding the links, language/theme controls and CTA kept off the
-      bar below md. */}
+      bar below md. Entdecken is an accordion here, not a hover panel. */}
   <aside
     id="jnl-mobile-menu"
     class="jnl-drawer md:hidden"
@@ -161,17 +225,62 @@ const navIcons: Record<string, string> = {
     </div>
 
     <nav class="jnl-drawer-nav" aria-label="Navigation">
-      {items.map((it) => (
-        <a
-          href={it.href}
-          data-menu-link
-          class="jnav-item jnav-item--block"
-          aria-current={isActiveNav(it.href, path) ? "page" : undefined}
-        >
-          <svg class="jnav-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={navIcons[it.key]} />
-          <span>{it.label}</span>
-        </a>
-      ))}
+      {nav.map((node) =>
+        node.kind === "link" ? (
+          <a
+            href={node.href}
+            data-menu-link
+            class="jnav-item jnav-item--block"
+            aria-current={isActiveNav(node.href, path) ? "page" : undefined}
+          >
+            <svg class="jnav-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={navIcons[node.key]} />
+            <span>{node.label}</span>
+          </a>
+        ) : (
+          <div class="jnl-acc">
+            <button
+              type="button"
+              class="jnav-item jnav-item--block jnl-acc-btn"
+              aria-expanded={entdeckenActive ? "true" : "false"}
+              aria-controls="jnl-acc-panel"
+            >
+              <svg class="jnav-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={navIcons.entdecken} />
+              <span>{node.label}</span>
+              <svg class="jnl-acc-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </button>
+            <div id="jnl-acc-panel" class="jnl-acc-panel" data-open={entdeckenActive ? "true" : "false"}>
+              <p class="jnav-dd-head">{labels.categories}</p>
+              {categories.length === 0 ? (
+                <p class="jnav-dd-empty">—</p>
+              ) : (
+                categories.map((c) => (
+                  <a href={categoryHref(lang, c.slug)} data-menu-link class="jnl-acc-link">
+                    <span>{c.name}</span>
+                    <span class="jnav-dd-count">{c.count}</span>
+                  </a>
+                ))
+              )}
+
+              <p class="jnav-dd-head">{labels.tags}</p>
+              {topTags.length === 0 ? (
+                <p class="jnav-dd-empty">—</p>
+              ) : (
+                <div class="jnav-dd-chips">
+                  {topTags.map((t) => (
+                    <a href={tagHref(lang, t.name)} data-menu-link class="chip-flat chip-flat--sm">#{t.name}</a>
+                  ))}
+                </div>
+              )}
+
+              <p class="jnav-dd-head">{labels.topics}</p>
+              <a href={topicsHref(lang)} data-menu-link class="jnl-acc-link jnl-acc-link--lead">
+                <span>{labels.topics}</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        )
+      )}
     </nav>
 
     <div class="jnl-drawer-controls">
@@ -370,6 +479,30 @@ const navIcons: Record<string, string> = {
     });
   });
 
+  // Desktop "Entdecken" disclosure — a flat panel under the nav button.
+  // Toggles on click; closes on Escape, click-outside or a route change.
+  const ddRoot = document.getElementById("jnl-entdecken");
+  const ddBtn = document.getElementById("jnl-entdecken-btn");
+  const ddPanel = document.getElementById("jnl-entdecken-panel");
+  if (ddRoot && ddBtn && ddPanel) {
+    const setDd = (open: boolean) => {
+      ddBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      ddPanel.dataset.open = open ? "true" : "false";
+    };
+    ddBtn.addEventListener("click", () => {
+      setDd(ddBtn.getAttribute("aria-expanded") !== "true");
+    });
+    document.addEventListener("click", (e) => {
+      if (!ddRoot.contains(e.target as Node)) setDd(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && ddBtn.getAttribute("aria-expanded") === "true") {
+        setDd(false);
+        ddBtn.focus();
+      }
+    });
+  }
+
   // Mobile drawer toggle — a right-side off-canvas panel with a dimmed
   // overlay and body scroll-lock while open.
   const toggle = document.getElementById("jnl-menu-toggle");
@@ -425,5 +558,16 @@ const navIcons: Record<string, string> = {
     mq.addEventListener("change", (e) => {
       if (e.matches) setOpen(false);
     });
+
+    // "Entdecken" accordion inside the drawer.
+    const accBtn = menu.querySelector<HTMLButtonElement>(".jnl-acc-btn");
+    const accPanel = menu.querySelector<HTMLElement>("#jnl-acc-panel");
+    if (accBtn && accPanel) {
+      accBtn.addEventListener("click", () => {
+        const open = accBtn.getAttribute("aria-expanded") !== "true";
+        accBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        accPanel.dataset.open = open ? "true" : "false";
+      });
+    }
   }
 </script>

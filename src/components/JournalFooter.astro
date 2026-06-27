@@ -4,8 +4,15 @@
  * panel followed by a fixed navy footer block — brand blurb +
  * Schwarzenbek on the left, link columns on the right. Both surfaces
  * use the surface-* tokens so they stay dark in dark mode.
+ *
+ * Columns mirror the header IA: Entdecken (top categories + Aktuelle
+ * Themen, surfaced here for crawlers as well as readers), Tracht Digital,
+ * Ressourcen and Rechtliches. The Entdecken category links are dynamic
+ * (`getTaxonomy`); the rest are stable hardcoded targets.
  */
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
+import { entdeckenLabels, categoryHref, topicsHref } from "~/lib/nav";
+import { getTaxonomy } from "~/lib/taxonomy";
 
 interface Props {
   lang?: "de" | "en";
@@ -13,21 +20,31 @@ interface Props {
 
 const { lang = "de" } = Astro.props;
 const year = new Date().getFullYear();
+const labels = entdeckenLabels(lang);
+const { categories } = await getTaxonomy(lang);
 
 const blurb =
   lang === "de"
     ? "Software, Web und Digitalisierung für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg."
     : "Software, web, and digitalization for small and medium-sized businesses — based in Schwarzenbek near Hamburg.";
 
+// Top categories surfaced in the footer (full list lives in the header
+// Entdecken panel). Always followed by the curated topics page.
+const entdeckenItems = [
+  ...categories.slice(0, 5).map((c) => ({ label: c.name, href: categoryHref(lang, c.slug) })),
+  { label: labels.topics, href: topicsHref(lang) },
+];
+
 const groups =
   lang === "de"
     ? [
+        { head: labels.group, items: entdeckenItems },
         {
-          head: "Navigation",
+          head: "Tracht Digital",
           items: [
             { label: "Hauptseite", href: "https://tracht-digital.de" },
-            { label: "Journal", href: "/" },
             { label: "Kundenportal", href: "https://app.tracht-digital.de" },
+            { label: "Kontakt", href: "https://tracht-digital.de/#contact" },
           ],
         },
         {
@@ -46,12 +63,13 @@ const groups =
         },
       ]
     : [
+        { head: labels.group, items: entdeckenItems },
         {
-          head: "Navigation",
+          head: "Tracht Digital",
           items: [
             { label: "Main site", href: "https://tracht-digital.de" },
-            { label: "Journal", href: "/en/" },
             { label: "Customer portal", href: "https://app.tracht-digital.de" },
+            { label: "Contact", href: "https://tracht-digital.de/#contact" },
           ],
         },
         {
@@ -75,7 +93,7 @@ const groups =
 
 <footer class="blog-footer" style="background: var(--color-surface-navy); color: #fff; padding: 48px 0 28px;">
   <div class="max-w-5xl mx-auto px-6">
-    <div class="grid gap-9 sm:grid-cols-2 lg:[grid-template-columns:1.4fr_repeat(3,1fr)]">
+    <div class="grid gap-9 sm:grid-cols-2 lg:[grid-template-columns:1.4fr_repeat(4,1fr)]">
       <div data-reveal>
         <p class="brand-wordmark text-lg mb-3 inline-flex items-center gap-2" style="color: #fff;">
           <span class="brand-logo brand-logo--inverse" aria-hidden="true"></span>
