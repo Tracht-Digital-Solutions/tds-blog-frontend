@@ -4,19 +4,31 @@
  * bordeaux divider square, angular nav items, live search field,
  * DE/EN segmented toggle and the primary CTA.
  *
- * The search field drives the BlogIndex island when one is on the
- * page (CustomEvent `tds-blog-search`, flagged via
- * `data-blog-live-search` on <html>); everywhere else Enter navigates
- * to the index with `?q=` so the island picks the query up on load.
+ * The primary nav is Journal · Entdecken ▾ · RSS. "Entdecken" opens a flat
+ * disclosure panel grouping the corpus into Kategorien · Beliebte Tags ·
+ * Aktuelle Themen (all built from `getTaxonomy()` at build time).
  *
- * Below `md` the section links, search and CTA collapse into a flat
- * slide-down panel behind a hamburger toggle, so none of them get cut
- * off on a phone. The script binds the search behaviour to every
- * `.js-blog-search` input, so the desktop bar field and the mobile
- * panel field behave identically (only one is visible at a time).
+ * Below `md` the bar carries just the logo + a search icon + a hamburger.
+ * The hamburger opens a flat **full-screen overlay menu** (large editorial
+ * links, the Entdecken group expanded inline); the search icon expands an
+ * inline search field over the bar. The two are mutually exclusive and both
+ * lock body scroll. Desktop (≥md) is unchanged.
+ *
+ * The search field drives the BlogIndex island when one is on the page
+ * (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search` on
+ * <html>); everywhere else Enter navigates to the index with `?q=`.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
-import { navItems, isActiveNav } from "~/lib/nav";
+import {
+  primaryNav,
+  isActiveNav,
+  isEntdeckenActive,
+  entdeckenLabels,
+  categoryHref,
+  tagHref,
+  topicsHref,
+} from "~/lib/nav";
+import { getTaxonomy } from "~/lib/taxonomy";
 
 interface Props {
   lang?: "de" | "en";
@@ -26,22 +38,17 @@ interface Props {
 const { lang = "de", class: className } = Astro.props;
 
 const home = lang === "de" ? "/" : "/en/";
-const items = navItems(lang);
+const nav = primaryNav(lang);
 const path = Astro.url.pathname;
+const labels = entdeckenLabels(lang);
+const { categories, topTags } = await getTaxonomy(lang);
+const entdeckenActive = isEntdeckenActive(path);
 const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
 const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
-
-// Flat stroke glyphs for the drawer nav, keyed by nav item. Inline SVG
-// paths (no icon dependency) matching the angular blog kit.
-const navIcons: Record<string, string> = {
-  journal:
-    '<path d="M3 4.5h6a2.5 2.5 0 0 1 2.5 2.5v12.5a2 2 0 0 0-2-2H3z"/><path d="M21 4.5h-6A2.5 2.5 0 0 0 12.5 7v12.5a2 2 0 0 1 2-2H21z"/>',
-  aktuelles:
-    '<path d="M12 2.5v3.5M12 18v3.5M2.5 12h3.5M18 12h3.5M5.1 5.1l2.5 2.5M16.4 16.4l2.5 2.5M18.9 5.1l-2.5 2.5M7.6 16.4l-2.5 2.5"/>',
-  rss: '<path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.4"/>',
-};
+const searchLabel = lang === "en" ? "Search" : "Suche";
+const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
 ---
 
 <header class:list={["brand-header", className]}>
@@ -57,15 +64,68 @@ const navIcons: Record<string, string> = {
     <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
 
     <nav class="hidden md:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
-      {items.map((it) => (
-        <a
-          href={it.href}
-          class="jnav-item whitespace-nowrap"
-          aria-current={isActiveNav(it.href, path) ? "page" : undefined}
-        >
-          {it.label}
-        </a>
-      ))}
+      {nav.map((node) =>
+        node.kind === "link" ? (
+          <a
+            href={node.href}
+            class="jnav-item whitespace-nowrap"
+            aria-current={isActiveNav(node.href, path) ? "page" : undefined}
+          >
+            {node.label}
+          </a>
+        ) : (
+          <div class="jnav-dd" id="jnl-entdecken">
+            <button
+              type="button"
+              id="jnl-entdecken-btn"
+              class="jnav-item jnav-dd-btn whitespace-nowrap"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="jnl-entdecken-panel"
+              aria-current={entdeckenActive ? "true" : undefined}
+            >
+              <span>{node.label}</span>
+              <svg class="jnav-dd-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </button>
+            <div id="jnl-entdecken-panel" class="jnav-dropdown" data-open="false" role="group" aria-label={node.label}>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.categories}</p>
+                {categories.length === 0 ? (
+                  <p class="jnav-dd-empty">—</p>
+                ) : (
+                  <div class="jnav-dd-links">
+                    {categories.map((c) => (
+                      <a href={categoryHref(lang, c.slug)} class="jnav-dd-link">
+                        <span>{c.name}</span>
+                        <span class="jnav-dd-count">{c.count}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.tags}</p>
+                {topTags.length === 0 ? (
+                  <p class="jnav-dd-empty">—</p>
+                ) : (
+                  <div class="jnav-dd-chips">
+                    {topTags.map((t) => (
+                      <a href={tagHref(lang, t.name)} class="chip-flat chip-flat--sm">#{t.name}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="jnav-dd-col">
+                <p class="jnav-dd-head">{labels.topics}</p>
+                <a href={topicsHref(lang)} class="jnav-dd-link jnav-dd-link--lead">
+                  <span>{labels.topics}</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )
+      )}
     </nav>
 
     <div class="nav-search hidden md:flex">
@@ -83,25 +143,12 @@ const navIcons: Record<string, string> = {
       />
     </div>
 
-    {/* Mobile search bar — on phones the only bar controls are this field
-        and the hamburger; language + theme live inside the panel. */}
-    <div class="nav-search nav-search--block md:hidden flex-1 min-w-0">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-        <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-      </svg>
-      <input
-        type="search"
-        id="jnl-search-bar"
-        class="js-blog-search"
-        placeholder={searchPlaceholder}
-        aria-label={searchPlaceholder}
-        data-index-url={home}
-      />
-    </div>
+    {/* Push the mobile controls to the right (the desktop nav already takes
+        the flex space from md up). */}
+    <div class="flex-1 md:hidden"></div>
 
     {/* Right-hand controls. Language, theme and the CTA only show from md
-        up; on mobile just the hamburger remains. */}
+        up; on mobile just the search icon + hamburger remain. */}
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <div class="hidden md:flex items-center gap-2">
         <div class="lang-toggle" role="group" aria-label="Sprache / Language">
@@ -117,6 +164,20 @@ const navIcons: Record<string, string> = {
       </div>
 
       <button
+        id="jnl-search-toggle"
+        type="button"
+        class="jnl-bar-btn md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
+        aria-controls="jnl-search-panel"
+        aria-expanded="false"
+        aria-label={searchLabel}
+      >
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"></circle>
+          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+        </svg>
+      </button>
+
+      <button
         id="jnl-menu-toggle"
         type="button"
         class="jnl-menu-toggle md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
@@ -129,21 +190,48 @@ const navIcons: Record<string, string> = {
         <span class="jnl-menu-bar jnl-menu-bar-bot" aria-hidden="true"></span>
       </button>
     </div>
+
+    {/* Expanding search field — slides over the bar row when the search icon
+        is tapped (mobile only). Reuses the shared `.js-blog-search` wiring. */}
+    <div id="jnl-search-panel" class="jnl-search-panel md:hidden" data-open="false" aria-hidden="true">
+      <div class="nav-search nav-search--panel flex-1 min-w-0">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <input
+          type="search"
+          id="jnl-search-mobile"
+          class="js-blog-search"
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
+          data-index-url={home}
+        />
+      </div>
+      <button
+        id="jnl-search-close"
+        type="button"
+        class="jnl-bar-btn inline-flex items-center justify-center w-10 h-10 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer shrink-0"
+        aria-label={closeSearchLabel}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 
-  {/* Dimmed backdrop behind the drawer (mobile only). */}
-  <div id="jnl-overlay" class="jnl-overlay md:hidden" hidden></div>
-
-  {/* Mobile drawer — flat off-canvas panel sliding in from the right,
-      holding the links, language/theme controls and CTA kept off the
-      bar below md. */}
-  <aside
+  {/* Full-screen overlay menu — a flat surface (no glass) carrying the large
+      editorial nav, the Entdecken group expanded inline, plus the language /
+      theme controls and the CTA kept off the bar below md. */}
+  <div
     id="jnl-mobile-menu"
-    class="jnl-drawer md:hidden"
+    class="jnl-fullmenu md:hidden"
+    data-open="false"
     aria-hidden="true"
     aria-label={menuLabel}
   >
-    <div class="jnl-drawer-head">
+    <div class="jnl-fullmenu-head max-w-5xl mx-auto w-full">
       <span class="brand-wordmark inline-flex items-center gap-2 text-[1.0625rem] tracking-tight">
         <span class="brand-logo" aria-hidden="true"></span>
         <span class="accent-italic">Journal</span>
@@ -151,48 +239,95 @@ const navIcons: Record<string, string> = {
       <button
         id="jnl-menu-close"
         type="button"
-        class="jnl-drawer-close"
+        class="jnl-fullmenu-close"
         aria-label={closeLabel}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18"></path>
         </svg>
       </button>
     </div>
 
-    <nav class="jnl-drawer-nav" aria-label="Navigation">
-      {items.map((it) => (
-        <a
-          href={it.href}
-          data-menu-link
-          class="jnav-item jnav-item--block"
-          aria-current={isActiveNav(it.href, path) ? "page" : undefined}
-        >
-          <svg class="jnav-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={navIcons[it.key]} />
-          <span>{it.label}</span>
-        </a>
-      ))}
+    <nav class="jnl-fullmenu-nav max-w-5xl mx-auto w-full" aria-label="Navigation">
+      {nav.map((node) =>
+        node.kind === "link" ? (
+          <a
+            href={node.href}
+            data-menu-link
+            class="jnl-fullmenu-link"
+            aria-current={isActiveNav(node.href, path) ? "page" : undefined}
+          >
+            {node.label}
+          </a>
+        ) : (
+          <div class="jnl-fullmenu-group">
+            <p class="jnl-fullmenu-sub">{labels.categories}</p>
+            {categories.length === 0 ? (
+              <p class="jnav-dd-empty">—</p>
+            ) : (
+              categories.map((c) => (
+                <a
+                  href={categoryHref(lang, c.slug)}
+                  data-menu-link
+                  class="jnl-fullmenu-link jnl-fullmenu-link--sub"
+                  aria-current={isActiveNav(categoryHref(lang, c.slug), path) ? "page" : undefined}
+                >
+                  <span>{c.name}</span>
+                  <span class="jnav-dd-count">{c.count}</span>
+                </a>
+              ))
+            )}
+
+            {topTags.length > 0 && (
+              <>
+                <p class="jnl-fullmenu-sub">{labels.tags}</p>
+                <div class="jnav-dd-chips">
+                  {topTags.map((t) => (
+                    <a
+                      href={tagHref(lang, t.name)}
+                      data-menu-link
+                      class:list={["chip-flat", "chip-flat--sm", { on: isActiveNav(tagHref(lang, t.name), path) }]}
+                    >#{t.name}</a>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <p class="jnl-fullmenu-sub">{labels.topics}</p>
+            <a
+              href={topicsHref(lang)}
+              data-menu-link
+              class="jnl-fullmenu-link jnl-fullmenu-link--sub jnl-fullmenu-link--lead"
+              aria-current={isActiveNav(topicsHref(lang), path) ? "page" : undefined}
+            >
+              <span>{labels.topics}</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        )
+      )}
     </nav>
 
-    <div class="jnl-drawer-controls">
-      <div class="lang-toggle" role="group" aria-label="Sprache / Language">
-        <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-        <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    <div class="jnl-fullmenu-foot max-w-5xl mx-auto w-full">
+      <div class="flex items-center gap-2">
+        <div class="lang-toggle" role="group" aria-label="Sprache / Language">
+          <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+          <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+        </div>
+        <ThemeToggle client:idle />
       </div>
-      <ThemeToggle client:idle />
+      <a
+        href="https://tracht-digital.de/#contact"
+        data-menu-link
+        class="btn-flat jnl-fullmenu-cta"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4.5" width="18" height="16" /><path d="M3 9h18M8 2.5v4M16 2.5v4" />
+        </svg>
+        <span>{cta}</span>
+      </a>
     </div>
-
-    <a
-      href="https://tracht-digital.de/#contact"
-      data-menu-link
-      class="btn-flat jnl-drawer-cta w-full justify-center"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="4.5" width="18" height="16" /><path d="M3 9h18M8 2.5v4M16 2.5v4" />
-      </svg>
-      <span>{cta}</span>
-    </a>
-  </aside>
+  </div>
 </header>
 
 <style>
@@ -229,45 +364,60 @@ const navIcons: Record<string, string> = {
     transform: translate(-50%, -50%) rotate(-45deg);
   }
 
-  /* Dimmed backdrop behind the drawer. */
-  .jnl-overlay {
+  /* Expanding search field over the bar (mobile). Anchored to the sticky
+     header, flat paper surface so it cleanly masks the bar row. */
+  .jnl-search-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    background: var(--color-paper);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 160ms ease, visibility 0s linear 160ms;
+  }
+  .jnl-search-panel[data-open="true"] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 160ms ease, visibility 0s linear 0s;
+  }
+  .nav-search--panel {
+    display: flex;
+  }
+  .nav-search--panel input,
+  .nav-search--panel input:focus {
+    width: 100%;
+  }
+
+  /* Full-screen overlay menu — flat (no glass), solid paper surface so it
+     holds in both themes. Fades + lifts in; covers the whole viewport. */
+  .jnl-fullmenu {
     position: fixed;
     inset: 0;
-    z-index: 40;
-    background: color-mix(in srgb, var(--color-surface-ink) 55%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 220ms ease;
-  }
-  .jnl-overlay[data-open="true"] {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Off-canvas drawer — flat panel sliding in from the right. Angular
-     (no radii, no shadow), separated by a single left hairline. */
-  .jnl-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 41;
+    z-index: 50;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    width: min(20rem, 86vw);
-    height: 100dvh;
     padding: 1rem 1.25rem 1.5rem;
     background: var(--color-paper);
-    border-left: 1px solid var(--color-line);
-    transform: translateX(100%);
-    transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
     overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
   }
-  .jnl-drawer[data-open="true"] {
-    transform: translateX(0);
+  .jnl-fullmenu[data-open="true"] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
   }
 
-  .jnl-drawer-head {
+  .jnl-fullmenu-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -276,12 +426,12 @@ const navIcons: Record<string, string> = {
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--color-line);
   }
-  .jnl-drawer-close {
+  .jnl-fullmenu-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     margin-right: -0.5rem;
     color: var(--color-primary);
     background: transparent;
@@ -289,58 +439,88 @@ const navIcons: Record<string, string> = {
     cursor: pointer;
     transition: background-color 160ms ease;
   }
-  .jnl-drawer-close:hover {
+  .jnl-fullmenu-close:hover {
     background: var(--color-soft);
   }
 
-  .jnl-drawer-nav {
+  .jnl-fullmenu-nav {
     display: flex;
     flex-direction: column;
-    padding: 0.5rem 0;
+    padding: 1.25rem 0;
   }
-  .jnl-drawer-controls {
-    margin-top: auto;
-    padding-top: 1rem;
+  .jnl-fullmenu-group {
     display: flex;
+    flex-direction: column;
+  }
+  .jnl-fullmenu-sub {
+    margin: 1.25rem 0 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Large editorial links (Instrument Serif); sub-items drop to the body
+     font. Flat accent-underline hover, consistent with .jnav-item. */
+  .jnl-fullmenu-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 3rem;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+  .jnl-fullmenu-link:hover,
+  .jnl-fullmenu-link:focus-visible {
+    color: var(--color-primary);
+  }
+  .jnl-fullmenu-link[aria-current="page"] {
+    color: var(--color-primary);
+  }
+  .jnl-fullmenu-link--sub {
+    min-height: 2.5rem;
+    padding-left: 0.25rem;
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  .jnl-fullmenu-link--sub[aria-current="page"] {
+    font-weight: 600;
+  }
+  .jnl-fullmenu-link--lead {
+    color: var(--color-primary);
+  }
+  .jnl-fullmenu-nav .jnav-dd-chips {
+    padding: 0.25rem 0 0.125rem;
+  }
+
+  .jnl-fullmenu-foot {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     border-top: 1px solid var(--color-line);
   }
-  .jnl-drawer-cta {
-    margin-top: 1rem;
+  .jnl-fullmenu-cta {
     gap: 0.5rem;
   }
 
-  /* Block nav items inside the drawer carry a leading flat glyph. */
-  .jnav-item--block {
-    min-height: 2.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 1rem;
-  }
-  .jnav-ico {
-    flex-shrink: 0;
-    color: var(--color-accent);
-    opacity: 0.85;
-  }
-
-  /* Full-width variant of the bar search for use on the mobile bar. */
-  .nav-search--block {
-    display: flex;
-    width: 100%;
-  }
-  .nav-search--block input {
-    width: 100%;
-  }
-  .nav-search--block input:focus {
-    width: 100%;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .jnl-drawer,
-    .jnl-overlay,
+    .jnl-fullmenu,
+    .jnl-search-panel,
     .jnl-menu-bar {
       transition-duration: 0.01ms;
     }
@@ -370,60 +550,109 @@ const navIcons: Record<string, string> = {
     });
   });
 
-  // Mobile drawer toggle — a right-side off-canvas panel with a dimmed
-  // overlay and body scroll-lock while open.
-  const toggle = document.getElementById("jnl-menu-toggle");
-  const menu = document.getElementById("jnl-mobile-menu");
-  const overlay = document.getElementById("jnl-overlay");
-  const closeBtn = document.getElementById("jnl-menu-close");
-  if (toggle && menu && overlay) {
-    const setOpen = (open: boolean) => {
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      menu.dataset.open = open ? "true" : "false";
-      menu.setAttribute("aria-hidden", open ? "false" : "true");
-      document.body.classList.toggle("drawer-open", open);
-      if (open) {
-        overlay.hidden = false;
-        overlay.dataset.open = "true";
-        closeBtn?.focus();
-      } else {
-        overlay.dataset.open = "false";
-        // Keep the overlay in the DOM through its fade-out, then hide it.
-        window.setTimeout(() => {
-          if (menu.dataset.open !== "true") overlay.hidden = true;
-        }, 240);
+  // Desktop "Entdecken" disclosure — a flat panel under the nav button.
+  // Toggles on click; closes on Escape, click-outside or a route change.
+  const ddRoot = document.getElementById("jnl-entdecken");
+  const ddBtn = document.getElementById("jnl-entdecken-btn");
+  const ddPanel = document.getElementById("jnl-entdecken-panel");
+  if (ddRoot && ddBtn && ddPanel) {
+    const setDd = (open: boolean) => {
+      ddBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      ddPanel.dataset.open = open ? "true" : "false";
+    };
+    ddBtn.addEventListener("click", () => {
+      setDd(ddBtn.getAttribute("aria-expanded") !== "true");
+    });
+    document.addEventListener("click", (e) => {
+      if (!ddRoot.contains(e.target as Node)) setDd(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && ddBtn.getAttribute("aria-expanded") === "true") {
+        setDd(false);
+        ddBtn.focus();
       }
+    });
+  }
+
+  // Mobile chrome — a full-screen overlay menu and an expanding search
+  // field. The two are mutually exclusive; either one open locks scroll.
+  const menuToggle = document.getElementById("jnl-menu-toggle");
+  const menu = document.getElementById("jnl-mobile-menu");
+  const menuClose = document.getElementById("jnl-menu-close");
+  const searchToggle = document.getElementById("jnl-search-toggle");
+  const searchPanel = document.getElementById("jnl-search-panel");
+  const searchClose = document.getElementById("jnl-search-close");
+  const searchInput = document.getElementById("jnl-search-mobile") as HTMLInputElement | null;
+
+  if (menuToggle && menu && searchToggle && searchPanel) {
+    const lockScroll = () => {
+      const open = menu.dataset.open === "true" || searchPanel.dataset.open === "true";
+      document.body.classList.toggle("drawer-open", open);
     };
 
-    toggle.addEventListener("click", () => {
-      const open = toggle.getAttribute("aria-expanded") !== "true";
-      setOpen(open);
-      if (!open) toggle.focus();
+    const setMenu = (open: boolean) => {
+      menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      menu.dataset.open = open ? "true" : "false";
+      menu.setAttribute("aria-hidden", open ? "false" : "true");
+      if (open) {
+        setSearch(false); // mutually exclusive
+        requestAnimationFrame(() => menuClose?.focus()); // wait for visibility flip
+      }
+      lockScroll();
+    };
+
+    const setSearch = (open: boolean) => {
+      searchToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      searchPanel.dataset.open = open ? "true" : "false";
+      searchPanel.setAttribute("aria-hidden", open ? "false" : "true");
+      if (open) {
+        setMenu(false); // mutually exclusive
+        requestAnimationFrame(() => searchInput?.focus()); // wait for visibility flip
+      }
+      lockScroll();
+    };
+
+    menuToggle.addEventListener("click", () => {
+      const open = menuToggle.getAttribute("aria-expanded") !== "true";
+      setMenu(open);
+      if (!open) menuToggle.focus();
     });
-    closeBtn?.addEventListener("click", () => {
-      setOpen(false);
-      toggle.focus();
+    menuClose?.addEventListener("click", () => {
+      setMenu(false);
+      menuToggle.focus();
     });
-    overlay.addEventListener("click", () => {
-      setOpen(false);
-      toggle.focus();
+    menu.querySelectorAll<HTMLAnchorElement>("[data-menu-link]").forEach((link) => {
+      link.addEventListener("click", () => setMenu(false));
     });
 
-    menu.querySelectorAll<HTMLAnchorElement>("[data-menu-link]").forEach((link) => {
-      link.addEventListener("click", () => setOpen(false));
+    searchToggle.addEventListener("click", () => {
+      const open = searchToggle.getAttribute("aria-expanded") !== "true";
+      setSearch(open);
+      if (!open) searchToggle.focus();
+    });
+    searchClose?.addEventListener("click", () => {
+      setSearch(false);
+      searchToggle.focus();
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
-        setOpen(false);
-        toggle.focus();
+      if (e.key !== "Escape") return;
+      if (menu.dataset.open === "true") {
+        setMenu(false);
+        menuToggle.focus();
+      } else if (searchPanel.dataset.open === "true") {
+        setSearch(false);
+        searchToggle.focus();
       }
     });
 
-    // Close automatically when crossing into the desktop (md / 768px) nav.
+    // Close both when crossing into the desktop (md / 768px) nav.
     const mq = window.matchMedia("(min-width: 768px)");
     mq.addEventListener("change", (e) => {
-      if (e.matches) setOpen(false);
+      if (e.matches) {
+        setMenu(false);
+        setSearch(false);
+      }
     });
   }
 </script>

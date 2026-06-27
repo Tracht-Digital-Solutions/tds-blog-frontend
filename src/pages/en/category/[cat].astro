@@ -1,0 +1,92 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { listAllPosts } from "~/lib/content-api";
+import { categorySlug } from "~/lib/taxonomy";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * Category-filtered journal index (EN). Mirror of /kategorie/[cat].astro
+ * against `listAllPosts("en")`.
+ */
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts("en");
+  } catch (err) {
+    console.error("[tds-blog] /en/category getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const catToPosts = new Map<string, { name: string; list: typeof posts }>();
+  for (const p of posts) {
+    const name = p.category?.trim();
+    if (!name) continue;
+    const slug = categorySlug(name);
+    if (!slug) continue;
+    const entry = catToPosts.get(slug);
+    if (entry) entry.list.push(p);
+    else catToPosts.set(slug, { name, list: [p] });
+  }
+
+  return Array.from(catToPosts.entries()).map(([slug, { name, list }]) => ({
+    params: { cat: slug },
+    props: { name, posts: list },
+  }));
+}
+
+interface PageProps {
+  name: string;
+  posts: Awaited<ReturnType<typeof listAllPosts>>;
+}
+
+const { name, posts } = Astro.props as PageProps;
+const cat = Astro.params.cat as string;
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("en"),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name, url: `${siteConfig.url}/en/category/${cat}` },
+  ]),
+);
+---
+
+<Layout
+  title={`${name} — Journal`}
+  description={`Articles in the “${name}” category.`}
+  lang="en"
+  jsonLd={jsonLd}
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="mb-10">
+      <a href="/en/" class="btn-back mb-6">
+        <span aria-hidden="true">←</span> All posts
+      </a>
+      <p class="section-num mb-4 mt-6">Journal · Category</p>
+      <h1 class="display text-4xl md:text-5xl">
+        <span class="accent-italic">{name}</span>
+      </h1>
+      <p class="marginalia mt-3">
+        {posts.length === 1
+          ? "One article in this category."
+          : `${posts.length} articles in this category.`}
+      </p>
+    </header>
+
+    <ul class="list-none p-0 m-0">
+      {posts.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="en"
+        />
+      ))}
+    </ul>
+  </main>
+</Layout>
