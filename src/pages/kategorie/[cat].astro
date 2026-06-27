@@ -1,0 +1,94 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import BlogPostCard from "~/components/BlogPostCard.astro";
+import { listAllPosts } from "~/lib/content-api";
+import { categorySlug } from "~/lib/taxonomy";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * Category-filtered journal index (DE). One static page per unique
+ * category across the published DE corpus. Mirrors /tag/[tag].astro:
+ * `listAllPosts` already pulls the full set for the static build, so we
+ * group in JS rather than asking the content-api for a server-side filter.
+ * The original category name rides along in props (the slug is lossy).
+ */
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts("de");
+  } catch (err) {
+    console.error("[tds-blog] /kategorie getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const catToPosts = new Map<string, { name: string; list: typeof posts }>();
+  for (const p of posts) {
+    const name = p.category?.trim();
+    if (!name) continue;
+    const slug = categorySlug(name);
+    if (!slug) continue;
+    const entry = catToPosts.get(slug);
+    if (entry) entry.list.push(p);
+    else catToPosts.set(slug, { name, list: [p] });
+  }
+
+  return Array.from(catToPosts.entries()).map(([slug, { name, list }]) => ({
+    params: { cat: slug },
+    props: { name, posts: list },
+  }));
+}
+
+interface PageProps {
+  name: string;
+  posts: Awaited<ReturnType<typeof listAllPosts>>;
+}
+
+const { name, posts } = Astro.props as PageProps;
+const cat = Astro.params.cat as string;
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("de"),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/` },
+    { name, url: `${siteConfig.url}/kategorie/${cat}` },
+  ]),
+);
+---
+
+<Layout
+  title={`${name} — Journal`}
+  description={`Artikel im Journal in der Kategorie „${name}“.`}
+  jsonLd={jsonLd}
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="mb-10">
+      <a href="/" class="btn-back mb-6">
+        <span aria-hidden="true">←</span> Alle Beiträge
+      </a>
+      <p class="section-num mb-4 mt-6">Journal · Kategorie</p>
+      <h1 class="display text-4xl md:text-5xl">
+        <span class="accent-italic">{name}</span>
+      </h1>
+      <p class="marginalia mt-3">
+        {posts.length === 1
+          ? "Ein Artikel in dieser Kategorie."
+          : `${posts.length} Artikel in dieser Kategorie.`}
+      </p>
+    </header>
+
+    <ul class="list-none p-0 m-0">
+      {posts.map((p) => (
+        <BlogPostCard
+          slug={p.slug}
+          category={p.category}
+          title={p.title}
+          excerpt={p.excerpt}
+          publishedAt={p.publishedAt}
+          lang="de"
+        />
+      ))}
+    </ul>
+  </main>
+</Layout>

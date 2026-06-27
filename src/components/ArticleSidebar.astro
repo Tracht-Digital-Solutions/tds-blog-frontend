@@ -5,9 +5,23 @@
  * collapse toggle, search, nav links, DE/EN toggle and the primary
  * CTA. Collapsed it narrows to an icon rail and the CTA becomes a
  * phone icon. State persists in localStorage (`tds-blog-sidenav`).
+ *
+ * Mirrors the JournalHeader IA: Journal · Entdecken (Kategorien ·
+ * Beliebte Tags · Aktuelle Themen) · RSS. The vertical layout renders the
+ * Entdecken group as inline grouped lists rather than a flyout. All of it
+ * lives under `sidebar-hide-collapsed`, so the collapsed icon rail stays
+ * the same minimal toggle + theme + CTA.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
-import { navItems, isActiveNav } from "~/lib/nav";
+import {
+  primaryNav,
+  isActiveNav,
+  entdeckenLabels,
+  categoryHref,
+  tagHref,
+  topicsHref,
+} from "~/lib/nav";
+import { getTaxonomy } from "~/lib/taxonomy";
 
 interface Props {
   lang?: "de" | "en";
@@ -15,9 +29,10 @@ interface Props {
 
 const { lang = "de" } = Astro.props;
 const home = lang === "de" ? "/" : "/en/";
-const items = navItems(lang);
+const nav = primaryNav(lang);
 const path = Astro.url.pathname;
-const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
+const labels = entdeckenLabels(lang);
+const { categories, topTags } = await getTaxonomy(lang);
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navigation";
 ---
@@ -32,31 +47,60 @@ const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navig
     </button>
   </div>
 
-  <div class="nav-search mb-4 sidebar-hide-collapsed">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-      <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-    </svg>
-    <input
-      type="search"
-      id="sidebar-search"
-      placeholder={searchPlaceholder}
-      aria-label={searchPlaceholder}
-      data-index-url={home}
-    />
-  </div>
+  <nav class="flex flex-col gap-1 sidebar-hide-collapsed flex-1 min-h-0 overflow-y-auto" aria-label="Navigation">
+    {nav.map((node) =>
+      node.kind === "link" ? (
+        <a href={node.href} class="snav-item" aria-current={isActiveNav(node.href, path) ? "page" : undefined}>
+          {node.label}
+        </a>
+      ) : (
+        <div class="snav-group">
+          <p class="snav-group-head">{node.label}</p>
 
-  <nav class="flex flex-col gap-1 sidebar-hide-collapsed" aria-label="Navigation">
-    {items.map((it) => (
-      <a href={it.href} class="snav-item" aria-current={isActiveNav(it.href, path) ? "page" : undefined}>
-        {it.label}
-      </a>
-    ))}
+          <p class="snav-sub-head">{labels.categories}</p>
+          {categories.length === 0 ? (
+            <p class="jnav-dd-empty px-3">—</p>
+          ) : (
+            categories.map((c) => (
+              <a
+                href={categoryHref(lang, c.slug)}
+                class="snav-item snav-item--sub"
+                aria-current={isActiveNav(categoryHref(lang, c.slug), path) ? "page" : undefined}
+              >
+                <span>{c.name}</span>
+                <span class="jnav-dd-count">{c.count}</span>
+              </a>
+            ))
+          )}
+
+          {topTags.length > 0 && (
+            <>
+              <p class="snav-sub-head">{labels.tags}</p>
+              <div class="jnav-dd-chips px-3 pb-1">
+                {topTags.map((t) => (
+                  <a
+                    href={tagHref(lang, t.name)}
+                    class:list={["chip-flat", "chip-flat--sm", { on: isActiveNav(tagHref(lang, t.name), path) }]}
+                  >#{t.name}</a>
+                ))}
+              </div>
+            </>
+          )}
+
+          <p class="snav-sub-head">{labels.topics}</p>
+          <a
+            href={topicsHref(lang)}
+            class="snav-item snav-item--sub"
+            aria-current={isActiveNav(topicsHref(lang), path) ? "page" : undefined}
+          >
+            {labels.topics}
+          </a>
+        </div>
+      )
+    )}
   </nav>
 
-  <div class="flex-1"></div>
-
-  <div class="flex justify-center mb-3">
+  <div class="flex justify-center mb-3 mt-3">
     <ThemeToggle client:idle />
   </div>
 
@@ -113,12 +157,5 @@ const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navig
     } catch {
       /* storage disabled */
     }
-  });
-
-  const input = document.getElementById("sidebar-search") as HTMLInputElement | null;
-  input?.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter" || !input.value.trim()) return;
-    const target = input.dataset.indexUrl || "/";
-    location.href = `${target}?q=${encodeURIComponent(input.value.trim())}`;
   });
 </script>
