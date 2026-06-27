@@ -319,8 +319,14 @@ export default function HeroSlider({
           )}
         </div>
 
-        <div role="tabpanel" aria-live="polite">
-          <Slide key={current.meta.id} posts={current.posts} meta={current.meta} lang={lang} t={t} />
+        <div role="tabpanel" aria-live="polite" style={{ overflow: "hidden" }}>
+          {/* Keyed wrapper remounts on each set change, replaying the
+              rightward slide-in keyframe (hero-slide, in global.css).
+              Auto-rotation advances forward, so it reads as scrolling
+              to the right; reduced-motion disables the animation. */}
+          <div key={current.meta.id} className="hero-slide">
+            <Slide posts={current.posts} meta={current.meta} lang={lang} t={t} />
+          </div>
         </div>
       </div>
     </section>

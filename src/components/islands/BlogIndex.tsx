@@ -282,8 +282,25 @@ export default function BlogIndex({
 
           <h2
             className="display-tight"
-            style={{ fontSize: "1.625rem", margin: "0 0 18px" }}
+            style={{ fontSize: "1.625rem", margin: "0 0 18px", display: "flex", alignItems: "center", gap: 10 }}
           >
+            <svg
+              className="head-ico"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
             {cat === "all" ? t.all : cat}
           </h2>
 

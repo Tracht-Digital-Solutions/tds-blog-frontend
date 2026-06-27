@@ -76,9 +76,10 @@ const groups =
 <footer class="blog-footer" style="background: var(--color-surface-navy); color: #fff; padding: 48px 0 28px;">
   <div class="max-w-5xl mx-auto px-6">
     <div class="grid gap-9 sm:grid-cols-2 lg:[grid-template-columns:1.4fr_repeat(3,1fr)]">
-      <div>
-        <p class="brand-wordmark text-lg mb-3" style="color: #fff;">
-          Tracht <span style="font-style: italic; color: var(--color-accent-pink);">Digital</span>
+      <div data-reveal>
+        <p class="brand-wordmark text-lg mb-3 inline-flex items-center gap-2" style="color: #fff;">
+          <span class="brand-logo brand-logo--inverse" aria-hidden="true"></span>
+          <span style="font-style: italic; color: var(--color-accent-pink);">Digital</span>
         </p>
         <p class="text-sm leading-relaxed" style="color: rgb(255 255 255 / 0.65); max-width: 32ch;">
           {blurb}
@@ -88,7 +89,7 @@ const groups =
         </p>
       </div>
       {groups.map((g) => (
-        <div>
+        <div data-reveal>
           <p class="eyebrow mb-4" style="color: rgb(255 255 255 / 0.5);">{g.head}</p>
           <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
             {g.items.map((it) => (

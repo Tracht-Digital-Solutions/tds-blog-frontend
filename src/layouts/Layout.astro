@@ -82,6 +82,9 @@ const altLang = lang === "de" ? "en" : "de";
         preference; if neither, follow the OS. Same key as the other
         TDS frontends so the choice carries across properties. */}
     <script is:inline>
+      // Flag JS so progressive-enhancement-only styling (scroll-reveal)
+      // never hides content when scripting is unavailable.
+      document.documentElement.classList.add("js");
       (function () {
         try {
           var saved = localStorage.getItem("tds-theme");
@@ -212,6 +215,34 @@ const altLang = lang === "de" ? "en" : "de";
           { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
         );
         sections.forEach((s) => observer.observe(s));
+      }
+    </script>
+
+    {/* Scroll-reveal — flat rise-in for [data-reveal] elements as they
+        enter the viewport. Honours reduced-motion (reveal immediately)
+        and degrades gracefully without IntersectionObserver. Items in
+        the same row get a small stagger. */}
+    <script>
+      const revealables = document.querySelectorAll<HTMLElement>("[data-reveal]");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!revealables.length) {
+        // nothing to do
+      } else if (reduce || !("IntersectionObserver" in window)) {
+        revealables.forEach((el) => el.classList.add("is-in"));
+      } else {
+        const io = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry, i) => {
+              if (!entry.isIntersecting) return;
+              const el = entry.target as HTMLElement;
+              el.style.setProperty("--reveal-delay", `${Math.min(i, 5) * 60}ms`);
+              el.classList.add("is-in");
+              obs.unobserve(el);
+            });
+          },
+          { rootMargin: "0px 0px -10% 0px", threshold: 0.05 },
+        );
+        revealables.forEach((el) => io.observe(el));
       }
     </script>
   </body>
