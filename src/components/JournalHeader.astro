@@ -37,7 +37,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
   <div class="max-w-5xl mx-auto px-4 sm:px-6 min-h-15 py-2.5 flex flex-nowrap items-center gap-x-2 sm:gap-x-4">
     <a
       href={home}
-      class="brand-wordmark text-[0.9375rem] sm:text-[1.0625rem] tracking-tight min-w-0 truncate whitespace-nowrap"
+      class="brand-wordmark text-[0.9375rem] sm:text-[1.0625rem] tracking-tight shrink-0 whitespace-nowrap"
     >
       Tracht <span class="accent-italic">Journal</span>
     </a>
@@ -70,19 +70,38 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
       />
     </div>
 
-    {/* Right-hand controls. `ml-auto` pins them to the edge on mobile
-        where the flex-1 nav is hidden; harmless on desktop. */}
-    <div class="flex items-center gap-1.5 sm:gap-2 ml-auto md:ml-0 shrink-0">
-      <div class="lang-toggle" role="group" aria-label="Sprache / Language">
-        <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-        <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    {/* Mobile search bar — on phones the only bar controls are this field
+        and the hamburger; language + theme live inside the panel. */}
+    <div class="nav-search nav-search--block md:hidden flex-1 min-w-0">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+        <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      </svg>
+      <input
+        type="search"
+        id="jnl-search-bar"
+        class="js-blog-search"
+        placeholder={searchPlaceholder}
+        aria-label={searchPlaceholder}
+        data-index-url={home}
+      />
+    </div>
+
+    {/* Right-hand controls. Language, theme and the CTA only show from md
+        up; on mobile just the hamburger remains. */}
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div class="hidden md:flex items-center gap-2">
+        <div class="lang-toggle" role="group" aria-label="Sprache / Language">
+          <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+          <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+        </div>
+
+        <ThemeToggle client:idle />
+
+        <a href="https://tracht-digital.de/#contact" class="btn-flat" style="height: 2.25rem;">
+          {cta}
+        </a>
       </div>
-
-      <ThemeToggle client:idle />
-
-      <a href="https://tracht-digital.de/#contact" class="btn-flat hidden md:inline-flex" style="height: 2.25rem;">
-        {cta}
-      </a>
 
       <button
         id="jnl-menu-toggle"
@@ -99,30 +118,15 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
     </div>
   </div>
 
-  {/* Mobile panel — flat slide-down holding the links, search and CTA
-      that are hidden from the bar below md. */}
+  {/* Mobile panel — flat slide-down holding the links, language/theme
+      controls and CTA that are kept off the bar below md. */}
   <div
     id="jnl-mobile-menu"
     class="jnl-mobile-menu md:hidden"
     aria-hidden="true"
   >
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3">
-      <div class="nav-search nav-search--block">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-        </svg>
-        <input
-          type="search"
-          id="jnl-search-mobile"
-          class="js-blog-search"
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
-          data-index-url={home}
-        />
-      </div>
-
-      <nav class="mt-3 flex flex-col" aria-label="Navigation">
+      <nav class="flex flex-col" aria-label="Navigation">
         {items.map((it) => (
           <a
             href={it.href}
@@ -134,6 +138,14 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
           </a>
         ))}
       </nav>
+
+      <div class="mt-3 pt-3 flex items-center justify-between gap-3" style="border-top: 1px solid var(--color-line);">
+        <div class="lang-toggle" role="group" aria-label="Sprache / Language">
+          <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+          <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+        </div>
+        <ThemeToggle client:idle />
+      </div>
 
       <a
         href="https://tracht-digital.de/#contact"
