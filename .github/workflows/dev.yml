@@ -19,7 +19,7 @@ jobs:
   build:
     uses: ./.github/workflows/_build.yml
     with:
-      demo_mode: 'true'
+      demo_mode: true
       og_smoke: true
       publish_branch: dev
     secrets: inherit
