@@ -5,6 +5,9 @@
 @import "@fontsource-variable/hanken-grotesk/index.css";
 @import "@fontsource-variable/plus-jakarta-sans/index.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
+/* Brand wordmark only — the logo title reads as a heading in the canonical
+   Instrument Serif (upright), not the body grotesk. See .brand-wordmark below. */
+@import "@fontsource/instrument-serif/400.css";
 
 /* Brand design system + shared application chrome. The tokens, dark
    theme, base resets, type primitives, chips, header shell and
@@ -27,6 +30,12 @@
 .display { font-weight: 800; letter-spacing: -0.03em; }
 .display-tight { font-weight: 700; letter-spacing: -0.02em; }
 .eyebrow { font-family: var(--font-display); font-weight: 600; }
+/* Logo title in the brand display serif (upright). Scoped to the wordmark so
+   only the brand title changes — every other --font-display heading stays the
+   grotesk. Instrument Serif is single-weight 400; pin it to avoid faux-bold
+   from the shared .brand-wordmark { font-weight: 500 }. */
+.brand-wordmark { font-family: "Instrument Serif", ui-serif, Georgia, serif; font-weight: 400; }
+.brand-wordmark .accent-italic { font-style: normal; }
 
 /* === Flat blog design ("kantig") ===================================
    From the Tracht design system handoff: the blog surface is flat and

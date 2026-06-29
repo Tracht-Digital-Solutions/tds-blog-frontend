@@ -253,7 +253,7 @@ export default function HeroSlider({
   return (
     <section style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
       <div
-        className="max-w-5xl mx-auto px-6"
+        className="w-full px-6 sm:px-10 lg:px-16"
         style={{ paddingTop: 40, paddingBottom: 44 }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}

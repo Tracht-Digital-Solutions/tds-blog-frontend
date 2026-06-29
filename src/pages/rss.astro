@@ -1,0 +1,29 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import RssInfo from "~/components/RssInfo.astro";
+import { asGraph, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+
+/**
+ * /rss (DE) — the friendly RSS landing the footer links to. Static; the
+ * actual feed stays at /rss.xml.
+ */
+const jsonLd = asGraph(
+  websiteSchema(),
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: "RSS", url: `${siteConfig.url}/rss` },
+  ]),
+);
+---
+
+<Layout
+  title="RSS abonnieren — Journal"
+  description="So abonnierst du das Journal per RSS: Feed-Adresse und empfohlene RSS-Programme."
+  jsonLd={jsonLd}
+  lang="de"
+>
+  <main id="main">
+    <RssInfo lang="de" />
+  </main>
+</Layout>
