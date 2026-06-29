@@ -30,9 +30,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: write
-      packages: read
+    # No permissions: block here - a reusable workflow cannot request more than
+    # the caller's token holds, and the repo default is read-only. Each caller
+    # grants least-privilege permissions instead.
 
     steps:
       - uses: actions/checkout@v5
