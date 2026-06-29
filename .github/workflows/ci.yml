@@ -49,6 +49,9 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Test
+        run: npm run test:run
+
       - name: Build
         # Build can do a runtime fetch against content-api; allow it
         # to succeed even if that fetch fails since journal teaser

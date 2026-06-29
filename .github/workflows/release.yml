@@ -39,6 +39,9 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Test
+        run: npm run test:run
+
       - name: OG smoke
         run: npm run og:smoke
 
