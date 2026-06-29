@@ -3,7 +3,7 @@
  * top JournalHeader (incl. its mobile drawer) and the article-page
  * ArticleSidebar so the two never drift.
  *
- * The primary nav is Journal · Entdecken ▾ · RSS. "Entdecken" is a group
+ * The primary nav is Journal · Entdecken ▾. "Entdecken" is a group
  * node — its three sections (Kategorien · Beliebte Tags · Aktuelle Themen)
  * are built at render time from `getTaxonomy()` (categories/tags are
  * derived from the corpus, so they can't be hard-coded here). The href
@@ -15,7 +15,7 @@
 export type Lang = "de" | "en";
 
 export type BlogNavNode =
-  | { kind: "link"; key: "journal" | "rss"; label: string; href: string }
+  | { kind: "link"; key: "journal"; label: string; href: string }
   | { kind: "group"; key: "entdecken"; label: string };
 
 export function primaryNav(lang: Lang): BlogNavNode[] {
@@ -23,7 +23,6 @@ export function primaryNav(lang: Lang): BlogNavNode[] {
   return [
     { kind: "link", key: "journal", label: "Journal", href: home },
     { kind: "group", key: "entdecken", label: lang === "de" ? "Entdecken" : "Discover" },
-    { kind: "link", key: "rss", label: "RSS", href: "/rss.xml" },
   ];
 }
 
@@ -51,11 +50,9 @@ export function topicsHref(lang: Lang): string {
 const norm = (p: string) => p.replace(/\/+$/, "") || "/";
 
 /**
- * Active-state helper for a plain link nav item (Journal / RSS). RSS never
- * reads as the active page.
+ * Active-state helper for a plain link nav item (Journal).
  */
 export function isActiveNav(href: string, pathname: string): boolean {
-  if (href === "/rss.xml") return false;
   return norm(href) === norm(pathname);
 }
 
