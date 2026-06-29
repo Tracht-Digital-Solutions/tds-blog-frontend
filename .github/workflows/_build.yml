@@ -10,9 +10,9 @@ on:
   workflow_call:
     inputs:
       demo_mode:
-        description: Value for PUBLIC_DEMO_MODE; left unset when empty (CI parity).
-        type: string
-        default: ''
+        description: Value for PUBLIC_DEMO_MODE on publishing builds (dev=true, release=false). Ignored by CI (no publish → var stays unset).
+        type: boolean
+        default: false
       og_smoke:
         description: Run the og:smoke font-path regression check (landingpage/blog only).
         type: boolean
@@ -64,9 +64,10 @@ jobs:
         run: npm run og:smoke
 
       - name: Configure demo mode
-        # Only export PUBLIC_DEMO_MODE when the caller set it. CI passes '' so
-        # the var stays unset, exactly as the standalone ci.yml did.
-        if: ${{ inputs.demo_mode != '' }}
+        # Only export PUBLIC_DEMO_MODE on publishing builds (dev/release). CI
+        # doesn't publish, so the var stays unset there, exactly as the
+        # standalone ci.yml did. The boolean renders as the string true/false.
+        if: ${{ inputs.publish_branch != '' }}
         run: echo "PUBLIC_DEMO_MODE=${{ inputs.demo_mode }}" >> "$GITHUB_ENV"
 
       - name: Build

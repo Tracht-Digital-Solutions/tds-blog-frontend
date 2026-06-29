@@ -16,7 +16,7 @@ jobs:
   build:
     uses: ./.github/workflows/_build.yml
     with:
-      demo_mode: 'false'
+      demo_mode: false
       og_smoke: true
       publish_branch: release
       deploy: true
