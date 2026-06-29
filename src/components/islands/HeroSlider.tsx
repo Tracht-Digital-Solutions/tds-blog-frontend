@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AuthorChip, formatPostDate, type CardPost } from "../PostCard";
 import { PostCover } from "../Covers";
 
@@ -52,7 +52,9 @@ const LABELS: Record<"de" | "en", { intro: string; sets: Record<SetId, SetMeta>;
   },
 };
 
-const ROTATE_MS = 7000;
+const ROTATE_MS = 12000;
+// Drag distance (px) past which a release advances to the prev/next set.
+const DRAG_THRESHOLD = 64;
 
 function readWeights(): Record<string, number> | null {
   const match = document.cookie.match(/(?:^|; )tds-interests=([^;]*)/);
@@ -85,8 +87,8 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
   const secondary = rest.slice(0, 2);
 
   return (
-    <div className="grid md:grid-cols-2 items-center gap-8 md:gap-11">
-      <div>
+    <div className="hero-grid grid md:grid-cols-2 gap-8 md:gap-11">
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <span className="eyebrow" style={{ color: "var(--color-accent-pink)" }}>
             {meta.label}
@@ -107,6 +109,10 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
             margin: "14px 0 0",
             maxWidth: "54ch",
             textWrap: "pretty",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
           {lead.excerpt}
@@ -138,8 +144,8 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           {t.read} <span aria-hidden="true">→</span>
         </a>
       </div>
-      <div className="hidden sm:flex" style={{ flexDirection: "column", gap: 16 }}>
-        <div style={{ overflow: "hidden", aspectRatio: "4 / 3", position: "relative" }}>
+      <div className="hidden sm:flex" style={{ flexDirection: "column", justifyContent: "center", gap: 16, minHeight: 0 }}>
+        <div className="hero-cover" style={{ overflow: "hidden", position: "relative" }}>
           <PostCover slug={lead.slug} coverHint={lead.coverHint} title={lead.title} style={{ position: "absolute", inset: 0 }} />
         </div>
         {secondary.length > 0 && (
@@ -234,6 +240,51 @@ export default function HeroSlider({
     [order, activeIndex],
   );
 
+  // Pointer-drag the slider left/right to flip sets (mouse + touch via the
+  // Pointer Events API). The panel follows the cursor live; releasing past
+  // DRAG_THRESHOLD advances, otherwise it springs back. A real drag swallows
+  // the trailing click so dragging off a link doesn't navigate.
+  const drag = useRef({ startX: 0, dx: 0, active: false, moved: false });
+  const [dragDX, setDragDX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const suppressClick = useRef(false);
+
+  const onPointerDown = useCallback(
+    (e: ReactPointerEvent) => {
+      if (order.length < 2) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      drag.current = { startX: e.clientX, dx: 0, active: true, moved: false };
+      setDragging(true);
+      setPaused(true);
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    },
+    [order.length],
+  );
+
+  const onPointerMove = useCallback((e: ReactPointerEvent) => {
+    const s = drag.current;
+    if (!s.active) return;
+    const dx = e.clientX - s.startX;
+    s.dx = dx;
+    if (Math.abs(dx) > 6) s.moved = true;
+    setDragDX(dx);
+  }, []);
+
+  const endDrag = useCallback(() => {
+    const s = drag.current;
+    if (!s.active) return;
+    s.active = false;
+    if (s.moved && Math.abs(s.dx) > DRAG_THRESHOLD && order.length > 1) {
+      interacted.current = true;
+      // drag left → next, drag right → previous
+      step(s.dx < 0 ? 1 : -1);
+    }
+    if (s.moved) suppressClick.current = true;
+    setDragDX(0);
+    setDragging(false);
+    setPaused(false);
+  }, [order.length, step]);
+
   // Auto-rotation — paused on hover/focus and for reduced-motion users.
   useEffect(() => {
     if (paused || order.length < 2 || prefersReducedMotion()) return;
@@ -319,13 +370,36 @@ export default function HeroSlider({
           )}
         </div>
 
-        <div role="tabpanel" aria-live="polite" style={{ overflow: "hidden" }}>
-          {/* Keyed wrapper remounts on each set change, replaying the
-              rightward slide-in keyframe (hero-slide, in global.css).
-              Auto-rotation advances forward, so it reads as scrolling
-              to the right; reduced-motion disables the animation. */}
-          <div key={current.meta.id} className="hero-slide">
-            <Slide posts={current.posts} meta={current.meta} lang={lang} t={t} />
+        <div
+          role="tabpanel"
+          aria-live="polite"
+          className="hero-stage"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onClickCapture={(e) => {
+            if (suppressClick.current) {
+              e.preventDefault();
+              e.stopPropagation();
+              suppressClick.current = false;
+            }
+          }}
+        >
+          {/* hero-drag follows the pointer during a drag (no animated remount,
+              so the translate is smooth); inside it the keyed hero-slide
+              remounts on each set change to replay the slide-in keyframe
+              (global.css). Reduced-motion disables that animation. */}
+          <div
+            className={`hero-drag${dragging ? " is-dragging" : ""}`}
+            style={{
+              transform: `translateX(${dragDX}px)`,
+              transition: dragging ? "none" : "transform 320ms cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          >
+            <div key={current.meta.id} className="hero-slide">
+              <Slide posts={current.posts} meta={current.meta} lang={lang} t={t} />
+            </div>
           </div>
         </div>
       </div>

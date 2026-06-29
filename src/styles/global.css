@@ -941,7 +941,52 @@ html.js [data-reveal].is-in {
   }
 }
 .hero-slide {
-  animation: heroSlideIn 480ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: heroSlideIn 620ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Hero stage — a fixed, vertically-centred viewport for the slider so every
+   set reads at the same height and the band never fills the whole screen.
+   Phones (single column) stay auto-height to avoid clipping long excerpts;
+   the fixed height kicks in at md where the two-column layout is predictable. */
+.hero-stage {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.hero-drag {
+  width: 100%;
+  cursor: grab;
+  touch-action: pan-y; /* let vertical scrolling through; we own the horizontal axis */
+}
+.hero-drag.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.hero-cover {
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 768px) {
+  .hero-stage {
+    height: clamp(360px, 44vh, 430px);
+  }
+  .hero-stage .hero-drag,
+  .hero-stage .hero-slide {
+    height: 100%;
+  }
+  /* Single full-height row so the columns actually fill the stage (a plain
+     height on the grid leaves the implicit row at content height); minmax(0,…)
+     lets children shrink so overflow:hidden can clip the cover. */
+  .hero-stage .hero-grid {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  /* Image fills the column height instead of scaling with the (now full-bleed)
+     width — that was making the cover huge and the hero tall. */
+  .hero-cover {
+    aspect-ratio: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
