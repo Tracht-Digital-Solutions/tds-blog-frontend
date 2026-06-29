@@ -24,7 +24,7 @@
     "@fontsource/instrument-serif": "^5.2.8",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "~4.2.4",
-    "@tracht-digital-solutions/tds-shared": "^0.7.0",
+    "@tracht-digital-solutions/tds-shared": "^0.7.4",
     "astro": "^6.4.2",
     "marked": "^18.0.0",
     "react": "^19.0.0",
