@@ -1,9 +1,9 @@
 name: Release → release branch (manual)
 
-# Production build, ONLY on the manual Actions button (workflow_dispatch).
-# Builds with the real production config, force-publishes dist/ to the
+# Production build, ONLY on the manual Actions button. Builds with the real
+# production config (PUBLIC_DEMO_MODE=false), force-publishes dist/ to the
 # orphan `release` branch, then pings the deploy webhook so the host pulls
-# `release` and goes live. Replaces the old `build` branch.
+# `release` and goes live. Pipeline body in _build.yml.
 
 on:
   workflow_dispatch:
@@ -14,81 +14,10 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: write
-      packages: read
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tracht-digital-solutions'
-
-      - name: Install
-        run: npm install --no-package-lock
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm run test:run
-
-      - name: OG smoke
-        run: npm run og:smoke
-
-      - name: Build (production config)
-        run: npm run build
-        env:
-          PUBLIC_DEMO_MODE: 'false'
-
-      - name: Stamp build
-        run: |
-          mkdir -p dist
-          {
-            echo "channel=release"
-            echo "commit=${GITHUB_SHA}"
-            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "workflow_run=${GITHUB_RUN_ID}"
-          } > dist/.build-info
-
-      - name: Publish dist to release branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.NPM_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: release
-          commit_message: 'release ${{ github.sha }}'
-          force_orphan: true
-
-      - name: Trigger deploy webhook
-        env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-        run: |
-          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
-            echo "DEPLOY_WEBHOOK_URL not set - skipping deploy ping."
-            exit 0
-          fi
-          echo "Pinging deploy webhook..."
-          # release/ is already published by now, so a failed ping must NOT
-          # red the run. Capture status, never exit non-zero, warn on failure.
-          # Plesk's git web-hook only answers POST (a bare GET 404s); -L follows
-          # any panel redirect and re-POSTs. A failed ping still must not red the run.
-          echo "POSTing deploy webhook to $(printf '%s' "$DEPLOY_WEBHOOK_URL" | cut -d/ -f1-3) ..."
-          code=$(curl -sS -o /dev/null -w '%{http_code}' \
-            -X POST -L --post301 --post302 --post303 \
-            --retry 3 --retry-delay 5 --max-time 30 \
-            "$DEPLOY_WEBHOOK_URL" || echo "000")
-          if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
-            echo "Deploy webhook pinged (HTTP $code)."
-          else
-            echo "::warning title=Deploy webhook failed::Webhook returned HTTP $code. The release branch is published but the host was not notified - check DEPLOY_WEBHOOK_URL."
-          fi
+    uses: ./.github/workflows/_build.yml
+    with:
+      demo_mode: 'false'
+      og_smoke: true
+      publish_branch: release
+      deploy: true
+    secrets: inherit

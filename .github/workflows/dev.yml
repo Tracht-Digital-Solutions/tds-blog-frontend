@@ -1,10 +1,10 @@
 name: Dev build → dev branch
 
-# Developer version: on every push to main, build the static site with the
-# Staging/Demo config (PUBLIC_DEMO_MODE=true — self-contained, no live
-# backend) and force-publish it to the orphan `dev` branch. NOT deployed —
-# this is the continuously-built developer artifact + the push-to-main
-# build gate. Production goes out via release.yml (manual button).
+# Developer version: on every push to main, build with the Staging/Demo config
+# (PUBLIC_DEMO_MODE=true) and force-publish dist/ to the orphan `dev` branch.
+# NOT deployed - this is the continuously-built developer artifact + push-to-main
+# build gate. Production goes out via release.yml (manual button). Pipeline body
+# in _build.yml.
 
 on:
   push:
@@ -17,60 +17,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: write
-      packages: read
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tracht-digital-solutions'
-
-      - name: Install
-        # See AGENTS.md: the Windows-generated lockfile is win32-only, so
-        # --no-package-lock is required for the Linux runner to resolve the
-        # right native binaries.
-        run: npm install --no-package-lock
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm run test:run
-
-      - name: OG smoke
-        run: npm run og:smoke
-
-      - name: Build (developer / demo config)
-        run: npm run build
-        env:
-          PUBLIC_DEMO_MODE: 'true'
-
-      - name: Stamp build
-        run: |
-          mkdir -p dist
-          {
-            echo "channel=dev"
-            echo "commit=${GITHUB_SHA}"
-            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "workflow_run=${GITHUB_RUN_ID}"
-          } > dist/.build-info
-
-      - name: Publish dist to dev branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.NPM_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: dev
-          commit_message: 'dev ${{ github.sha }}'
-          force_orphan: true
+    uses: ./.github/workflows/_build.yml
+    with:
+      demo_mode: 'true'
+      og_smoke: true
+      publish_branch: dev
+    secrets: inherit

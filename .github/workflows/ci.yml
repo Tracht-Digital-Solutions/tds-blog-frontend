@@ -1,12 +1,10 @@
 name: CI
 
-# Runs on every push and PR. Distinct from build.yml — this one
-# never publishes to the `build` branch, it just gates merges by
-# making sure type-check + build pass.
+# PR-only merge gate: type-check + test + og:smoke + build, no publish.
+# Push-to-main correctness is covered by dev.yml (single build per push).
+# The pipeline body lives in _build.yml.
 
 on:
-  # PR-only — push-to-main correctness is covered by build.yml (single
-  # build per push). This gates merges without duplicating the build.
   pull_request:
     branches: [main]
 
@@ -16,44 +14,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      packages: read
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tracht-digital-solutions'
-
-      - name: Install
-        # Using `npm install --no-package-lock` — the lockfile was
-        # generated on Windows and only registers win32 platform
-        # binaries (rollup, lightningcss, esbuild, sharp,
-        # tailwindcss-oxide) under node_modules/. Both `npm ci` and
-        # `npm install` honor that and skip the Linux binaries;
-        # --no-package-lock makes npm ignore the lockfile entirely
-        # and resolve from package.json so the right platform
-        # binaries get installed (npm/cli#4828).
-        run: npm install --no-package-lock
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm run test:run
-
-      - name: Build
-        # Build can do a runtime fetch against content-api; allow it
-        # to succeed even if that fetch fails since journal teaser
-        # endpoints degrade gracefully.
-        run: npm run build
+    uses: ./.github/workflows/_build.yml
+    with:
+      og_smoke: true
+    secrets: inherit
