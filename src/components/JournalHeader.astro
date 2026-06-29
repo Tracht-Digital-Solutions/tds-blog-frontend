@@ -8,15 +8,14 @@
  * disclosure panel grouping the corpus into Kategorien · Beliebte Tags ·
  * Aktuelle Themen (all built from `getTaxonomy()` at build time).
  *
- * Below `md` the bar carries just the logo + a search icon + a hamburger.
- * The hamburger opens a flat **full-screen overlay menu** (large editorial
- * links, the Entdecken group expanded inline); the search icon expands an
- * inline search field over the bar. The two are mutually exclusive and both
- * lock body scroll. Desktop (≥md) is unchanged.
+ * Below `md` the bar carries just the logo + a hamburger; the hamburger
+ * opens a flat **full-screen overlay menu** (large editorial links, the
+ * Entdecken group expanded inline) and locks body scroll. Search is a
+ * desktop-only affordance. Desktop (≥md) is unchanged.
  *
- * The search field drives the BlogIndex island when one is on the page
- * (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search` on
- * <html>); everywhere else Enter navigates to the index with `?q=`.
+ * The desktop search field drives the BlogIndex island when one is on the
+ * page (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search`
+ * on <html>); everywhere else Enter navigates to the index with `?q=`.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
 import {
@@ -47,8 +46,6 @@ const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
 const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
-const searchLabel = lang === "en" ? "Search" : "Suche";
-const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
 ---
 
 <header class:list={["brand-header", className]}>
@@ -148,7 +145,7 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
     <div class="flex-1 md:hidden"></div>
 
     {/* Right-hand controls. Language, theme and the CTA only show from md
-        up; on mobile just the search icon + hamburger remain. */}
+        up; on mobile just the hamburger remains. */}
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <div class="hidden md:flex items-center gap-2">
         <div class="lang-toggle" role="group" aria-label="Sprache / Language">
@@ -164,20 +161,6 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
       </div>
 
       <button
-        id="jnl-search-toggle"
-        type="button"
-        class="jnl-bar-btn md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
-        aria-controls="jnl-search-panel"
-        aria-expanded="false"
-        aria-label={searchLabel}
-      >
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"></circle>
-          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
-        </svg>
-      </button>
-
-      <button
         id="jnl-menu-toggle"
         type="button"
         class="jnl-menu-toggle md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
@@ -188,35 +171,6 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
         <span class="jnl-menu-bar jnl-menu-bar-top" aria-hidden="true"></span>
         <span class="jnl-menu-bar jnl-menu-bar-mid" aria-hidden="true"></span>
         <span class="jnl-menu-bar jnl-menu-bar-bot" aria-hidden="true"></span>
-      </button>
-    </div>
-
-    {/* Expanding search field — slides over the bar row when the search icon
-        is tapped (mobile only). Reuses the shared `.js-blog-search` wiring. */}
-    <div id="jnl-search-panel" class="jnl-search-panel md:hidden" data-open="false" aria-hidden="true">
-      <div class="nav-search nav-search--panel flex-1 min-w-0">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-        </svg>
-        <input
-          type="search"
-          id="jnl-search-mobile"
-          class="js-blog-search"
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
-          data-index-url={home}
-        />
-      </div>
-      <button
-        id="jnl-search-close"
-        type="button"
-        class="jnl-bar-btn inline-flex items-center justify-center w-10 h-10 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer shrink-0"
-        aria-label={closeSearchLabel}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18"></path>
-        </svg>
       </button>
     </div>
   </div>
@@ -364,34 +318,6 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
     transform: translate(-50%, -50%) rotate(-45deg);
   }
 
-  /* Expanding search field over the bar (mobile). Anchored to the sticky
-     header, flat paper surface so it cleanly masks the bar row. */
-  .jnl-search-panel {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0 1rem;
-    background: var(--color-paper);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 160ms ease, visibility 0s linear 160ms;
-  }
-  .jnl-search-panel[data-open="true"] {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 160ms ease, visibility 0s linear 0s;
-  }
-  .nav-search--panel {
-    display: flex;
-  }
-  .nav-search--panel input,
-  .nav-search--panel input:focus {
-    width: 100%;
-  }
-
   /* Full-screen overlay menu — flat (no glass), solid paper surface so it
      holds in both themes. Fades + lifts in; covers the whole viewport. */
   .jnl-fullmenu {
@@ -520,7 +446,6 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
 
   @media (prefers-reduced-motion: reduce) {
     .jnl-fullmenu,
-    .jnl-search-panel,
     .jnl-menu-bar {
       transition-duration: 0.01ms;
     }
@@ -528,8 +453,7 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
 </style>
 
 <script>
-  // Live search — bind to every search field (desktop bar + mobile
-  // panel) so the behaviour is identical wherever the visitor types.
+  // Live search — bind the desktop search field (mobile has none).
   const inputs = document.querySelectorAll<HTMLInputElement>(".js-blog-search");
   const initialQ = new URLSearchParams(location.search).get("q");
   inputs.forEach((input) => {
@@ -574,42 +498,18 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
     });
   }
 
-  // Mobile chrome — a full-screen overlay menu and an expanding search
-  // field. The two are mutually exclusive; either one open locks scroll.
+  // Mobile chrome — the full-screen overlay menu. Open locks body scroll.
   const menuToggle = document.getElementById("jnl-menu-toggle");
   const menu = document.getElementById("jnl-mobile-menu");
   const menuClose = document.getElementById("jnl-menu-close");
-  const searchToggle = document.getElementById("jnl-search-toggle");
-  const searchPanel = document.getElementById("jnl-search-panel");
-  const searchClose = document.getElementById("jnl-search-close");
-  const searchInput = document.getElementById("jnl-search-mobile") as HTMLInputElement | null;
 
-  if (menuToggle && menu && searchToggle && searchPanel) {
-    const lockScroll = () => {
-      const open = menu.dataset.open === "true" || searchPanel.dataset.open === "true";
-      document.body.classList.toggle("drawer-open", open);
-    };
-
+  if (menuToggle && menu) {
     const setMenu = (open: boolean) => {
       menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
       menu.dataset.open = open ? "true" : "false";
       menu.setAttribute("aria-hidden", open ? "false" : "true");
-      if (open) {
-        setSearch(false); // mutually exclusive
-        requestAnimationFrame(() => menuClose?.focus()); // wait for visibility flip
-      }
-      lockScroll();
-    };
-
-    const setSearch = (open: boolean) => {
-      searchToggle.setAttribute("aria-expanded", open ? "true" : "false");
-      searchPanel.dataset.open = open ? "true" : "false";
-      searchPanel.setAttribute("aria-hidden", open ? "false" : "true");
-      if (open) {
-        setMenu(false); // mutually exclusive
-        requestAnimationFrame(() => searchInput?.focus()); // wait for visibility flip
-      }
-      lockScroll();
+      document.body.classList.toggle("drawer-open", open);
+      if (open) requestAnimationFrame(() => menuClose?.focus()); // wait for visibility flip
     };
 
     menuToggle.addEventListener("click", () => {
@@ -625,34 +525,17 @@ const closeSearchLabel = lang === "en" ? "Close search" : "Suche schließen";
       link.addEventListener("click", () => setMenu(false));
     });
 
-    searchToggle.addEventListener("click", () => {
-      const open = searchToggle.getAttribute("aria-expanded") !== "true";
-      setSearch(open);
-      if (!open) searchToggle.focus();
-    });
-    searchClose?.addEventListener("click", () => {
-      setSearch(false);
-      searchToggle.focus();
-    });
-
     document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (menu.dataset.open === "true") {
+      if (e.key === "Escape" && menu.dataset.open === "true") {
         setMenu(false);
         menuToggle.focus();
-      } else if (searchPanel.dataset.open === "true") {
-        setSearch(false);
-        searchToggle.focus();
       }
     });
 
-    // Close both when crossing into the desktop (md / 768px) nav.
+    // Close when crossing into the desktop (md / 768px) nav.
     const mq = window.matchMedia("(min-width: 768px)");
     mq.addEventListener("change", (e) => {
-      if (e.matches) {
-        setMenu(false);
-        setSearch(false);
-      }
+      if (e.matches) setMenu(false);
     });
   }
 </script>
