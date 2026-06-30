@@ -971,6 +971,7 @@ html.js [data-reveal].is-in {
    Phones (single column) stay auto-height to avoid clipping long excerpts;
    the fixed height kicks in at md where the two-column layout is predictable. */
 .hero-stage {
+  position: relative;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -983,6 +984,61 @@ html.js [data-reveal].is-in {
 .hero-drag.is-dragging {
   cursor: grabbing;
   user-select: none;
+}
+
+/* Slider controls — a centred bar of prev/next arrows flanking a dot rail,
+   sitting below the stage so nothing overlaps the slide content. The flat
+   (kantig) blog look: square, hairline-bordered glass chips, no radius. */
+.hero-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.hero-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.hero-arrow:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.hero-arrow:focus-visible {
+  outline: 2px solid var(--color-accent-pink);
+  outline-offset: 2px;
+}
+
+.hero-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.hero-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  background: rgba(255, 255, 255, 0.3);
+  transition: width 200ms ease, background-color 200ms ease;
+}
+.hero-dot:hover { background: rgba(255, 255, 255, 0.55); }
+.hero-dot.on {
+  width: 26px;
+  background: var(--color-accent-pink);
+}
+.hero-dot:focus-visible {
+  outline: 2px solid var(--color-accent-pink);
+  outline-offset: 2px;
 }
 .hero-cover {
   aspect-ratio: 4 / 3;

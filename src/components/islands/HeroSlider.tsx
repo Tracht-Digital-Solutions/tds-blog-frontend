@@ -300,6 +300,9 @@ export default function HeroSlider({
   if (sets.length === 0) return null;
 
   const current = sets[activeIndex] ?? sets[0];
+  const nav = lang === "de"
+    ? { prev: "Vorherige Auswahl", next: "Nächste Auswahl" }
+    : { prev: "Previous set", next: "Next set" };
 
   return (
     <section style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
@@ -402,6 +405,50 @@ export default function HeroSlider({
             </div>
           </div>
         </div>
+
+        {sets.length > 1 && (
+          <div className="hero-controls" role="group" aria-label={lang === "de" ? "Folien-Navigation" : "Slide navigation"}>
+            <button
+              type="button"
+              className="hero-arrow cursor-pointer"
+              aria-label={nav.prev}
+              onClick={() => {
+                interacted.current = true;
+                step(-1);
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+
+            <div className="hero-dots">
+              {sets.map(({ meta }) => {
+                const on = meta.id === current.meta.id;
+                return (
+                  <button
+                    key={meta.id}
+                    type="button"
+                    className={`hero-dot cursor-pointer${on ? " on" : ""}`}
+                    aria-label={meta.label}
+                    aria-current={on ? "true" : undefined}
+                    onClick={() => go(meta.id)}
+                  />
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="hero-arrow cursor-pointer"
+              aria-label={nav.next}
+              onClick={() => {
+                interacted.current = true;
+                step(1);
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
