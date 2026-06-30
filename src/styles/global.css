@@ -578,7 +578,29 @@ a.topic-card:focus-visible {
 .sec-body.closed { grid-template-rows: 0fr; }
 .sec-body > .sec-body-inner { overflow: hidden; min-height: 0; }
 
-/* ---- Article: TOC (left column) ---- */
+/* ---- Article: shell layout ----
+   The section nav (.toc) sits in the left page margin as a sticky rail so
+   the article body fills the remaining column. Single column on small
+   screens (the .toc is hidden there) and for posts without a TOC. */
+.article-shell {
+  max-width: 82rem;
+  margin-inline: auto;
+}
+.article-shell:not(.has-toc) .article-col {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .article-shell.has-toc {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    column-gap: 2.75rem;
+    align-items: start;
+  }
+  .article-shell.has-toc > .article-col { min-width: 0; }
+}
+
+/* ---- Article: TOC (left margin rail) ---- */
 .toc a {
   display: block;
   padding: 0.5rem 0.75rem;
