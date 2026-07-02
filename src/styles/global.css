@@ -596,8 +596,14 @@ a.topic-card:focus-visible {
     grid-template-columns: 210px minmax(0, 1fr);
     column-gap: 2.75rem;
     align-items: start;
+    transition: grid-template-columns 280ms ease, column-gap 280ms ease;
   }
   .article-shell.has-toc > .article-col { min-width: 0; }
+  /* Folded: the section nav shrinks to a slim tick rail (see below). */
+  .article-shell.has-toc.toc-collapsed {
+    grid-template-columns: 46px minmax(0, 1fr);
+    column-gap: 1.5rem;
+  }
 }
 
 /* ---- Article: TOC (left margin rail) ---- */
@@ -617,6 +623,93 @@ a.topic-card:focus-visible {
 .toc a.on {
   background: var(--color-surface-navy);
   color: #fff;
+}
+
+/* ---- Article: TOC head + fold toggle ---- */
+.toc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+.toc-head .toc-title { margin-bottom: 0; }
+.toc-toggle {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-soft);
+  color: var(--color-muted);
+  border: 0;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.toc-toggle:hover { background: var(--flat-hover); color: var(--color-ink); }
+.toc-toggle svg { transition: transform 280ms ease; }
+.toc-list { list-style: none; margin: 0; padding: 0; }
+.toc-tick { display: none; }
+
+/* ---- Article: folded TOC — one tick line per section ---- */
+.toc-collapsed .toc-head { justify-content: center; }
+.toc-collapsed .toc-title { display: none; }
+.toc-collapsed .toc-toggle svg { transform: rotate(180deg); }
+
+.toc-collapsed .toc-link,
+.toc-collapsed .toc-link:hover,
+.toc-collapsed .toc-link.on {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 7px 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+}
+.toc-collapsed .toc-tick {
+  display: block;
+  height: 2px;
+  width: 15px;
+  border-radius: 2px;
+  background: var(--color-line);
+  transition: width 200ms ease, background-color 200ms ease;
+}
+.toc-collapsed .toc-link:hover .toc-tick,
+.toc-collapsed .toc-link:focus-visible .toc-tick {
+  width: 20px;
+  background: var(--color-ink);
+}
+/* The section currently in view: its line expands + turns accent. */
+.toc-collapsed .toc-link.on .toc-tick {
+  width: 28px;
+  background: var(--color-accent);
+}
+/* Heading label rides the rail as a floating chip (revealed for the active
+   section and on hover), so the rail width itself never changes. */
+.toc-collapsed .toc-label {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  white-space: nowrap;
+  background: var(--color-surface-navy);
+  color: #fff;
+  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 5;
+}
+.toc-collapsed .toc-link.on .toc-label,
+.toc-collapsed .toc-link:hover .toc-label,
+.toc-collapsed .toc-link:focus-visible .toc-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* ---- Article: fixed collapsible sidebar (lg+) ---- */

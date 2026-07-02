@@ -95,6 +95,7 @@ const jsonLd = [
 const tx = lang === "de"
   ? {
       back: "Alle Beiträge", read: "Min. Lesezeit", contents: "Inhalt",
+      tocCollapse: "Inhalt einklappen", tocExpand: "Inhalt ausklappen",
       aboutAuthor: "Über den Autor", owner: "Inhaber, Tracht Digital Solutions",
       bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
       newer: "Neuerer Artikel", older: "Älterer Artikel", nav: "Artikel-Navigation",
@@ -103,6 +104,7 @@ const tx = lang === "de"
     }
   : {
       back: "All posts", read: "min read", contents: "Contents",
+      tocCollapse: "Collapse contents", tocExpand: "Expand contents",
       aboutAuthor: "About the author", owner: "Owner, Tracht Digital Solutions",
       bio: "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg.",
       newer: "Newer article", older: "Older article", nav: "Article navigation",
@@ -148,12 +150,53 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
     ]}
   >
     {showToc && (
-      <nav class="toc hidden lg:block sticky top-6" aria-label={tx.contents}>
-        <p class="eyebrow mb-3.5">{tx.contents}</p>
-        {sections.map((sec) => (
-          <a href={`#${sec.id}`} data-toc={sec.id}>{sec.heading}</a>
-        ))}
-      </nav>
+      <>
+        <nav class="toc hidden lg:block sticky top-6" aria-label={tx.contents} id="article-toc">
+          <div class="toc-head">
+            <p class="eyebrow toc-title">{tx.contents}</p>
+            <button
+              type="button"
+              class="toc-toggle"
+              id="toc-toggle"
+              aria-expanded="true"
+              aria-controls="main"
+              title={tx.tocCollapse}
+              aria-label={tx.tocCollapse}
+              data-label-collapse={tx.tocCollapse}
+              data-label-expand={tx.tocExpand}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+            </button>
+          </div>
+          <ol class="toc-list">
+            {sections.map((sec) => (
+              <li>
+                <a href={`#${sec.id}`} data-toc={sec.id} class="toc-link">
+                  <span class="toc-tick" aria-hidden="true"></span>
+                  <span class="toc-label">{sec.heading}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        {/* Apply the saved fold state before first paint so the article
+            column doesn't jump on load. #main + #toc-toggle are already
+            parsed at this point (this runs right after the nav). */}
+        <script is:inline>
+          (function () {
+            try {
+              if (localStorage.getItem("tds-blog-toc") === "collapsed") {
+                var m = document.getElementById("main");
+                if (m) m.classList.add("toc-collapsed");
+                var t = document.getElementById("toc-toggle");
+                if (t) t.setAttribute("aria-expanded", "false");
+              }
+            } catch (e) {
+              /* storage disabled — start expanded */
+            }
+          })();
+        </script>
+      </>
     )}
 
     <article class="article-col">
@@ -279,6 +322,34 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   </main>
 
   <script>
+    // Fold the section nav into a tick rail (each section = one line; the
+    // line for the section in view expands via the scroll-spy `.on` class).
+    // State persists in localStorage so it survives navigation.
+    const tocShell = document.getElementById("main");
+    const tocToggle = document.getElementById("toc-toggle");
+    if (tocShell && tocToggle) {
+      const applyToc = (collapsed: boolean) => {
+        tocShell.classList.toggle("toc-collapsed", collapsed);
+        tocToggle.setAttribute("aria-expanded", String(!collapsed));
+        const label = collapsed
+          ? tocToggle.dataset.labelExpand
+          : tocToggle.dataset.labelCollapse;
+        if (label) {
+          tocToggle.setAttribute("aria-label", label);
+          tocToggle.setAttribute("title", label);
+        }
+      };
+      tocToggle.addEventListener("click", () => {
+        const collapsed = !tocShell.classList.contains("toc-collapsed");
+        applyToc(collapsed);
+        try {
+          localStorage.setItem("tds-blog-toc", collapsed ? "collapsed" : "open");
+        } catch {
+          /* storage disabled — fold state just won't persist */
+        }
+      });
+    }
+
     const heads = document.querySelectorAll<HTMLButtonElement>(".sec-head");
     heads.forEach((btn) => {
       btn.addEventListener("click", () => {
