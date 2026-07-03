@@ -72,6 +72,10 @@ const journalLabel = "Journal";
 const journalHomeUrl = `${siteConfig.url}${pfx}/`;
 const postUrl = new URL(postHref(post.slug), siteConfig.url).toString();
 
+// Contact CTA target: the landingpage's contact form anchor, language-aware
+// (the EN landingpage lives under /en/) so EN readers land on the EN form.
+const contactUrl = `https://tracht-digital.de${pfx}/#contact`;
+
 const jsonLd = [
   blogPostingSchema({
     slug: post.slug,
@@ -101,6 +105,9 @@ const tx = lang === "de"
       newer: "Neuerer Artikel", older: "Älterer Artikel", nav: "Artikel-Navigation",
       allArticles: "Alle Artikel", rss: "RSS abonnieren",
       machine: "Automatisch übersetzt — das Original ist auf Deutsch verfasst.",
+      contactHead: "Zusammenarbeiten",
+      contactLead: "Ein Projekt im Kopf oder eine Frage? Schreiben Sie mir über das Kontaktformular.",
+      contactCta: "Kontaktieren",
     }
   : {
       back: "All posts", read: "min read", contents: "Contents",
@@ -110,6 +117,9 @@ const tx = lang === "de"
       newer: "Newer article", older: "Older article", nav: "Article navigation",
       allArticles: "All articles", rss: "Subscribe via RSS",
       machine: "Machine-translated — the original is written in German.",
+      contactHead: "Work together",
+      contactLead: "Got a project in mind or a question? Reach out through the contact form.",
+      contactCta: "Get in touch",
     };
 
 // Public, fire-and-forget view beacon. PUBLIC_ env so the inline script
@@ -275,6 +285,26 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
                 {tx.bio}
               </p>
             </div>
+          </aside>
+
+          <aside
+            class="mt-6 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            style="background: var(--color-soft);"
+            aria-label={tx.contactHead}
+          >
+            <div>
+              <p class="eyebrow mb-1.5">{tx.contactHead}</p>
+              <p class="text-sm text-[var(--color-muted)]" style="max-width: 44ch; text-wrap: pretty;">
+                {tx.contactLead}
+              </p>
+            </div>
+            <a href={contactUrl} class="btn-flat shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16"></rect>
+                <path d="m22 6-10 7L2 6"></path>
+              </svg>
+              <span>{tx.contactCta}</span>
+            </a>
           </aside>
 
           <TagList tags={post.tags} lang={lang} label="Tags" />
