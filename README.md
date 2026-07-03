@@ -9,7 +9,7 @@
 
 
 Public blog at `blog.tracht-digital.de`. **Astro** SSG + **Tailwind v4**
-with self-hosted **Instrument Serif + Geist** on the shared token
+with self-hosted **Hanken Grotesk + Plus Jakarta Sans** on the shared token
 system from **tds-shared**. The surface design is the **flat/"kantig"
 blog design** from the Tracht design-system handoff: no border radii,
 colour blocks instead of hairlines, compact spacing, fixed dark panels
@@ -200,7 +200,7 @@ src/
 │   └── seo.ts                      # Org/person identity (mirrors tds-landingpage)
 ├── og/
 │   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
-│   └── fonts/                      # Instrument Serif Regular + Italic (woff) + Geist Medium (ttf)
+│   └── fonts/                      # Geist Medium (ttf) — the OG card renders in Geist
 ├── pages/
 │   ├── index.astro                 # DE index (BlogIndex island)
 │   ├── page/[num].astro            # DE pages 2+
@@ -226,7 +226,7 @@ explicit URL in `coverHint` still overrides if you ever want to
 ship a hand-designed cover.
 
 The template is editorial: hairline rule + category eyebrow →
-Instrument Serif display headline with the last word italic-burgundy →
+Geist display headline with the last word in burgundy →
 hairline footer with date · author + "Tracht Digital · Journal"
 wordmark. See `src/og/render.ts` for the JSX-object tree.
 

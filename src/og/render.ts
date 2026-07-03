@@ -13,7 +13,7 @@
  *   │  CATEGORY                                                  │
  *   │                                                            │
  *   │  Title runs across as many lines as it                     │
- *   │  needs, with the last word italicised.                     │
+ *   │  needs, with the last word in the accent colour.           │
  *   │                                                            │
  *   │                                                            │
  *   │  ─── Date · Author          Tracht Journal                 │
@@ -27,24 +27,17 @@ import { Resvg } from "@resvg/resvg-js";
 // Resolved from the project root because Astro bundles this file into dist/,
 // where `import.meta.url`-based relative paths no longer reach src/og/fonts.
 const FONT_DIR = path.join(process.cwd(), "src/og/fonts");
-let serifRegular: Buffer | null = null;
-let serifItalic: Buffer | null = null;
 let geistMedium: Buffer | null = null;
 
 function loadFonts() {
-  if (serifRegular === null) {
-    serifRegular = fs.readFileSync(path.join(FONT_DIR, "InstrumentSerif-Regular.woff"));
-    serifItalic = fs.readFileSync(path.join(FONT_DIR, "InstrumentSerif-Italic.woff"));
+  if (geistMedium === null) {
     geistMedium = fs.readFileSync(path.join(FONT_DIR, "Geist-Medium.ttf"));
   }
   return {
-    serif: serifRegular!,
-    serifItalic: serifItalic!,
     geist: geistMedium!,
   };
 }
 
-const SERIF = "Instrument Serif";
 const PAPER = "#fafaf7";
 const INK = "#1a1a17";
 const PRIMARY = "#050f68";
@@ -60,8 +53,8 @@ interface OgOptions {
 }
 
 /**
- * Splits the title so the last word can be rendered italic + burgundy,
- * matching the "italic accent word" pattern the rest of the site uses.
+ * Splits the title so the last word can be rendered in burgundy,
+ * matching the "accent word" pattern the rest of the site uses.
  * Falls back to plain rendering if the title is a single word.
  */
 function splitForAccent(title: string): { head: string; accent: string } {
@@ -72,7 +65,7 @@ function splitForAccent(title: string): { head: string; accent: string } {
 }
 
 export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
-  const { serif, serifItalic, geist } = loadFonts();
+  const { geist } = loadFonts();
 
   const { head, accent } = splitForAccent(opts.title);
   const locale = opts.lang === "de" ? "de-DE" : "en-US";
@@ -142,15 +135,16 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
               ],
             },
           },
-          // Headline — Instrument Serif, head in primary, last word italic burgundy
+          // Headline — Geist, head in primary, last word accent burgundy
           {
             type: "div",
             props: {
               style: {
-                fontFamily: SERIF,
-                fontSize: "82px",
-                lineHeight: 1.02,
-                letterSpacing: "-0.025em",
+                fontFamily: "Geist",
+                fontWeight: 500,
+                fontSize: "78px",
+                lineHeight: 1.04,
+                letterSpacing: "-0.03em",
                 color: PRIMARY,
                 display: "flex",
                 flexWrap: "wrap",
@@ -168,8 +162,6 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: SERIF,
-                      fontStyle: "italic",
                       color: ACCENT,
                     },
                     children: accent,
@@ -220,7 +212,8 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: SERIF,
+                      fontFamily: "Geist",
+                      fontWeight: 500,
                       fontSize: "24px",
                       color: INK,
                     },
@@ -237,18 +230,6 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
       width: 1200,
       height: 630,
       fonts: [
-        {
-          name: SERIF,
-          data: serif,
-          weight: 400,
-          style: "normal",
-        },
-        {
-          name: SERIF,
-          data: serifItalic,
-          weight: 400,
-          style: "italic",
-        },
         {
           name: "Geist",
           data: geist,

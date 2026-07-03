@@ -1,13 +1,10 @@
 @import "tailwindcss";
 
-/* Tracht Design System typefaces — self-hosted, this app only. The
-   landing page intentionally keeps Instrument Serif + Geist (tds-shared). */
+/* Tracht Design System typefaces — self-hosted. Hanken Grotesk is the
+   shared display face (headings + wordmark); Plus Jakarta Sans the body. */
 @import "@fontsource-variable/hanken-grotesk/index.css";
 @import "@fontsource-variable/plus-jakarta-sans/index.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
-/* Brand wordmark only — the logo title reads as a heading in the canonical
-   Instrument Serif (upright), not the body grotesk. See .brand-wordmark below. */
-@import "@fontsource/instrument-serif/400.css";
 
 /* Brand design system + shared application chrome. The tokens, dark
    theme, base resets, type primitives, chips, header shell and
@@ -30,11 +27,9 @@
 .display { font-weight: 800; letter-spacing: -0.03em; }
 .display-tight { font-weight: 700; letter-spacing: -0.02em; }
 .eyebrow { font-family: var(--font-display); font-weight: 600; }
-/* Logo title in the brand display serif (upright). Scoped to the wordmark so
-   only the brand title changes — every other --font-display heading stays the
-   grotesk. Instrument Serif is single-weight 400; pin it to avoid faux-bold
-   from the shared .brand-wordmark { font-weight: 500 }. */
-.brand-wordmark { font-family: "Instrument Serif", ui-serif, Georgia, serif; font-weight: 400; }
+/* Logo wordmark in the display grotesk — pin the weight so it reads as a
+   crisp title; the accent word ("Journal") stays upright, not a serif italic. */
+.brand-wordmark { font-family: var(--font-display); font-weight: 600; }
 .brand-wordmark .accent-italic { font-style: normal; }
 
 /* === Flat blog design ("kantig") ===================================
@@ -942,8 +937,8 @@ a.topic-card:focus-visible {
 }
 
 /* === Grotesk heading weights =======================================
-   The card/row/article headings above were tuned for Instrument Serif
-   (which reads fine at weight 400). With the design-system grotesk
+   The card/row/article headings above were first tuned for a serif
+   display (which read fine at weight 400). With the design-system grotesk
    display face they need real weight to register as headings. Placed
    last so it wins over the definitions above. */
 .post-card .card-title,
