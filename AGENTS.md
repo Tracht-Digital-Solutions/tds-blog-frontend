@@ -85,7 +85,12 @@ in this repo only.
 - `src/components/PostCard.tsx` + `Covers.tsx` — flat card + the six
   abstract brand-geometry covers (slug-hashed variant; photo cover
   when `coverHint` is an http URL). Also rendered statically (no
-  hydration) inside `RelatedArticles.astro`
+  hydration) inside `RelatedArticles.astro`. **Cover URLs are made
+  absolute at the data layer** (`content-api.ts` `resolveCoverHint`):
+  the content-API persists an uploaded `coverHint` as a storage-relative
+  `/uploads/...` path, so `listAllPosts`/`listPopular`/`getPost` prefix
+  it with the content-API base before it reaches any `startsWith("http")`
+  render gate — otherwise the photo cover would 404 against the blog origin.
 - `src/components/islands/NewsletterSignup.tsx` — newsletter block in
   the footer; posts a well-formed message to tds-contact-api (no
   dedicated newsletter backend — Julian gets a signup mail)
