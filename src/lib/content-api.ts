@@ -20,6 +20,27 @@ interface ListResponse {
   nextCursor: number | null;
 }
 
+/**
+ * Make an uploaded cover URL absolute. The content-API's cover endpoint
+ * persists `coverHint` as a storage-relative `/uploads/...` path, but every
+ * consumer here (the `<img src>` in `PostCover`, the OG `explicitCover`) gates
+ * on `startsWith("http")` — a relative path would resolve against the blog
+ * origin (`blog.tracht-digital.de/uploads/...`) and 404. Resolving it against
+ * `BASE_URL` (`…/content`) at the data layer means every downstream check just
+ * works, retroactively, for whatever is already stored. Absolute or empty
+ * values pass through unchanged.
+ */
+export function resolveCoverHint(coverHint?: string | null): string | null {
+  if (!coverHint) return null;
+  if (/^https?:\/\//.test(coverHint)) return coverHint;
+  if (coverHint.startsWith("/")) return `${BASE_URL}${coverHint}`;
+  return coverHint;
+}
+
+function withResolvedCovers<T extends { coverHint?: string | null }>(posts: T[]): T[] {
+  return posts.map((p) => ({ ...p, coverHint: resolveCoverHint(p.coverHint) }));
+}
+
 export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["posts"]> {
   // No-API demo build: serve demo posts instead of fetching.
   if (DEMO_MODE) return demoPostList(lang);
@@ -43,7 +64,7 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
       cursor = data.nextCursor;
     } while (cursor !== null);
 
-    return all;
+    return withResolvedCovers(all);
   } catch (err) {
     // No content API reachable at build time → ship demo posts instead of
     // an empty blog. A *connected* API that returns 0 posts stays empty
@@ -73,7 +94,7 @@ export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListRes
       throw new Error(`content-api ${url.pathname} → ${res.status}`);
     }
     const data = (await res.json()) as { posts: ListResponse["posts"] };
-    return data.posts ?? [];
+    return withResolvedCovers(data.posts ?? []);
   } catch (err) {
     console.warn("[tds-blog] content-api unreachable — serving demo popular:", err);
     return demoPostList(lang).slice(0, limit);
@@ -120,7 +141,7 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost
       throw new Error(`content-api ${url.pathname} → ${res.status}`);
     }
     const { post } = (await res.json()) as { post: BlogPost };
-    return post;
+    return { ...post, coverHint: resolveCoverHint(post.coverHint) };
   } catch (err) {
     // API down → serve the matching demo post (keeps demo slugs from
     // listAllPosts() renderable). Returns null for an unknown slug.

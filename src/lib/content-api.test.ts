@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { listAllPosts, listPopular } from "./content-api";
+import { listAllPosts, listPopular, resolveCoverHint } from "./content-api";
 import { demoPostList } from "./demoContent";
 
 /**
@@ -58,6 +58,35 @@ describe("listAllPosts", () => {
 
     const posts = await listAllPosts("en");
     expect(posts).toEqual(demoPostList("en"));
+  });
+});
+
+describe("resolveCoverHint", () => {
+  it("prefixes a storage-relative /uploads path with the content-API base", () => {
+    expect(resolveCoverHint("/uploads/a/pic.png")).toMatch(/^https?:\/\/.+\/content\/uploads\/a\/pic\.png$/);
+  });
+
+  it("leaves an absolute URL untouched", () => {
+    expect(resolveCoverHint("https://cdn.example/x.png")).toBe("https://cdn.example/x.png");
+  });
+
+  it("passes null/empty through", () => {
+    expect(resolveCoverHint(null)).toBeNull();
+    expect(resolveCoverHint(undefined)).toBeNull();
+    expect(resolveCoverHint("")).toBeNull();
+  });
+});
+
+describe("listAllPosts cover resolution", () => {
+  it("makes a relative coverHint absolute in the returned posts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({ posts: [{ id: 1, slug: "a", coverHint: "/uploads/a/c.png" }], nextCursor: null }),
+      ),
+    );
+    const posts = await listAllPosts("de");
+    expect(posts[0].coverHint).toMatch(/\/content\/uploads\/a\/c\.png$/);
   });
 });
 
