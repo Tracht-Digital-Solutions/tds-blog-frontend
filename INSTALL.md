@@ -44,20 +44,17 @@ on an unusual platform, see Troubleshooting.
 
 ## 3. Brand fonts
 
-Three font files live committed under `src/og/fonts/`, used only by the
+One font file lives committed under `src/og/fonts/`, used only by the
 Satori OG-card renderer:
 
-- `InstrumentSerif-Regular.woff` — display headline
-- `InstrumentSerif-Italic.woff` — accent word
-- `Geist-Medium.ttf` — eyebrow + footer meta
+- `Geist-Medium.ttf` — the whole card (headline, eyebrow, footer meta)
 
-The Instrument Serif faces are the `latin` subset copied from the
-`@fontsource/instrument-serif` package (`.woff`, since Satori can't read
-woff2); Geist is from `vercel/geist-font`. They're committed deliberately
-so the build doesn't depend on resolving font files out of node_modules.
+Geist is from `vercel/geist-font`, committed deliberately so the build
+doesn't depend on resolving font files out of node_modules. (The OG card
+renders entirely in Geist since the brand retired Instrument Serif.)
 
-**Don't delete these.** If they ever need updating, copy fresh `.woff`
-files and re-run `npm run og:smoke` to verify the renderer.
+**Don't delete this.** If it ever needs updating, copy a fresh `.ttf`
+and re-run `npm run og:smoke` to verify the renderer.
 
 ## 4. Configure
 
@@ -89,10 +86,9 @@ npm run og:smoke
 ```
 
 Open both — you should see the editorial template (hairline rule +
-category eyebrow + Instrument Serif headline with italic-burgundy accent
-on the last word + hairline footer with date · author + "Tracht
-Digital · Journal" wordmark). If anything renders wrong, the fix
-lives in `src/og/render.ts`.
+category eyebrow + Geist headline with a burgundy accent on the last
+word + hairline footer with date · author + "Tracht Digital · Journal"
+wordmark). If anything renders wrong, the fix lives in `src/og/render.ts`.
 
 ## 7. Verify the build
 
@@ -151,15 +147,9 @@ fallback to JS: `npm install --legacy-peer-deps` then retry with
 `@resvg/resvg-js-fallback`.
 
 **`npm run og:smoke` errors with `Cannot find font`.**
-The font files are missing from `src/og/fonts/`. The Instrument Serif
-faces are copied from the installed `@fontsource/instrument-serif`
-package; Geist comes from upstream:
+The font file is missing from `src/og/fonts/`. Geist comes from upstream:
 
 ```bash
-cp node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff \
-  src/og/fonts/InstrumentSerif-Regular.woff
-cp node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff \
-  src/og/fonts/InstrumentSerif-Italic.woff
 curl -L "https://raw.githubusercontent.com/vercel/geist-font/main/packages/next/dist/fonts/geist-sans/Geist-Medium.ttf" \
   -o src/og/fonts/Geist-Medium.ttf
 ```

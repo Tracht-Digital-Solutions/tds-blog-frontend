@@ -3,8 +3,8 @@
 Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
-Self-hosted Instrument Serif + Geist; the editorial type vocabulary
-(`.display`, `.section-num`, `.marginalia`, …) comes from
+Self-hosted Hanken Grotesk (display) + Plus Jakarta Sans (body); the
+editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes from
 `@tracht-digital-solutions/tds-shared` (`styles/base.css` +
 `styles/app.css`), shared with the portals.
 
@@ -16,9 +16,9 @@ them. The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
 `.toc`, `.btn-flat`, `.btn-back`, `.sec-head`/`.sec-body`,
 `.blog-sidebar`/`.with-sidebar`, `.nav-search`, `.lang-toggle`) and the
 brand-aware `.prose-article` long-form class live in
-`src/styles/global.css`. The design bundle's Google-font substitutes
-(Hanken Grotesk etc.) were deliberately NOT adopted — Instrument Serif
-+ Geist stay canonical.
+`src/styles/global.css`. The display face is **Hanken Grotesk** (the
+flat, modern grotesk that replaced the former Instrument Serif brand-wide);
+the body is Plus Jakarta Sans. Instrument Serif is retired.
 
 ## Build pipeline
 
