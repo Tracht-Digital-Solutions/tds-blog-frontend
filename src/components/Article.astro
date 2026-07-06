@@ -161,7 +161,13 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   >
     {showToc && (
       <>
-        <nav class="toc hidden lg:block sticky top-6" aria-label={tx.contents} id="article-toc">
+        <div class="back-rail hidden lg:block">
+          <a href={`${pfx}/`} class="btn-back">
+            <span aria-hidden="true">←</span>
+            {tx.back}
+          </a>
+        </div>
+        <nav class="toc" aria-label={tx.contents} id="article-toc">
           <div class="toc-head">
             <p class="eyebrow toc-title">{tx.contents}</p>
             <button
@@ -211,7 +217,9 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 
     <article class="article-col">
       <header class="mb-7">
-        <a href={`${pfx}/`} class="btn-back">
+        {/* In-flow back button: <lg and no-TOC articles. With a TOC the
+            sticky .back-rail in the left margin takes over on lg+. */}
+        <a href={`${pfx}/`} class:list={["btn-back", showToc && "lg:hidden"]}>
           <span aria-hidden="true">←</span>
           {tx.back}
         </a>
@@ -416,6 +424,41 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       spy();
       addEventListener("scroll", spy, { passive: true });
       addEventListener("resize", spy, { passive: true });
+    }
+
+    // Collapsed-rail labels: a label shows exactly while its HEADING (the
+    // id sits on the <h2>) is on screen (`.in-view` — several can show at
+    // once and stack on the row pitch). No-IO fallback: labels still
+    // reveal on hover/focus.
+    if (tocLinks.length > 0 && "IntersectionObserver" in window) {
+      const byId = new Map(
+        Array.from(tocLinks).map((l) => [l.dataset.toc ?? "", l]),
+      );
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            byId
+              .get((e.target as HTMLElement).id)
+              ?.classList.toggle("in-view", e.isIntersecting);
+          }
+        },
+        { threshold: 0 },
+      );
+      byId.forEach((_link, id) => {
+        const sec = document.getElementById(id);
+        if (sec) io.observe(sec);
+      });
+    }
+
+    // Fade the fixed rail out once the reader scrolls past the article
+    // column (it would otherwise float over the navy site footer).
+    const rail = document.getElementById("article-toc");
+    const artCol = document.querySelector(".article-col");
+    if (rail && artCol && "IntersectionObserver" in window) {
+      new IntersectionObserver(
+        ([e]) => rail.classList.toggle("rail-off", !e.isIntersecting),
+        { threshold: 0 },
+      ).observe(artCol);
     }
   </script>
 
