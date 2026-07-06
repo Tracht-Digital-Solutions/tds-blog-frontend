@@ -4,6 +4,7 @@ import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
+import { siteConfig } from "~/lib/seo";
 
 interface Props {
   title: string;
@@ -11,6 +12,18 @@ interface Props {
   lang?: "de" | "en";
   /** Canonical URL — defaults to the current page's URL. */
   canonical?: string;
+  /**
+   * Alternate-language URL for the hreflang links.
+   * - `undefined` (default): auto-derive by swapping the `/en/` prefix —
+   *   correct for posts (every post exists in both languages via the
+   *   DeepL build fallback) and for pages whose twins mirror by name.
+   * - `null`: suppress the hreflang alternates + x-default entirely
+   *   (canonical only). Required for listing routes whose twin does NOT
+   *   mirror by prefix: /kategorie vs /en/category, per-language tag
+   *   sets and pagination counts.
+   * - string: use it as the alternate URL.
+   */
+  altUrl?: string | null;
   /** Absolute URL or site-relative path. Used for og:image + twitter:image. */
   ogImage?: string;
   /** Article meta (only for /[slug] pages). */
@@ -36,9 +49,10 @@ interface Props {
 
 const {
   title,
-  description = "Persönlich entwickelte digitale Lösungen für den Mittelstand.",
+  description: descriptionProp,
   lang = "de",
   canonical,
+  altUrl: altUrlProp,
   ogImage,
   article,
   jsonLd,
@@ -46,6 +60,10 @@ const {
   sidebar = false,
   bare = false,
 } = Astro.props;
+
+// Journal-specific default (resolved after destructuring — the default
+// expression can't reference `lang` from the same destructure).
+const description = descriptionProp ?? siteConfig.description[lang];
 
 const resolvedOgImage =
   ogImage ?? (article?.slug ? `/og/${lang}/${article.slug}.png` : "/og-default.png");
@@ -56,14 +74,21 @@ const ogImageAbs = resolvedOgImage.startsWith("http")
   ? resolvedOgImage
   : new URL(resolvedOgImage, site).toString();
 
-// Alternate-language URL. Same slug, /en/-prefixed for the EN variant.
-// Lets search engines surface the right variant per locale.
-const altPath =
+// Alternate-language URL. Default: same slug, /en/-prefixed for the EN
+// variant — lets search engines surface the right variant per locale.
+// `altUrl={null}` suppresses the links (see Props.altUrl).
+const autoAltPath =
   lang === "de"
     ? Astro.url.pathname.replace(/^\//, "/en/")
     : Astro.url.pathname.replace(/^\/en\//, "/");
-const altUrl = new URL(altPath, site).toString();
+const altUrl =
+  altUrlProp === null
+    ? null
+    : (altUrlProp ?? new URL(autoAltPath, site).toString());
 const altLang = lang === "de" ? "en" : "de";
+
+// Language-matched RSS autodiscovery (the EN feed carries EN posts).
+const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
 ---
 
 <!DOCTYPE html>
@@ -99,10 +124,14 @@ const altLang = lang === "de" ? "en" : "de";
       })();
     </script>
     <link rel="canonical" href={url} />
-    <link rel="alternate" hreflang={lang} href={url} />
-    <link rel="alternate" hreflang={altLang} href={altUrl} />
-    <link rel="alternate" hreflang="x-default" href={lang === "de" ? url : altUrl} />
-    <link rel="alternate" type="application/rss+xml" title="TDS Journal" href="/rss.xml" />
+    {altUrl !== null && (
+      <>
+        <link rel="alternate" hreflang={lang} href={url} />
+        <link rel="alternate" hreflang={altLang} href={altUrl} />
+        <link rel="alternate" hreflang="x-default" href={lang === "de" ? url : altUrl} />
+      </>
+    )}
+    <link rel="alternate" type="application/rss+xml" title="TDS Journal" href={rssHref} />
 
     <!-- Resource hints — open early connections to the API origin
          (content-api at build time, in case any runtime asset

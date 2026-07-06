@@ -1,13 +1,14 @@
 import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
 import { listAllPosts } from "~/lib/content-api";
+import { siteConfig } from "~/lib/seo";
 
 export async function GET(context: APIContext) {
   const posts = await listAllPosts("de").catch(() => []);
 
   return rss({
     title: "TDS Journal",
-    description: "Gedanken und Artikel von Julian Tracht.",
+    description: siteConfig.description.de,
     site: context.site ?? "https://blog.tracht-digital.de",
     items: posts.map((p) => ({
       title: p.title,

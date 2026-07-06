@@ -15,8 +15,8 @@ export const siteConfig = {
   marketingUrl: "https://tracht-digital.de",
   defaultLocale: "de" as const,
   description: {
-    de: "Notizen aus der Werkstatt — über Software, Auftraggeber und das, was zwischen den beiden passiert.",
-    en: "Notes from the workshop — on software, clients, and the things that happen in between.",
+    de: "Das Journal von Tracht Digital Solutions — Artikel über Digitalisierung für Unternehmen, Software-Entwicklung und den Alltag dazwischen.",
+    en: "The Tracht Digital Solutions journal — articles on digitalization for businesses, software development and everything in between.",
   },
   blogName: {
     de: "TDS Journal",
@@ -29,16 +29,20 @@ export const siteConfig = {
     jobTitle: "Inhaber & Entwickler",
   },
   /**
-   * Verified location is city only. Real street pending Impressum
-   * cleanup (tds-landingpage#5).
+   * Verified postal code + locality (matches the landingpage Impressum).
+   * The street stays Impressum-only over on tds-landingpage.
    */
   address: {
+    postalCode: "21493",
     addressLocality: "Schwarzenbek",
     addressRegion: "Schleswig-Holstein",
     addressCountry: "DE",
   },
-  /** Empty until tds-landingpage#7 lands real social URLs. */
-  socials: {} as {
+  /** Public social URLs — mirror tds-landingpage's seo.ts. */
+  socials: {
+    linkedin: "https://www.linkedin.com/in/julian-tracht/",
+    github: "https://github.com/Tracht-Digital-Solutions",
+  } as {
     linkedin?: string;
     github?: string;
     xing?: string;

@@ -41,8 +41,9 @@ const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
 
 <Layout
   title={`Journal · Seite ${page} — Tracht Digital Solutions`}
-  description="Gedanken und Artikel von Julian Tracht."
+  description={`Journal-Archiv, Seite ${page} — Artikel über Digitalisierung und Software-Entwicklung.`}
   jsonLd={jsonLd}
+  altUrl={null}
 >
   <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
     <header class="mb-10">

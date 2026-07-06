@@ -14,7 +14,9 @@ interface Props {
 }
 const { lang } = Astro.props;
 
-const FEED_URL = "https://blog.tracht-digital.de/rss.xml";
+// Language-matched feed: EN pages advertise the English feed.
+const FEED_PATH = lang === "en" ? "/en/rss.xml" : "/rss.xml";
+const FEED_URL = `https://blog.tracht-digital.de${FEED_PATH}`;
 const FEEDLY_URL = `https://feedly.com/i/subscription/feed/${FEED_URL}`;
 
 const t =
@@ -166,7 +168,7 @@ const programs = [
     <h2 id="rss-raw" class="display text-xl md:text-2xl mb-2">{t.rawHead}</h2>
     <p class="marginalia max-w-prose">
       {t.rawBody}{" "}
-      <a href="/rss.xml" class="link-underline text-[var(--color-accent)]">/rss.xml</a>.
+      <a href={FEED_PATH} class="link-underline text-[var(--color-accent)]">{FEED_PATH}</a>.
     </p>
   </section>
 </div>
