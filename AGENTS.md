@@ -131,7 +131,7 @@ in this repo only.
   backfill hasn't covered. `resolveLocalizedPost` treats a stored
   `machineTranslated` row like a build-time translation (`translated: true`) so
   the notice still shows; the flag is optional on tds-shared's `BlogPost`
-  (≥ 0.8.6). `_build.yml` exports the `DEEPL_API_KEY` repo secret into the
+  (≥ 0.8.7). `_build.yml` exports the `DEEPL_API_KEY` repo secret into the
   Build step for the fallback (optional; unset = graceful no-op).
 - `src/pages/interests-index.json.ts` — build-time static JSON index
   of all posts (slug/lang/category/title/excerpt/tags/publishedAt)
