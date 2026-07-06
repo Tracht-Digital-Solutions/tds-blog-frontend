@@ -12,7 +12,9 @@ editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes
 handoff, 2026-06): no border radii or hairline cards — separation via
 colour blocks (`--color-soft`), fixed dark panels (hero, newsletter,
 footer) on the `--color-surface-*` tokens so dark mode never inverts
-them. The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
+them. This includes the shared `.chip` tag pills: `global.css` squares
+them off with a blog-local `border-radius: 0` override (geometry is
+app-local per repo convention — don't "fix" this in tds-shared). The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
 `.toc`, `.btn-flat`, `.btn-back`, `.sec-head`/`.sec-body`,
 `.blog-sidebar`/`.with-sidebar`, `.nav-search`, `.lang-toggle`) and the
 brand-aware `.prose-article` long-form class live in
@@ -100,7 +102,20 @@ in this repo only.
   phone icon; state persists in localStorage `tds-blog-sidenav`
 - `src/lib/sections.ts` — splits rendered article HTML at h2
   boundaries for the collapsible sections + scrollspy TOC on
-  `[slug].astro` (TOC renders only with ≥2 sections)
+  `[slug].astro` (TOC renders only with ≥2 sections). The TOC (`.toc`
+  in `Article.astro`) is a **fixed rail on the RIGHT viewport edge**
+  (`right: 14px`, vertically centered, z-30) that visually merges with
+  the brand scrollbar; the article shell reserves `padding-right`
+  (`--toc-w`) for it instead of a grid column. Collapsible to a tick
+  rail (toggle + `localStorage["tds-blog-toc"]`, pre-paint restore);
+  when collapsed, a heading's floating label (left of the rail) shows
+  **only while that `<h2>` is visible in the viewport** (per-heading
+  IntersectionObserver → `.in-view`; several can show at once), plus on
+  hover/focus — the active section keeps its wider accent tick. A second
+  observer fades the rail out (`.rail-off`) once the reader scrolls past
+  the article column. The back button on TOC articles sits sticky in
+  the freed **left** margin (`.back-rail`, lg+; the in-flow header copy
+  stays for <lg and no-TOC articles).
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail
