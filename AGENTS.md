@@ -125,7 +125,14 @@ in this repo only.
   fallback**: with `DEEPL_API_KEY` unset or on any API error, the page renders
   the authored-language content — still static, build-time only, build never
   breaks. (Same-slug rows in DE + EN are treated as the two language versions
-  of one post.)
+  of one post.) **Save-time sync note:** tds-content-api now machine-creates
+  the counterpart row on save (flagged `machineTranslated` in the API payload),
+  so the build-time path above is a rarely-firing fallback for content the
+  backfill hasn't covered. `resolveLocalizedPost` treats a stored
+  `machineTranslated` row like a build-time translation (`translated: true`) so
+  the notice still shows; the flag is optional on tds-shared's `BlogPost`
+  (≥ 0.8.6). `_build.yml` exports the `DEEPL_API_KEY` repo secret into the
+  Build step for the fallback (optional; unset = graceful no-op).
 - `src/pages/interests-index.json.ts` — build-time static JSON index
   of all posts (slug/lang/category/title/excerpt/tags/publishedAt)
   for the recommendations island

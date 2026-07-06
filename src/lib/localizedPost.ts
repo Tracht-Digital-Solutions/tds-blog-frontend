@@ -26,14 +26,20 @@ export async function resolveLocalizedPost(
   slug: string,
   lang: "de" | "en",
 ): Promise<LocalizedPost | null> {
-  // Authored in the requested language → use verbatim.
+  // Authored in the requested language → use verbatim. A stored row the
+  // content-api's save-time DeepL sync created is still machine output,
+  // so it carries the same "machine-translated" notice as a build-time
+  // translation. (machineTranslated ships with tds-shared ≥ 0.8.6 — the
+  // cast keeps older installed type versions green.)
   const native = await getPost(slug, lang);
   if (native) {
+    const machine =
+      (native as { machineTranslated?: boolean }).machineTranslated === true;
     return {
       post: native,
       bodyHtml: await renderMarkdown(native.body),
-      translated: false,
-      sourceLang: null,
+      translated: machine,
+      sourceLang: machine ? (lang === "de" ? "en" : "de") : null,
     };
   }
 
