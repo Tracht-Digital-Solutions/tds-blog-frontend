@@ -173,21 +173,42 @@ or similar.
 
 Layout.astro renders the per-page meta (canonical, hreflang,
 OG with image dimensions, Twitter Card, `article:modified_time`,
-theme-color) and passes through an optional `jsonLd` prop.
+theme-color) and passes through an optional `jsonLd` prop. The
+default description is `siteConfig.description[lang]` (journal
+copy with the "Digitalisierung für Unternehmen" keyword), resolved
+after the props destructure.
 
+- **`altUrl` prop (Layout):** `undefined` = auto-derive the hreflang
+  alternate by swapping the `/en/` prefix (correct for posts — every
+  post exists in both languages via the DeepL build fallback — and
+  for name-mirrored twins); `null` = suppress the hreflang links +
+  x-default entirely (canonical only); string = explicit URL. The
+  listing routes (`tag/`, `kategorie/`↔`en/category/`, `page/`) pass
+  `altUrl={null}` because their twins do NOT mirror by prefix —
+  don't remove that or the head links point at 404s.
+- **Sitemap** (`astro.config.mjs`) filters out `/og/`, `.png`
+  endpoints, `interests-index.json` and the error pages. Deliberately
+  NO sitemap `i18n` option here (unlike the landingpage): blog routes
+  don't mirror by prefix, so prefix-derived alternates would 404.
+  `lastmod` via `serialize` was considered and skipped — the
+  integration only sees URL strings, and mapping slug→updatedAt would
+  duplicate the content-api client inside the config context.
+- **RSS is per-language:** `/rss.xml` (DE) + `/en/rss.xml` (EN); the
+  Layout autodiscovery link and the RssInfo explainer both pick the
+  feed matching the page language.
 - `[slug].astro` emits `BlogPosting` (with author, publisher,
   image, wordCount, inLanguage, datePublished, dateModified) +
   `BreadcrumbList` (Home → category → post).
 - Index pages (DE + EN, both page 1 and `/page/[num]`) emit
-  `WebSite` + `Blog` graph.
+  `WebSite` + `Blog` graph. The WebSite node has no SearchAction —
+  there is no search endpoint; don't add a fake one.
 - Organization + Person `@id`s are anchored on `tracht-digital.de`
   (the marketing origin), so this site references them by `@id`
   rather than redefining them.
 
-When updating identity in tds-landingpage (street/phone/socials,
-issues #5/#6/#7 over there), mirror the change in `src/lib/seo.ts`
-here so the Organization graph stays consistent across both
-domains.
+When updating identity in tds-landingpage (address/phone/socials),
+mirror the change in `src/lib/seo.ts` here so the Organization graph
+stays consistent across both domains.
 
 ## Don't (additions)
 

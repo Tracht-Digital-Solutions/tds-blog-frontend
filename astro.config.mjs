@@ -8,7 +8,22 @@ import { tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
   output: "static",
-  integrations: [react(), sitemap()],
+  integrations: [
+    react(),
+    sitemap({
+      // Content pages only: drop the generated OG PNGs, JSON endpoints and
+      // error pages. NO `i18n` option here (unlike the landingpage) — blog
+      // routes don't mirror by prefix (/kategorie vs /en/category, per-language
+      // tag sets and page counts), so prefix-derived alternates would point
+      // at 404s. Post-level hreflang lives in the Layout <head> instead.
+      filter: (page) =>
+        !page.includes("/og/") &&
+        !page.endsWith(".png") &&
+        !page.includes("interests-index.json") &&
+        !page.includes("/404") &&
+        !page.includes("/500"),
+    }),
+  ],
   vite: {
     build: { ...tdsViteBuild },
   },

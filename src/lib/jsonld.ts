@@ -48,10 +48,10 @@ export function personRef() {
 }
 
 /**
- * WebSite for the blog with a Sgl SearchAction. Since the journal
- * has no first-class search, we point the action template at the
- * current page-based listing — AI crawlers prefer *something* over
- * nothing here.
+ * WebSite node for the blog. Deliberately WITHOUT a `potentialAction`
+ * SearchAction: the journal has no site search endpoint, and a
+ * non-functional url template is worse than none (crawlers probe it).
+ * Add one only when a real search route exists.
  */
 export function websiteSchema() {
   return {
