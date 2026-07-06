@@ -29,7 +29,7 @@ export async function resolveLocalizedPost(
   // Authored in the requested language → use verbatim. A stored row the
   // content-api's save-time DeepL sync created is still machine output,
   // so it carries the same "machine-translated" notice as a build-time
-  // translation. (machineTranslated ships with tds-shared ≥ 0.8.6 — the
+  // translation. (machineTranslated ships with tds-shared ≥ 0.8.7 — the
   // cast keeps older installed type versions green.)
   const native = await getPost(slug, lang);
   if (native) {
