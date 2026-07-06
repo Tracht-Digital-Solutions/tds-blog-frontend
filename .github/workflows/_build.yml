@@ -72,6 +72,13 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Build-time fallback translation for posts that still lack a
+          # counterpart language (src/lib/translate.ts). Optional — unset
+          # gracefully renders the authored language instead. Rarely fires
+          # since the content-api's save-time sync stores real counterpart
+          # rows; it only covers content the backfill hasn't touched.
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
 
       - name: Stamp build
         if: ${{ inputs.publish_branch != '' }}
