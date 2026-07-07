@@ -103,7 +103,7 @@ const tx = lang === "de"
       aboutAuthor: "Über den Autor", owner: "Inhaber, Tracht Digital Solutions",
       bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
       newer: "Neuerer Artikel", older: "Älterer Artikel", nav: "Artikel-Navigation",
-      allArticles: "Alle Artikel", rss: "RSS abonnieren",
+      allArticles: "Alle Artikel", rss: "RSS abonnieren", print: "Drucken",
       machine: "Automatisch übersetzt — das Original ist auf Englisch verfasst.",
       contactHead: "Zusammenarbeiten",
       contactLead: "Ein Projekt im Kopf oder eine Frage? Schreiben Sie mir über das Kontaktformular.",
@@ -115,7 +115,7 @@ const tx = lang === "de"
       aboutAuthor: "About the author", owner: "Owner, Tracht Digital Solutions",
       bio: "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg.",
       newer: "Newer article", older: "Older article", nav: "Article navigation",
-      allArticles: "All articles", rss: "Subscribe via RSS",
+      allArticles: "All articles", rss: "Subscribe via RSS", print: "Print",
       machine: "Machine-translated — the original is written in German.",
       contactHead: "Work together",
       contactLead: "Got a project in mind or a question? Reach out through the contact form.",
@@ -229,6 +229,20 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">
             {dateLabel && <>{dateLabel} · </>}~{readingMinutes} {tx.read}
           </p>
+          {/* Opens the colourless print / PDF view in its own tab. */}
+          <a
+            href={`${pfx}/${post.slug}/print`}
+            target="_blank"
+            rel="noopener"
+            class="ml-auto inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] no-underline transition-colors"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9V2h12v7"></path>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <path d="M6 14h12v8H6z"></path>
+            </svg>
+            <span>{tx.print}</span>
+          </a>
         </div>
         <h1 class="display text-4xl md:text-5xl" style="text-wrap: balance;">
           {post.title}
@@ -275,28 +289,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           ))}
 
           <aside
-            class="grid grid-cols-[64px_1fr] gap-5 items-start mt-9 p-5"
-            style="background: var(--color-soft);"
-          >
-            <span
-              aria-hidden="true"
-              class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
-              style="background: var(--color-surface-navy); font-family: var(--font-display);"
-            >JT</span>
-            <div>
-              <p class="eyebrow mb-2">{tx.aboutAuthor}</p>
-              <p class="font-semibold">
-                Julian Tracht
-                <span class="font-normal text-sm text-[var(--color-muted)]">· {tx.owner}</span>
-              </p>
-              <p class="text-sm leading-relaxed text-[var(--color-muted)] mt-2" style="text-wrap: pretty;">
-                {tx.bio}
-              </p>
-            </div>
-          </aside>
-
-          <aside
-            class="mt-6 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            class="mt-9 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             style="background: var(--color-soft);"
             aria-label={tx.contactHead}
           >
@@ -315,7 +308,27 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             </a>
           </aside>
 
-          <TagList tags={post.tags} lang={lang} label="Tags" />
+          {/* Author bio sits below the contact CTA (moved further down). */}
+          <aside
+            class="grid grid-cols-[64px_1fr] gap-5 items-start mt-6 p-5"
+            style="background: var(--color-soft);"
+          >
+            <span
+              aria-hidden="true"
+              class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
+              style="background: var(--color-surface-navy); font-family: var(--font-display);"
+            >JT</span>
+            <div>
+              <p class="eyebrow mb-2">{tx.aboutAuthor}</p>
+              <p class="font-semibold">
+                Julian Tracht
+                <span class="font-normal text-sm text-[var(--color-muted)]">· {tx.owner}</span>
+              </p>
+              <p class="text-sm leading-relaxed text-[var(--color-muted)] mt-2" style="text-wrap: pretty;">
+                {tx.bio}
+              </p>
+            </div>
+          </aside>
       </div>
 
       <RelatedArticles
@@ -324,6 +337,11 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         currentCategory={post.category}
         lang={lang}
       />
+
+      {/* Tags moved further down — below the related-articles strip. */}
+      <div class="mt-10">
+        <TagList tags={post.tags} lang={lang} label="Tags" />
+      </div>
 
       {(newerPost || olderPost) && (
         <nav class="mt-16 grid sm:grid-cols-2 gap-4" aria-label={tx.nav}>

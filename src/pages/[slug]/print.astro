@@ -1,0 +1,26 @@
+---
+import PrintDoc from "~/components/PrintDoc.astro";
+import { listAllPosts } from "~/lib/content-api";
+import { resolveLocalizedPost } from "~/lib/localizedPost";
+
+// German print view — one per distinct slug, mirroring /[slug].astro.
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts();
+  } catch (err) {
+    console.error("[tds-blog] print getStaticPaths fetch failed:", err);
+    return [];
+  }
+  const slugs = [...new Set(posts.map((p) => p.slug))];
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const localized = await resolveLocalizedPost(slug as string, "de");
+if (!localized) {
+  return new Response("Not found", { status: 404 });
+}
+---
+
+<PrintDoc localized={localized} lang="de" />

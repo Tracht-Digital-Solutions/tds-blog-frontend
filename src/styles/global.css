@@ -1252,4 +1252,172 @@ html.js [data-reveal].is-in {
   .article-shell.has-toc {
     transition: none;
   }
+  .print-switch-track,
+  .print-switch-thumb {
+    transition: none;
+  }
+}
+
+/* ---- Article: print / PDF view (/[slug]/print) ----
+   A colourless, chrome-free rendering opened in its own tab. The screen shows
+   a sticky control panel (PrintControls island) whose switches toggle
+   `hide-<key>` classes on #print-root; `@media print` drops the panel so only
+   the curated document reaches the printer / "Save as PDF". Colours are
+   hard-coded neutral (not theme tokens) so the sheet never inverts in dark
+   mode. */
+.print-shell {
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+.print-controls {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  padding: 0.85rem 1rem;
+  margin-bottom: 2rem;
+}
+.print-back-link {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: #52525b;
+  text-decoration: none;
+  margin-bottom: 0.7rem;
+}
+.print-back-link:hover { color: #111; text-decoration: underline; }
+.print-controls-inner { display: flex; flex-direction: column; gap: 0.8rem; }
+.print-controls-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717a;
+  margin: 0;
+}
+.print-switches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.45rem 1rem;
+}
+.print-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: #27272a;
+}
+.print-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+}
+.print-switch-track {
+  flex: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d4d4d8;
+  transition: background-color 160ms ease;
+}
+.print-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 160ms ease;
+}
+.print-switch-input:checked + .print-switch-track { background: #18181b; }
+.print-switch-input:checked + .print-switch-track .print-switch-thumb { transform: translateX(14px); }
+.print-switch-input:focus-visible + .print-switch-track { outline: 2px solid #18181b; outline-offset: 2px; }
+.print-do { margin-top: 0.15rem; align-self: flex-start; }
+
+.print-doc { color: #111; background: #fff; font-family: var(--font-body); }
+.print-doc .print-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #52525b;
+  margin: 0 0 0.6rem;
+}
+.print-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+  text-wrap: balance;
+}
+.print-lead { font-size: 1.05rem; line-height: 1.6; color: #3f3f46; margin: 0 0 1rem; }
+.print-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
+  color: #52525b;
+  margin: 0 0 0.4rem;
+}
+.print-meta > span { position: relative; }
+.print-meta > span + span::before {
+  content: "·";
+  position: absolute;
+  left: -0.55rem;
+  color: #a1a1aa;
+}
+.print-url { font-size: 0.75rem; color: #71717a; word-break: break-all; margin: 0 0 1.5rem; }
+.pm-cover { display: block; width: 100%; height: auto; margin: 0 0 1.5rem; filter: grayscale(1); }
+
+/* Meta visibility toggles, driven by the island via #print-root classes. */
+#print-root.hide-cover .pm-cover,
+#print-root.hide-category .pm-category,
+#print-root.hide-date .pm-date,
+#print-root.hide-reading .pm-reading,
+#print-root.hide-author .pm-author,
+#print-root.hide-lead .pm-lead,
+#print-root.hide-tags .pm-tags,
+#print-root.hide-url .pm-url { display: none; }
+#print-root.hide-date.hide-reading.hide-author .print-meta { display: none; }
+
+.print-tags { font-size: 0.8125rem; color: #52525b; margin: 2rem 0 0; }
+
+.prose-print { color: #111; font-size: 1rem; line-height: 1.7; }
+.prose-print > * + * { margin-top: 1rem; }
+.prose-print h2 { font-family: var(--font-display); font-size: 1.4rem; line-height: 1.25; margin-top: 2rem; }
+.prose-print h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; }
+.prose-print a { color: #111; text-decoration: underline; }
+.prose-print ul, .prose-print ol { padding-left: 1.4rem; }
+.prose-print li { margin-top: 0.35rem; }
+.prose-print blockquote {
+  border-left: 3px solid #d4d4d8;
+  padding-left: 1rem;
+  color: #3f3f46;
+  font-style: italic;
+}
+.prose-print img { max-width: 100%; height: auto; }
+.prose-print pre {
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
+.prose-print code { font-family: var(--font-mono); font-size: 0.9em; }
+.prose-print hr { border: 0; border-top: 1px solid #e4e4e7; }
+
+@media print {
+  .print-controls { display: none !important; }
+  .print-shell { max-width: none; margin: 0; padding: 0; }
+  .print-doc { font-size: 11.5pt; }
+  .print-title, .prose-print h2, .prose-print h3 { break-after: avoid; }
+  .prose-print p, .prose-print blockquote, .prose-print li { orphans: 3; widows: 3; }
+  .prose-print pre, .prose-print img, .prose-print blockquote { break-inside: avoid; }
+  a { color: #000 !important; }
 }
