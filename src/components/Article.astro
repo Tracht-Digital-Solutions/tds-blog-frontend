@@ -159,12 +159,6 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       showToc && "has-toc",
     ]}
   >
-    {/* Single arrow-only back control — a floating rail in the left margin on
-        lg+, an inline arrow on small screens (renders for every post). */}
-    <a href={`${pfx}/`} class="back-rail" aria-label={tx.back}>
-      <span aria-hidden="true">←</span>
-    </a>
-
     {showToc && (
       <>
         <nav class="toc" aria-label={tx.contents} id="article-toc">
@@ -238,9 +232,19 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             <span>{tx.print}</span>
           </a>
         </div>
-        <h1 class="display text-4xl md:text-5xl" style="text-wrap: balance;">
-          {post.title}
-        </h1>
+        {/* Back arrow sits directly left of the heading (hangs into the left
+            margin on lg+; inline before the title on small screens). */}
+        <div class="title-row">
+          <a href={`${pfx}/`} class="back-rail" aria-label={tx.back}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
+          <h1 class="display text-4xl md:text-5xl" style="text-wrap: balance;">
+            {post.title}
+          </h1>
+        </div>
         <p class="lead mt-3.5 text-[var(--color-muted)]" style="text-wrap: pretty;">
           {post.excerpt}
         </p>
