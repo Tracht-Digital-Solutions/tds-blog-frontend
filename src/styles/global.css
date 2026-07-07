@@ -1333,8 +1333,8 @@ html.js [data-reveal].is-in {
   }
 }
 .print-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.print-sizes { display: flex; gap: 0.25rem; }
-.print-size-btn {
+.print-seg { display: flex; gap: 0.25rem; }
+.print-seg-btn {
   flex: 1;
   padding: 0.4rem 0;
   font-size: 0.8125rem;
@@ -1344,8 +1344,35 @@ html.js [data-reveal].is-in {
   border: 1px solid #e4e4e7;
   transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
 }
-.print-size-btn:hover { background: #e4e4e7; }
-.print-size-btn.on { background: #18181b; color: #fff; border-color: #18181b; }
+.print-seg-btn:hover { background: #e4e4e7; }
+.print-seg-btn.on { background: #18181b; color: #fff; border-color: #18181b; }
+
+/* Highlighter toggle + clear. */
+.print-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #27272a;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+.print-action:hover { background: #e4e4e7; }
+.print-action.on { background: #fef08a; border-color: #eab308; color: #111; }
+.print-clear {
+  padding: 0.1rem 0;
+  font-size: 0.75rem;
+  color: #71717a;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.print-clear:hover { color: #111; text-decoration: underline; }
 .print-back-link {
   display: inline-block;
   font-size: 0.8125rem;
@@ -1419,10 +1446,25 @@ html.js [data-reveal].is-in {
   max-width: 100%;
   border: 1px solid #e4e4e7;
   padding: 16mm;
+  --print-fs: 1rem; /* body prose size, driven by the fs-* class below */
 }
-.print-doc.size-a4 { width: 210mm; }
 .print-doc.size-a5 { width: 148mm; }
+.print-doc.size-a4 { width: 210mm; }
 .print-doc.size-a3 { width: 297mm; }
+.print-doc.fs-s { --print-fs: 0.9rem; }
+.print-doc.fs-m { --print-fs: 1rem; }
+.print-doc.fs-l { --print-fs: 1.15rem; }
+
+/* Highlighter: marks made in the preview print with the page (force the
+   background so it survives print without the reader enabling backgrounds). */
+.print-mark {
+  background: #fef08a;
+  color: inherit;
+  padding: 0 1px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+#print-root.marking { cursor: text; }
 .print-doc .print-eyebrow {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -1470,7 +1512,7 @@ html.js [data-reveal].is-in {
 
 .print-tags { font-size: 0.8125rem; color: #52525b; margin: 2rem 0 0; }
 
-.prose-print { color: #111; font-size: 1rem; line-height: 1.7; }
+.prose-print { color: #111; font-size: var(--print-fs, 1rem); line-height: 1.7; }
 .prose-print > * + * { margin-top: 1rem; }
 .prose-print h2 { font-family: var(--font-display); font-size: 1.4rem; line-height: 1.25; margin-top: 2rem; }
 .prose-print h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; }
@@ -1505,7 +1547,6 @@ html.js [data-reveal].is-in {
     border: 0;
     padding: 0;
     margin: 0;
-    font-size: 11.5pt;
   }
   .print-title, .prose-print h2, .prose-print h3 { break-after: avoid; }
   .prose-print p, .prose-print blockquote, .prose-print li { orphans: 3; widows: 3; }

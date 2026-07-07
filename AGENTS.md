@@ -165,14 +165,19 @@ in this repo only.
   rendering (`.prose-print`, hard-coded neutral colours so it never inverts in
   dark mode). The `PrintControls` island renders as a **floating bar on the
   right** (`.print-controls`, `position: fixed`, flat/no shadow) with: a **page
-  size** segmented control (A4/A5/A3 — writes both a `size-<x>` class on
-  `#print-root` for the on-screen sheet preview and an injected
-  `@page { size … margin … }` rule for the actual print/PDF), and **meta
-  Kippschalter** (toggle switches) that flip `hide-<key>` classes on
-  `#print-root` to show/hide each meta block (cover/category/date/reading time/
-  author/summary/tags/link; cover defaults **off**). Both persist in
-  `localStorage`. The sheet (`.print-doc`) is page-sized (`210mm/148mm/297mm`)
-  with a 16mm **Seitenabstand** (padding, mirrored by the `@page` margin);
+  size** segmented control (A5/A4/A3, sorted small→large — writes both a
+  `size-<x>` class on `#print-root` for the sheet preview and an injected
+  `@page { size … margin … }` rule for the actual print/PDF); **font size**
+  (S/M/L — an `fs-<x>` class driving the `--print-fs` var the body prose reads,
+  so the choice carries into print); a **highlighter** (`Markieren` toggle —
+  while on, a `mouseup` handler wraps the current selection inside `#print-root`
+  in `<mark class="print-mark">`, forced to print via `print-color-adjust:
+  exact`; a Clear button unwraps all); and **meta Kippschalter** flipping
+  `hide-<key>` classes to show/hide each block (cover/category/summary/date/
+  reading/author/link/tags in document-flow order; cover defaults **off**).
+  Size/font/meta persist in `localStorage`. The sheet (`.print-doc`) is
+  page-sized (`148/210/297mm`) with a 16mm **Seitenabstand** (padding mirrored
+  by the `@page` margin);
   `@media print` resets the sheet frame so the margin isn't doubled and drops
   the panel. A "Drucken / Als PDF" button calls `window.print()`. No runtime
   fetch — the body is baked at build time.
