@@ -128,6 +128,32 @@ export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null>
   }
 }
 
+/**
+ * Whether the public cookie banner is enabled — the language-agnostic
+ * `cookie_banner` landing content block ({ enabled }, stored under `lang=de`),
+ * toggled in tds-admin and baked at build time (a toggle fires a blog
+ * rebuild). Absent block, demo mode or an unreachable API mean "off" —
+ * the safe default.
+ */
+export async function cookieBannerEnabled(): Promise<boolean> {
+  if (DEMO_MODE) return false;
+
+  const url = new URL(`${BASE_URL}/landing`);
+  url.searchParams.set("lang", "de");
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return false;
+    const data = (await res.json()) as {
+      blocks?: Record<string, { enabled?: unknown } | undefined>;
+    };
+    return data.blocks?.["cookie_banner"]?.enabled === true;
+  } catch (err) {
+    console.warn("[tds-blog] content-api unreachable — cookie banner off:", err);
+    return false;
+  }
+}
+
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
   if (DEMO_MODE) return demoPost(slug, lang);
 
