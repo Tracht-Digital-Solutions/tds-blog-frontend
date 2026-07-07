@@ -123,7 +123,13 @@ in this repo only.
   in `Article.astro`) is a **fixed rail on the RIGHT viewport edge**
   (`right: 14px`, vertically centered, z-30) that visually merges with
   the brand scrollbar; the article shell reserves `padding-right`
-  (`--toc-w`) for it instead of a grid column. Collapsible to a tick
+  (`--toc-w`) for it instead of a grid column. **Expanded panel is a peek
+  nav:** the section-heading rows rest faint (`opacity: .5`) + small
+  (`.toc-label` `0.6875rem`) and only rise to full opacity/size on
+  `.toc:hover`/`:focus-within` — the in-view section (`.toc-link.on`) stays
+  legible so the reading position is always visible (scoped
+  `.article-shell:not(.toc-collapsed)` so the collapsed rail keeps its own
+  label logic). Collapsible to a tick
   rail (toggle + `localStorage["tds-blog-toc"]`, pre-paint restore);
   when collapsed, a heading's floating label (left of the rail) shows
   **only while that `<h2>` is visible in the viewport** (per-heading
