@@ -671,6 +671,30 @@ a.topic-card:focus-visible {
   color: #fff;
 }
 
+/* Peek nav: in the expanded panel the section headings rest faint + small and
+   only rise to full opacity/size while the reader hovers (or tabs into) the
+   rail — the section currently in view (.on) always stays legible so the
+   reading position is visible. Scoped to the expanded panel; the collapsed
+   rail keeps its own in-view/hover label logic further down. */
+.article-shell:not(.toc-collapsed) .toc-link {
+  opacity: 0.5;
+  transition: opacity 180ms ease, color 180ms ease, background-color 180ms ease;
+}
+.article-shell:not(.toc-collapsed) .toc-label {
+  font-size: 0.6875rem;
+  transition: font-size 180ms ease;
+}
+.article-shell:not(.toc-collapsed) .toc:hover .toc-link,
+.article-shell:not(.toc-collapsed) .toc:focus-within .toc-link,
+.article-shell:not(.toc-collapsed) .toc-link.on {
+  opacity: 1;
+}
+.article-shell:not(.toc-collapsed) .toc:hover .toc-label,
+.article-shell:not(.toc-collapsed) .toc:focus-within .toc-label,
+.article-shell:not(.toc-collapsed) .toc-link.on .toc-label {
+  font-size: 0.8125rem;
+}
+
 /* ---- Article: TOC head + fold toggle ---- */
 .toc-head {
   display: flex;
@@ -1222,6 +1246,7 @@ html.js [data-reveal].is-in {
     transition: none;
   }
   .toc,
+  .toc-link,
   .toc-label,
   .toc-tick,
   .article-shell.has-toc {
