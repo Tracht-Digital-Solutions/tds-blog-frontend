@@ -84,6 +84,23 @@ in this repo only.
   nav search field (JournalHeader) drives it via `tds-blog-search`
   CustomEvents; on non-index pages Enter navigates to `/?q=…`.
   Hero + 9 grid cards mirror page 1 of the static pagination
+- `src/components/islands/HeroSlider.tsx` — the navy Journal hero on the
+  index: a real **carousel track** rotating up to three sets (Empfohlen /
+  Aktuelles / Populär). **All sets are rendered side-by-side in `.hero-track`
+  (`flex:0 0 100%` per slide, `global.css`) and the component translates the
+  track by `-activeIndex*100% (+ live drag px)`** — so a set change *slides*
+  the strip and a pointer-drag reveals the neighbouring set instead of blank
+  navy (the old build rendered only the active slide, so dragging it exposed an
+  empty band). Mouse/touch drag via Pointer Events: the track follows the
+  cursor, releasing past `DRAG_THRESHOLD` (64px) snaps to the neighbour,
+  otherwise it springs back; the ends **rubber-band** (overscroll ÷3, no wrap
+  past first/last on drag) and a real drag swallows the trailing click
+  (`suppressClick`). Off-screen slides carry `inert`+`aria-hidden` so their
+  links aren't tabbable/clickable. Tabs/arrows/dots + 12s auto-rotation (paused
+  on hover/focus) still wrap via `step`. `prefers-reduced-motion` drops the
+  track transition (instant jump) — resolved after hydration into `reducedMotion`
+  state to avoid an SSR mismatch. **Empfohlen** is client-scored from the
+  `tds-interests` cookie (mirrors `ForYou`, no runtime content-api call)
 - `src/components/PostCard.tsx` + `Covers.tsx` — flat card + the six
   abstract brand-geometry covers (slug-hashed variant; photo cover
   when `coverHint` is an http URL). Also rendered statically (no
