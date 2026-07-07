@@ -190,7 +190,12 @@ export default function HeroSlider({
   const [recommended, setRecommended] = useState<SliderPost[]>([]);
   const [active, setActive] = useState<SetId>("aktuelles");
   const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const interacted = useRef(false);
+
+  // Resolve prefers-reduced-motion after hydration (avoids an SSR mismatch);
+  // it gates the track slide transition below.
+  useEffect(() => setReducedMotion(prefersReducedMotion()), []);
 
   // Score recommendations from the interest cookie against the baked
   // candidate set — client-only, mirrors ForYou. No content-api call.
@@ -261,29 +266,43 @@ export default function HeroSlider({
     [order.length],
   );
 
-  const onPointerMove = useCallback((e: ReactPointerEvent) => {
-    const s = drag.current;
-    if (!s.active) return;
-    const dx = e.clientX - s.startX;
-    s.dx = dx;
-    if (Math.abs(dx) > 6) s.moved = true;
-    setDragDX(dx);
-  }, []);
+  const onPointerMove = useCallback(
+    (e: ReactPointerEvent) => {
+      const s = drag.current;
+      if (!s.active) return;
+      let dx = e.clientX - s.startX;
+      // Rubber-band at the ends: the track has no wrap-around slide, so
+      // dragging past the first (rightward) or last (leftward) set would
+      // expose blank navy. Dampen that overscroll so it springs back.
+      const atStart = activeIndex === 0 && dx > 0;
+      const atEnd = activeIndex === order.length - 1 && dx < 0;
+      if (atStart || atEnd) dx /= 3;
+      s.dx = dx;
+      if (Math.abs(e.clientX - s.startX) > 6) s.moved = true;
+      setDragDX(dx);
+    },
+    [activeIndex, order.length],
+  );
 
   const endDrag = useCallback(() => {
     const s = drag.current;
     if (!s.active) return;
     s.active = false;
     if (s.moved && Math.abs(s.dx) > DRAG_THRESHOLD && order.length > 1) {
-      interacted.current = true;
-      // drag left → next, drag right → previous
-      step(s.dx < 0 ? 1 : -1);
+      // drag left → next, drag right → previous — but never step past the
+      // ends of the track (the rubber-band above already made that hard).
+      const dir = s.dx < 0 ? 1 : -1;
+      const target = activeIndex + dir;
+      if (target >= 0 && target < order.length) {
+        interacted.current = true;
+        setActive(order[target]);
+      }
     }
     if (s.moved) suppressClick.current = true;
     setDragDX(0);
     setDragging(false);
     setPaused(false);
-  }, [order.length, step]);
+  }, [order, activeIndex]);
 
   // Auto-rotation — paused on hover/focus and for reduced-motion users.
   useEffect(() => {
@@ -389,20 +408,26 @@ export default function HeroSlider({
             }
           }}
         >
-          {/* hero-drag follows the pointer during a drag (no animated remount,
-              so the translate is smooth); inside it the keyed hero-slide
-              remounts on each set change to replay the slide-in keyframe
-              (global.css). Reduced-motion disables that animation. */}
+          {/* All sets live side-by-side in the track; translating the track
+              by -activeIndex*100% (plus the live drag offset) IS the slide —
+              so dragging reveals the neighbouring set instead of blank navy.
+              Inactive slides are `inert` so their links can't be tabbed to or
+              clicked while off-screen. Reduced-motion drops the transition. */}
           <div
-            className={`hero-drag${dragging ? " is-dragging" : ""}`}
+            className={`hero-track${dragging ? " is-dragging" : ""}`}
             style={{
-              transform: `translateX(${dragDX}px)`,
-              transition: dragging ? "none" : "transform 320ms cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: `translateX(calc(${-activeIndex * 100}% + ${dragDX}px))`,
+              transition: dragging || reducedMotion ? "none" : "transform 320ms cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           >
-            <div key={current.meta.id} className="hero-slide">
-              <Slide posts={current.posts} meta={current.meta} lang={lang} t={t} />
-            </div>
+            {sets.map(({ meta, posts }, i) => {
+              const on = i === activeIndex;
+              return (
+                <div key={meta.id} className="hero-slide" aria-hidden={!on} inert={!on}>
+                  <Slide posts={posts} meta={meta} lang={lang} t={t} />
+                </div>
+              );
+            })}
           </div>
         </div>
 
