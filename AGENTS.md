@@ -137,9 +137,10 @@ in this repo only.
   hover/focus — the active section keeps its wider accent tick. A second
   observer fades the rail out (`.rail-off`) once the reader scrolls past
   the article column. Back navigation is a **single arrow-only** control
-  (`.back-rail`) rendered for every post: an inline square at the top on small
-  screens, and on lg+ a `position: fixed` rail pinned just right of the sidebar
-  (`left: calc(var(--nav-w) + …)`, so it follows the sidebar's expand/collapse).
+  (`.back-rail`, a centred SVG arrow) sitting **directly left of the heading**
+  (`.title-row`): inline before the `<h1>` on small screens, and on lg+ it
+  hangs into the left margin (absolute, `right: 100%`) so the heading isn't
+  indented.
 - **Reading column is window-centred on sidebar pages** (the "Mitte der Seite"
   fix). The `.with-sidebar` wrapper stays offset by the sidebar (keeps the
   footer/newsletter clear of it), and `--nav-w` (264px / 64px collapsed, set on
@@ -162,13 +163,19 @@ in this repo only.
   (shared like `Article.astro`), rendered with Layout `bare` + `noindex` (no
   site chrome; excluded from the sitemap). It's a colourless, single-flow
   rendering (`.prose-print`, hard-coded neutral colours so it never inverts in
-  dark mode). A screen-only control panel — the `PrintControls` island — shows
-  Kippschalter (toggle switches) that flip `hide-<key>` classes on `#print-root`
-  to show/hide each meta block (cover/category/date/reading time/author/summary/
-  tags/link; cover defaults **off**), persisted in `localStorage`; a "Drucken /
-  Als PDF" button calls `window.print()` (the browser dialog also offers
-  Save-as-PDF). `@media print` drops the panel. No runtime fetch — the body is
-  baked at build time.
+  dark mode). The `PrintControls` island renders as a **floating bar on the
+  right** (`.print-controls`, `position: fixed`, flat/no shadow) with: a **page
+  size** segmented control (A4/A5/A3 — writes both a `size-<x>` class on
+  `#print-root` for the on-screen sheet preview and an injected
+  `@page { size … margin … }` rule for the actual print/PDF), and **meta
+  Kippschalter** (toggle switches) that flip `hide-<key>` classes on
+  `#print-root` to show/hide each meta block (cover/category/date/reading time/
+  author/summary/tags/link; cover defaults **off**). Both persist in
+  `localStorage`. The sheet (`.print-doc`) is page-sized (`210mm/148mm/297mm`)
+  with a 16mm **Seitenabstand** (padding, mirrored by the `@page` margin);
+  `@media print` resets the sheet frame so the margin isn't doubled and drops
+  the panel. A "Drucken / Als PDF" button calls `window.print()`. No runtime
+  fetch — the body is baked at build time.
 - `src/pages/og/[lang]/[slug].png.ts` — build-time per-post OG image
   via the renderer in `src/og/render.ts` (Satori → Resvg)
 - `src/pages/rss.xml.ts` — RSS feed
