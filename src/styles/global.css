@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 /* Tracht Design System typefaces — self-hosted. Hanken Grotesk is the
-   shared display face (headings + wordmark); Plus Jakarta Sans the body. */
-@import "@fontsource-variable/hanken-grotesk/index.css";
-@import "@fontsource-variable/plus-jakarta-sans/index.css";
-@import "@fontsource-variable/jetbrains-mono/index.css";
+   shared display face (headings + wordmark); Plus Jakarta Sans the body.
+   The @fontsource-variable imports live in Layout.astro, NOT here: an
+   @import in this file is inlined by @tailwindcss/postcss, which does
+   not rebase the packages' relative url(./files/*.woff2) references —
+   Vite then never emits the woff2 assets and every font 404s at runtime. */
 
 /* Brand design system + shared application chrome. The tokens, dark
    theme, base resets, type primitives, chips, header shell and

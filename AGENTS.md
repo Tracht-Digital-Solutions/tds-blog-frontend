@@ -241,6 +241,13 @@ stays consistent across both domains.
 
 ## Don't (additions)
 
+- Don't move the `@fontsource-variable/*` imports from `Layout.astro`
+  into a CSS `@import` in `global.css`. `@tailwindcss/postcss` inlines
+  CSS `@import`s without rebasing the packages' relative
+  `url(./files/*.woff2)` references, so Vite never emits the font
+  files — the build ships zero woff2 and every font 404s at runtime
+  (shipped broken until 2026-07-07, silent system-font fallback).
+  Font faces are JS-style imports in the layout frontmatter.
 - Don't import the OG renderer from a runtime React island —
   Satori + Resvg pull in native deps and are build-time only.
 - Don't drop the TTFs from `src/og/fonts/`. They're OFL-licensed
