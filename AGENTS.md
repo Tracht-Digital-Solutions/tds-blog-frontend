@@ -145,6 +145,19 @@ in this repo only.
   with date / reading time / author, RelatedArticles strip, reading-
   progress bar, chronological prev/next footer nav, and the inline
   interest-cookie script (see below)
+- `src/pages/[slug]/print.astro` + `src/pages/en/[slug]/print.astro` — the
+  **print / PDF view**, opened in its own tab from the "Drucken" button in the
+  article header. Both are thin wrappers over `src/components/PrintDoc.astro`
+  (shared like `Article.astro`), rendered with Layout `bare` + `noindex` (no
+  site chrome; excluded from the sitemap). It's a colourless, single-flow
+  rendering (`.prose-print`, hard-coded neutral colours so it never inverts in
+  dark mode). A screen-only control panel — the `PrintControls` island — shows
+  Kippschalter (toggle switches) that flip `hide-<key>` classes on `#print-root`
+  to show/hide each meta block (cover/category/date/reading time/author/summary/
+  tags/link; cover defaults **off**), persisted in `localStorage`; a "Drucken /
+  Als PDF" button calls `window.print()` (the browser dialog also offers
+  Save-as-PDF). `@media print` drops the panel. No runtime fetch — the body is
+  baked at build time.
 - `src/pages/og/[lang]/[slug].png.ts` — build-time per-post OG image
   via the renderer in `src/og/render.ts` (Satori → Resvg)
 - `src/pages/rss.xml.ts` — RSS feed

@@ -20,6 +20,7 @@ export default defineConfig({
         !page.includes("/og/") &&
         !page.endsWith(".png") &&
         !page.includes("interests-index.json") &&
+        !page.includes("/print") &&
         !page.includes("/404") &&
         !page.includes("/500"),
     }),

@@ -1,0 +1,81 @@
+---
+/**
+ * Print / PDF view of an article — a stripped, colourless rendering opened
+ * in its own tab from the "Drucken" button on the article page. The whole
+ * body is baked at build time (no collapsible sections, no drop-cap, no
+ * site chrome via Layout `bare`); a screen-only control panel (PrintControls)
+ * lets the reader toggle meta blocks on/off before printing or saving as PDF
+ * with the browser's own dialog. `noindex` — this is a utility view, not a
+ * public URL to be crawled.
+ */
+import Layout from "~/layouts/Layout.astro";
+import PrintControls from "~/components/islands/PrintControls.tsx";
+import { siteConfig } from "~/lib/seo";
+import type { LocalizedPost } from "~/lib/localizedPost";
+
+interface Props {
+  localized: LocalizedPost;
+  lang: "de" | "en";
+}
+
+const { localized, lang } = Astro.props;
+const { post, bodyHtml } = localized;
+
+const pfx = lang === "en" ? "/en" : "";
+const backHref = `${pfx}/${post.slug}`;
+const url = new URL(backHref, siteConfig.url).toString();
+
+const dateLabel = post.publishedAt
+  ? new Date(post.publishedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  : null;
+
+const plain = bodyHtml.replace(/<[^>]+>/g, " ");
+const wordCount = plain.split(/\s+/).filter(Boolean).length;
+const readingMinutes = Math.max(1, Math.round(wordCount / 220));
+
+const explicitCover = post.coverHint?.startsWith("http") ? post.coverHint : undefined;
+const tags = (post.tags ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+const t =
+  lang === "de"
+    ? { readUnit: "Min. Lesezeit", by: "Von", tagsLabel: "Themen", back: "← Zum Beitrag", view: "Druckansicht" }
+    : { readUnit: "min read", by: "By", tagsLabel: "Topics", back: "← Back to article", view: "Print view" };
+---
+
+<Layout title={`${post.title} — ${t.view}`} description={post.excerpt} lang={lang} bare noindex>
+  <div class="print-shell">
+    {/* Screen-only controls; hidden by `@media print`. */}
+    <aside class="print-controls">
+      <a href={backHref} class="print-back-link">{t.back}</a>
+      <PrintControls lang={lang} hasCover={!!explicitCover} hasTags={tags.length > 0} client:load />
+    </aside>
+
+    {/* Default hidden meta start baked in as classes so there's no flash
+        before the island hydrates (mirrors PrintControls DEFAULTS). */}
+    <article id="print-root" class="print-doc hide-cover">
+      {explicitCover && <img class="pm-cover" src={explicitCover} alt="" />}
+
+      <p class="pm-category print-eyebrow">{post.category}</p>
+      <h1 class="print-title">{post.title}</h1>
+      <p class="pm-lead print-lead">{post.excerpt}</p>
+
+      <div class="print-meta">
+        {dateLabel && <span class="pm-date">{dateLabel}</span>}
+        <span class="pm-reading">~{readingMinutes} {t.readUnit}</span>
+        <span class="pm-author">{t.by} Julian Tracht</span>
+      </div>
+
+      <p class="pm-url print-url">{url}</p>
+
+      <div class="prose-print" set:html={bodyHtml}></div>
+
+      {tags.length > 0 && (
+        <p class="pm-tags print-tags">{t.tagsLabel}: {tags.join(", ")}</p>
+      )}
+    </article>
+  </div>
+</Layout>
