@@ -171,7 +171,14 @@ in this repo only.
   missing/unreachable topics block degrades to just the post list.
 - `src/components/BlogPostCard.astro` — list-item component (editorial-grid)
 - `src/lib/content-api.ts` — build-time fetch client (cursor-paginated);
-  `listTopics(lang)` fetches the `/topics` block for `/aktuelles`
+  `listTopics(lang)` fetches the `/topics` block for `/aktuelles`;
+  `cookieBannerEnabled()` reads the language-agnostic `cookie_banner`
+  landing block (`/landing?lang=de`) — `Layout.astro` bakes the shared
+  `CookieNotice` island (tds-shared ≥0.8.8, `client:idle`) on every
+  non-bare page when `{ enabled: true }`. Toggled in tds-admin
+  (Landingpage → Cookie-Banner); a save fires a blog rebuild. Absent
+  block / demo / API down = banner off; dismissal persists per origin
+  in localStorage (`tds-cookie-notice`)
 - `src/lib/nav.ts` — shared public-nav item list + active-state helper
 - `src/lib/pagination.ts` — page-window slicing
 - `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage)

@@ -4,7 +4,9 @@ import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
+import { CookieNotice } from "@tracht-digital-solutions/tds-shared/components";
 import { siteConfig } from "~/lib/seo";
+import { cookieBannerEnabled } from "~/lib/content-api";
 
 interface Props {
   title: string;
@@ -89,6 +91,11 @@ const altLang = lang === "de" ? "en" : "de";
 
 // Language-matched RSS autodiscovery (the EN feed carries EN posts).
 const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
+
+// Admin-toggleable cookie banner — the `cookie_banner` content block is
+// resolved at build time (baked; toggling it in tds-admin fires a blog
+// rebuild). Off when absent / demo / API down.
+const showCookieNotice = !bare && (await cookieBannerEnabled());
 ---
 
 <!DOCTYPE html>
@@ -194,6 +201,11 @@ const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
         </>
       )
     }
+
+    {/* Admin-toggleable cookie/privacy notice — baked at build time from
+        the cookie_banner content block; links the central privacy policy
+        on the marketing site (the component's default URL). */}
+    {showCookieNotice && <CookieNotice client:idle lang={lang} />}
 
     {/* Dynamic document.title — prefixes the tab with the heading
         of whichever `<section id="…">` is currently in the viewport.
