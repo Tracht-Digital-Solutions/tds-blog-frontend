@@ -2,78 +2,96 @@ import { useEffect, useState } from "react";
 
 /**
  * Screen-only control panel for the article print view (`/[slug]/print`) —
- * rendered as a floating bar on the right (see `.print-controls` in
- * global.css). It drives three things, all persisted in localStorage:
+ * a floating bar on the right (see `.print-controls` in global.css). All
+ * choices persist in localStorage. It drives:
  *
- *   • Page size — writes an `@page { size … }` rule (so the browser's print /
- *     PDF uses A4/A5/A3) and a `size-<x>` class on `#print-root` so the
- *     on-screen sheet preview matches. A fixed page margin (Seitenabstand)
- *     rides along on `@page` + the sheet padding.
- *   • Meta visibility — each switch flips a `hide-<key>` class on `#print-root`;
- *     the matching CSS hides that meta block on screen and in print.
- *   • Print — `window.print()` (the browser dialog also offers Save-as-PDF).
+ *   • Page size (A5/A4/A3, small→large) — a `size-<x>` class on `#print-root`
+ *     (screen sheet preview) + an injected `@page { size … margin … }` rule
+ *     (real print/PDF). A fixed 16mm margin (Seitenabstand) rides along.
+ *   • Font size (S/M/L) — an `fs-<x>` class on `#print-root` driving the
+ *     `--print-fs` variable the body prose reads.
+ *   • Highlighter — a marker mode; while on, releasing a text selection inside
+ *     the sheet wraps it in `<mark class="print-mark">`; a Clear button unwraps
+ *     all of them. Highlights are in-DOM (print with the page).
+ *   • Meta visibility — each switch flips a `hide-<key>` class on `#print-root`.
  *
- * The article body is baked server-side, so this only flips visibility /
- * sizing — no runtime content fetch.
+ * The article body is baked server-side; this only flips visibility / sizing.
  */
 
-type Key = "cover" | "category" | "date" | "reading" | "author" | "lead" | "tags" | "url";
-type Size = "a4" | "a5" | "a3";
+type Key = "cover" | "category" | "lead" | "date" | "reading" | "author" | "url" | "tags";
+type Size = "a5" | "a4" | "a3";
+type Fs = "s" | "m" | "l";
 
-const ORDER: Key[] = ["cover", "category", "date", "reading", "author", "lead", "tags", "url"];
+// Meta order follows the document's own top-to-bottom flow.
+const ORDER: Key[] = ["cover", "category", "lead", "date", "reading", "author", "url", "tags"];
 
 // Cover defaults off (it's the colourful brand geometry the print view strips);
 // everything textual defaults on.
 const DEFAULTS: Record<Key, boolean> = {
   cover: false,
   category: true,
+  lead: true,
   date: true,
   reading: true,
   author: true,
-  lead: true,
-  tags: true,
   url: true,
+  tags: true,
 };
 
-const SIZES: Size[] = ["a4", "a5", "a3"];
-const PAGE_NAME: Record<Size, string> = { a4: "A4", a5: "A5", a3: "A3" };
+// Sorted small → large.
+const SIZES: Size[] = ["a5", "a4", "a3"];
+const PAGE_NAME: Record<Size, string> = { a5: "A5", a4: "A4", a3: "A3" };
 const PAGE_MARGIN = "16mm"; // Seitenabstand — mirrored by .print-doc padding.
 
-const LABELS: Record<"de" | "en", { title: string; size: string; print: string; items: Record<Key, string> }> = {
+const FONT_SIZES: Fs[] = ["s", "m", "l"];
+
+const LABELS: Record<
+  "de" | "en",
+  { size: string; font: string; fonts: Record<Fs, string>; mark: string; clear: string; meta: string; print: string; items: Record<Key, string> }
+> = {
   de: {
-    title: "Meta-Infos",
     size: "Seitenformat",
+    font: "Schriftgröße",
+    fonts: { s: "Klein", m: "Mittel", l: "Groß" },
+    mark: "Markieren",
+    clear: "Markierungen löschen",
+    meta: "Meta-Infos",
     print: "Drucken / Als PDF",
     items: {
       cover: "Titelbild",
       category: "Kategorie",
+      lead: "Kurzbeschreibung",
       date: "Datum",
       reading: "Lesezeit",
       author: "Autor",
-      lead: "Kurzbeschreibung",
-      tags: "Themen",
       url: "Link zum Beitrag",
+      tags: "Themen",
     },
   },
   en: {
-    title: "Meta info",
     size: "Page size",
+    font: "Font size",
+    fonts: { s: "Small", m: "Medium", l: "Large" },
+    mark: "Highlight",
+    clear: "Clear highlights",
+    meta: "Meta info",
     print: "Print / Save as PDF",
     items: {
       cover: "Cover image",
       category: "Category",
+      lead: "Summary",
       date: "Date",
       reading: "Reading time",
       author: "Author",
-      lead: "Summary",
-      tags: "Topics",
       url: "Article link",
+      tags: "Topics",
     },
   },
 };
 
 const META_KEY = "tds-print-meta";
 const SIZE_KEY = "tds-print-size";
+const FS_KEY = "tds-print-fs";
 
 export default function PrintControls({
   lang = "de",
@@ -88,6 +106,8 @@ export default function PrintControls({
   const keys = ORDER.filter((k) => (k !== "cover" || hasCover) && (k !== "tags" || hasTags));
   const [state, setState] = useState<Record<Key, boolean>>(DEFAULTS);
   const [size, setSize] = useState<Size>("a4");
+  const [fs, setFs] = useState<Fs>("m");
+  const [marking, setMarking] = useState(false);
 
   // Restore persisted choices after hydration.
   useEffect(() => {
@@ -95,7 +115,7 @@ export default function PrintControls({
       const raw = localStorage.getItem(META_KEY);
       if (raw) setState((s) => ({ ...s, ...(JSON.parse(raw) as Partial<Record<Key, boolean>>) }));
     } catch {
-      /* storage disabled — start from defaults */
+      /* storage disabled */
     }
     try {
       const s = localStorage.getItem(SIZE_KEY) as Size | null;
@@ -103,9 +123,15 @@ export default function PrintControls({
     } catch {
       /* storage disabled */
     }
+    try {
+      const f = localStorage.getItem(FS_KEY) as Fs | null;
+      if (f && FONT_SIZES.includes(f)) setFs(f);
+    } catch {
+      /* storage disabled */
+    }
   }, []);
 
-  // Reflect meta visibility onto #print-root (and persist).
+  // Meta visibility → #print-root.
   useEffect(() => {
     const root = document.getElementById("print-root");
     if (root) for (const k of ORDER) root.classList.toggle(`hide-${k}`, !state[k]);
@@ -116,8 +142,7 @@ export default function PrintControls({
     }
   }, [state]);
 
-  // Reflect page size onto #print-root (preview) + an injected @page rule
-  // (actual print / PDF), and persist.
+  // Page size → #print-root class (preview) + injected @page (print/PDF).
   useEffect(() => {
     const root = document.getElementById("print-root");
     if (root) for (const s of SIZES) root.classList.toggle(`size-${s}`, s === size);
@@ -137,16 +162,66 @@ export default function PrintControls({
     }
   }, [size]);
 
+  // Font size → #print-root class (drives --print-fs).
+  useEffect(() => {
+    const root = document.getElementById("print-root");
+    if (root) for (const f of FONT_SIZES) root.classList.toggle(`fs-${f}`, f === fs);
+    try {
+      localStorage.setItem(FS_KEY, fs);
+    } catch {
+      /* storage disabled */
+    }
+  }, [fs]);
+
+  // Marker mode: while on, releasing a selection inside the sheet highlights it.
+  useEffect(() => {
+    const root = document.getElementById("print-root");
+    if (!root) return;
+    root.classList.toggle("marking", marking);
+    if (!marking) return;
+
+    const onUp = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (!root.contains(range.commonAncestorContainer)) return;
+      const mark = document.createElement("mark");
+      mark.className = "print-mark";
+      try {
+        range.surroundContents(mark);
+      } catch {
+        // Multi-node selection: extract + rewrap (valid enough for highlighting).
+        mark.appendChild(range.extractContents());
+        range.insertNode(mark);
+      }
+      sel.removeAllRanges();
+    };
+    document.addEventListener("mouseup", onUp);
+    return () => document.removeEventListener("mouseup", onUp);
+  }, [marking]);
+
+  const clearMarks = () => {
+    const root = document.getElementById("print-root");
+    if (!root) return;
+    root.querySelectorAll("mark.print-mark").forEach((m) => {
+      const parent = m.parentNode;
+      if (!parent) return;
+      while (m.firstChild) parent.insertBefore(m.firstChild, m);
+      parent.removeChild(m);
+      parent.normalize();
+    });
+  };
+
   return (
     <div className="print-controls-inner">
       <div className="print-group">
         <p className="print-controls-title">{t.size}</p>
-        <div className="print-sizes" role="group" aria-label={t.size}>
+        <div className="print-seg" role="group" aria-label={t.size}>
           {SIZES.map((s) => (
             <button
               key={s}
               type="button"
-              className={`print-size-btn cursor-pointer${size === s ? " on" : ""}`}
+              className={`print-seg-btn cursor-pointer${size === s ? " on" : ""}`}
               aria-pressed={size === s}
               onClick={() => setSize(s)}
             >
@@ -157,7 +232,42 @@ export default function PrintControls({
       </div>
 
       <div className="print-group">
-        <p className="print-controls-title">{t.title}</p>
+        <p className="print-controls-title">{t.font}</p>
+        <div className="print-seg" role="group" aria-label={t.font}>
+          {FONT_SIZES.map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`print-seg-btn cursor-pointer${fs === f ? " on" : ""}`}
+              aria-pressed={fs === f}
+              onClick={() => setFs(f)}
+            >
+              {t.fonts[f]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="print-group">
+        <button
+          type="button"
+          className={`print-action cursor-pointer${marking ? " on" : ""}`}
+          aria-pressed={marking}
+          onClick={() => setMarking((m) => !m)}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          <span>{t.mark}</span>
+        </button>
+        <button type="button" className="print-clear cursor-pointer" onClick={clearMarks}>
+          {t.clear}
+        </button>
+      </div>
+
+      <div className="print-group">
+        <p className="print-controls-title">{t.meta}</p>
         <ul className="print-switches list-none p-0 m-0">
           {keys.map((k) => (
             <li key={k}>
