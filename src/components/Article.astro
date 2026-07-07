@@ -159,14 +159,14 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       showToc && "has-toc",
     ]}
   >
+    {/* Single arrow-only back control — a floating rail in the left margin on
+        lg+, an inline arrow on small screens (renders for every post). */}
+    <a href={`${pfx}/`} class="back-rail" aria-label={tx.back}>
+      <span aria-hidden="true">←</span>
+    </a>
+
     {showToc && (
       <>
-        <div class="back-rail hidden lg:block">
-          <a href={`${pfx}/`} class="btn-back">
-            <span aria-hidden="true">←</span>
-            {tx.back}
-          </a>
-        </div>
         <nav class="toc" aria-label={tx.contents} id="article-toc">
           <div class="toc-head">
             <p class="eyebrow toc-title">{tx.contents}</p>
@@ -217,13 +217,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 
     <article class="article-col">
       <header class="mb-7">
-        {/* In-flow back button: <lg and no-TOC articles. With a TOC the
-            sticky .back-rail in the left margin takes over on lg+. */}
-        <a href={`${pfx}/`} class:list={["btn-back", showToc && "lg:hidden"]}>
-          <span aria-hidden="true">←</span>
-          {tx.back}
-        </a>
-        <div class="flex flex-wrap items-center gap-3.5 mt-6 mb-3.5">
+        <div class="flex flex-wrap items-center gap-3.5 mb-3.5">
           <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
           <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)]"></span>
           <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">

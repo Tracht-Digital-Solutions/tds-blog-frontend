@@ -508,6 +508,36 @@
 }
 .btn-back:hover { background: var(--flat-hover); }
 
+/* Single arrow-only back control. Small screens: an inline square at the top
+   of the article. lg+: a floating rail pinned just right of the fixed sidebar
+   (`--nav-w` follows the sidebar's expand/collapse) so it always sits in the
+   left margin and never under the sidebar. */
+.back-rail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1.25rem;
+  background: var(--color-soft);
+  color: var(--color-ink);
+  font-size: 1.15rem;
+  line-height: 1;
+  text-decoration: none;
+  transition: background-color 180ms ease;
+}
+.back-rail:hover { background: var(--flat-hover); }
+@media (min-width: 1024px) {
+  .back-rail {
+    position: fixed;
+    top: 4.5rem;
+    left: calc(var(--nav-w, 264px) + 0.75rem);
+    margin-bottom: 0;
+    z-index: 20;
+    transition: left 320ms ease, background-color 180ms ease;
+  }
+}
+
 /* ---- Aktuelle Themen (current topics) cards ---- */
 .topic-card {
   display: block;
@@ -582,33 +612,31 @@ a.topic-card:focus-visible {
 .sec-body > .sec-body-inner { overflow: hidden; min-height: 0; }
 
 /* ---- Article: shell layout ----
-   The back button sits in a slim sticky rail in the left page margin; the
-   section nav (.toc) is a FIXED rail hugging the right viewport edge at
-   the scrollbar, so the shell reserves right padding for it instead of a
-   grid column. Single column on small screens (both rails hidden there)
-   and for posts without a TOC. */
+   A single centred reading column. The section nav (.toc) and the back-rail
+   are both FIXED against the viewport (they float in the side margins), so the
+   shell reserves no side columns for them. On sidebar pages the column is
+   window-centred (see below) regardless of the sidebar's state; the fixed TOC
+   and sidebar overlay the side whitespace. */
 .article-shell {
   max-width: 82rem;
   margin-inline: auto;
 }
-.article-shell:not(.has-toc) .article-col {
+.article-col {
   max-width: 48rem;
   margin-inline: auto;
 }
 @media (min-width: 1024px) {
-  .article-shell.has-toc {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    column-gap: 2.75rem;
-    align-items: start;
-    /* room for the fixed right-edge section nav */
-    padding-right: calc(var(--toc-w) + 3rem);
-    transition: padding-right 280ms ease;
+  /* The reading column is centred inside a shell that the sidebar offsets to
+     the right; nudge it back left by half the sidebar width so it lands on the
+     true viewport centre ("Mitte der Seite"). --nav-w flips with the sidebar,
+     so the two shifts cancel and toggling the sidebar never moves the article.
+     Uses position/left (not transform) so the fixed TOC keeps its viewport
+     anchor. */
+  .with-sidebar .article-col {
+    position: relative;
+    left: calc(var(--nav-w, 264px) / -2);
+    transition: left 320ms ease;
   }
-  .article-shell.has-toc > .article-col { min-width: 0; }
-  /* Folded: the nav shrinks to a slim tick rail on the edge. */
-  .article-shell.has-toc.toc-collapsed { padding-right: 4.5rem; }
-  .back-rail { position: sticky; top: 1.5rem; }
 }
 
 /* ---- Article: section nav — fixed rail merged with the scrollbar ----
@@ -806,12 +834,16 @@ a.topic-card:focus-visible {
   padding: 1.25rem 1rem;
   transition: width 320ms ease, padding 320ms ease;
 }
+/* Sidebar width as a variable so the back-rail + column-centering can follow
+   the expand/collapse without duplicated breakpoints. */
+.with-sidebar { --nav-w: 264px; }
+.with-sidebar.nav-collapsed { --nav-w: 64px; }
 @media (min-width: 1024px) {
   .blog-sidebar { display: flex; }
-  .with-sidebar { margin-left: 264px; transition: margin-left 320ms ease; }
-  .with-sidebar.nav-collapsed { margin-left: 64px; }
-  .with-sidebar #reading-progress { left: 264px; transition: left 320ms ease; }
-  .with-sidebar.nav-collapsed #reading-progress { left: 64px; }
+  /* The wrapper stays offset by the sidebar (keeps the footer / newsletter
+     clear of it); only the reading column re-centres on the viewport. */
+  .with-sidebar { margin-left: var(--nav-w); transition: margin-left 320ms ease; }
+  .with-sidebar #reading-progress { left: 0; }
   .with-sidebar .brand-header { display: none; }
 }
 .blog-sidebar.collapsed { width: 64px; padding: 1.25rem 0.75rem; }
@@ -1249,7 +1281,10 @@ html.js [data-reveal].is-in {
   .toc-link,
   .toc-label,
   .toc-tick,
-  .article-shell.has-toc {
+  .article-shell.has-toc,
+  .with-sidebar,
+  .with-sidebar .article-col,
+  .back-rail {
     transition: none;
   }
   .print-switch-track,

@@ -136,9 +136,20 @@ in this repo only.
   IntersectionObserver → `.in-view`; several can show at once), plus on
   hover/focus — the active section keeps its wider accent tick. A second
   observer fades the rail out (`.rail-off`) once the reader scrolls past
-  the article column. The back button on TOC articles sits sticky in
-  the freed **left** margin (`.back-rail`, lg+; the in-flow header copy
-  stays for <lg and no-TOC articles).
+  the article column. Back navigation is a **single arrow-only** control
+  (`.back-rail`) rendered for every post: an inline square at the top on small
+  screens, and on lg+ a `position: fixed` rail pinned just right of the sidebar
+  (`left: calc(var(--nav-w) + …)`, so it follows the sidebar's expand/collapse).
+- **Reading column is window-centred on sidebar pages** (the "Mitte der Seite"
+  fix). The `.with-sidebar` wrapper stays offset by the sidebar (keeps the
+  footer/newsletter clear of it), and `--nav-w` (264px / 64px collapsed, set on
+  `#page-shift`) drives everything: `.with-sidebar .article-col` is nudged
+  `left: calc(var(--nav-w) / -2)` so it lands on the true viewport centre and
+  **doesn't move when the sidebar toggles** (the offset + nudge cancel). Uses
+  `position/left`, not `transform`, so the fixed `.toc` keeps its viewport
+  anchor. The fixed TOC (right) and sidebar (left) overlay the side whitespace;
+  on narrow lg widths with the sidebar open the column can slip under it
+  (accepted trade-off for exact window-centring).
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail
