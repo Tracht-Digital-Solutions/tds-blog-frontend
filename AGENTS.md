@@ -253,6 +253,34 @@ Markdown rendering uses `set:html` directly. Bodies are admin-only
 today — if user-generated content ever ships, sanitise via DOMPurify
 or similar.
 
+## Blog authors & author pages
+
+Every post now carries a **denormalised author** (`post.author`: name/slug/
+avatar/bio) served by tds-content-api's `blog_author` snapshot (synced from the
+panel's app_user). `content-api.ts` widens the list/get shapes to include
+`author` + `viewCount` and **resolves the avatar** (`resolveAvatar`, the same
+`/uploads/...` → absolute-URL trick as `resolveCoverHint`). The byline replaced
+the hard-coded "Julian Tracht" everywhere — `Article.astro` (header byline +
+"Über den Autor" block, both **linked** to the author page when present),
+`PostCard.tsx` `AuthorChip` (name + avatar), `PrintDoc.astro`, and the OG card
+(`og/render.ts`, `author` option). A post **without** an author (deleted user /
+legacy) falls back to a neutral, **unlinked** studio byline
+(`fallbackAuthorName`) — the page never breaks on a missing author.
+
+**Author pages** — `src/pages/autor/[slug].astro` + `src/pages/en/author/[slug].astro`
+(mirror `kategorie/[cat].astro`): `getStaticPaths` groups `listAllPosts(lang)` by
+`author.slug`; the profile header shows avatar/name/bio and the
+**`AuthorPostList` island** renders the posts with a client-side sort control —
+**Datum / Aufrufe / Trend**, where Trend = `viewCount / max(1, days since
+publishedAt)` (a recency-weighted popularity proxy). `authorHref(lang, slug)`
+lives in `nav.ts`. Indexable (DE + EN), `altUrl={null}` like the category pages
+(routes don't mirror by a prefix swap), with a JSON-LD **Person** node. Demo
+content ships one author so a no-API build still generates + exercises the pages.
+
+Depends on **tds-shared ≥ 0.9.1** (the `BlogAuthor` type + `BlogPost.author` /
+`authorId` / `viewCount`). Build against the published package — a stale
+tds-shared makes the author types unresolvable.
+
 ## Open
 
 - (nothing tracked here right now — check the GitHub issues)

@@ -508,6 +508,24 @@
 }
 .btn-back:hover { background: var(--flat-hover); }
 
+/* Author-page sort control (AuthorPostList island). Flat, angular to match the
+   design-system blog kit; the active option inverts to the ink surface. */
+.author-sort-btn {
+  padding: 0.375rem 0.75rem;
+  background: var(--color-soft);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.author-sort-btn:hover { background: var(--flat-hover); color: var(--color-ink); }
+.author-sort-btn[data-active] {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
 /* Single arrow-only back control, sitting directly left of the heading. The
    SVG arrow is centred in the square via flex (the old "←" glyph rendered
    off-centre). Small screens: inline before the title (title-row is a flex

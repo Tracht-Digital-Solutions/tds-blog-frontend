@@ -13,8 +13,28 @@ export const DEMO_MODE = import.meta.env.PUBLIC_DEMO_MODE === "true";
 
 type PostSummary = Pick<
   BlogPost,
-  "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt"
+  | "id"
+  | "slug"
+  | "lang"
+  | "category"
+  | "title"
+  | "excerpt"
+  | "coverHint"
+  | "tags"
+  | "publishedAt"
+  | "viewCount"
+  | "authorId"
+  | "author"
 >;
+
+/** A single demo author so a no-API build still exercises the author pages. */
+const DEMO_AUTHOR = {
+  id: 1,
+  name: "Julian Tracht",
+  slug: "julian-tracht",
+  avatarUrl: null,
+  bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
+};
 
 const day = 86_400_000;
 const date = (offsetDays: number): string =>
@@ -92,6 +112,11 @@ function summaryFor(seed: DemoSeed, id: number, lang: "de" | "en"): PostSummary 
     coverHint: null,
     tags: seed.tags,
     publishedAt: seed.publishedAt,
+    // Spread the view counts so the author page's views/trend sort is visibly
+    // different from the date sort in a demo build.
+    viewCount: id * 137,
+    authorId: DEMO_AUTHOR.id,
+    author: DEMO_AUTHOR,
   } as PostSummary;
 }
 
@@ -162,5 +187,8 @@ export function demoPost(slug: string, lang: "de" | "en"): BlogPost | null {
     draft: false,
     createdAt: seed.publishedAt,
     updatedAt: seed.publishedAt,
+    viewCount: (SEEDS.indexOf(seed) + 1) * 137,
+    authorId: DEMO_AUTHOR.id,
+    author: DEMO_AUTHOR,
   } as unknown as BlogPost;
 }

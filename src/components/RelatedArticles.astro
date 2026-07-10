@@ -5,7 +5,7 @@ import PostCard from "~/components/PostCard.tsx";
 interface Props {
   /** All posts for the current language (passed in from the page so we don't refetch). */
   posts: Array<
-    Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "publishedAt" | "coverHint">
+    Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "publishedAt" | "coverHint" | "author">
   >;
   currentSlug: string;
   currentCategory: string;

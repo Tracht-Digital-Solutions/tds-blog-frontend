@@ -9,6 +9,13 @@ import { PostCover } from "./Covers";
  * hydrated as part of the BlogIndex island on the index pages.
  */
 
+/** Author display data snapshotted onto a post. */
+export interface CardAuthor {
+  name: string;
+  slug: string;
+  avatarUrl: string | null;
+}
+
 export interface CardPost {
   slug: string;
   category: string;
@@ -16,28 +23,64 @@ export interface CardPost {
   excerpt: string;
   publishedAt: string | null;
   coverHint?: string | null;
+  author?: CardAuthor | null;
 }
 
-export function AuthorChip({ inverse }: { inverse?: boolean }) {
+/** Neutral byline for a post whose author is missing (deleted user / legacy). */
+export function fallbackAuthorName(lang: "de" | "en"): string {
+  return lang === "de" ? "Tracht Digital Redaktion" : "Tracht Digital Editorial";
+}
+
+function initialsOf(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "TD"
+  );
+}
+
+export function AuthorChip({
+  inverse,
+  name = "Tracht Digital",
+  avatarUrl,
+}: {
+  inverse?: boolean;
+  name?: string;
+  avatarUrl?: string | null;
+}) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-      <span
-        aria-hidden="true"
-        style={{
-          width: 28,
-          height: 28,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: inverse ? "rgba(255,255,255,.14)" : "var(--flat-tint)",
-          color: inverse ? "#fff" : "var(--color-primary)",
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.04em",
-        }}
-      >
-        JT
-      </span>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          width={28}
+          height={28}
+          style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+          loading="lazy"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          style={{
+            width: 28,
+            height: 28,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: inverse ? "rgba(255,255,255,.14)" : "var(--flat-tint)",
+            color: inverse ? "#fff" : "var(--color-primary)",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+          }}
+        >
+          {initialsOf(name)}
+        </span>
+      )}
       <span
         style={{
           fontSize: 13,
@@ -45,7 +88,7 @@ export function AuthorChip({ inverse }: { inverse?: boolean }) {
           color: inverse ? "rgba(255,255,255,.78)" : "var(--color-ink)",
         }}
       >
-        Julian Tracht
+        {name}
       </span>
     </span>
   );
@@ -136,7 +179,10 @@ export default function PostCard({
             gap: 12,
           }}
         >
-          <AuthorChip />
+          <AuthorChip
+            name={post.author?.name ?? fallbackAuthorName(lang)}
+            avatarUrl={post.author?.avatarUrl}
+          />
         </div>
       </div>
     </a>

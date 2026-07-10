@@ -40,6 +40,9 @@ const readingMinutes = Math.max(1, Math.round(wordCount / 220));
 const explicitCover = post.coverHint?.startsWith("http") ? post.coverHint : undefined;
 const tags = (post.tags ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
+const authorName =
+  post.author?.name ?? (lang === "de" ? "Tracht Digital Redaktion" : "Tracht Digital Editorial");
+
 const t =
   lang === "de"
     ? { readUnit: "Min. Lesezeit", by: "Von", tagsLabel: "Themen", back: "← Zum Beitrag", view: "Druckansicht" }
@@ -66,7 +69,7 @@ const t =
       <div class="print-meta">
         {dateLabel && <span class="pm-date">{dateLabel}</span>}
         <span class="pm-reading">~{readingMinutes} {t.readUnit}</span>
-        <span class="pm-author">{t.by} Julian Tracht</span>
+        <span class="pm-author">{t.by} {authorName}</span>
       </div>
 
       <p class="pm-url print-url">{url}</p>

@@ -46,6 +46,9 @@ export function tagHref(lang: Lang, tag: string): string {
 export function topicsHref(lang: Lang): string {
   return lang === "de" ? "/aktuelles" : "/en/aktuelles";
 }
+export function authorHref(lang: Lang, slug: string): string {
+  return lang === "de" ? `/autor/${slug}` : `/en/author/${slug}`;
+}
 
 const norm = (p: string) => p.replace(/\/+$/, "") || "/";
 
