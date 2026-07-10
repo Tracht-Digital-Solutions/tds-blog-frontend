@@ -16,9 +16,12 @@ const BASE_URL =
   import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
 
 interface ListResponse {
-  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt">>;
+  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author">>;
   nextCursor: number | null;
 }
+
+/** A post as it appears in list/get responses (author + covers resolved). */
+export type ListPost = ListResponse["posts"][number];
 
 /**
  * Make an uploaded cover URL absolute. The content-API's cover endpoint
@@ -37,8 +40,27 @@ export function resolveCoverHint(coverHint?: string | null): string | null {
   return coverHint;
 }
 
-function withResolvedCovers<T extends { coverHint?: string | null }>(posts: T[]): T[] {
-  return posts.map((p) => ({ ...p, coverHint: resolveCoverHint(p.coverHint) }));
+/**
+ * Make an author's avatar URL absolute — same reasoning as
+ * {@link resolveCoverHint}. content-api stores `avatarUrl` as a storage-relative
+ * `/uploads/avatars/...` path; a relative `<img src>` would resolve against the
+ * blog origin and 404, so anchor it to the content-API origin at the data layer.
+ */
+export function resolveAvatar(avatarUrl?: string | null): string | null {
+  if (!avatarUrl) return null;
+  if (/^https?:\/\//.test(avatarUrl)) return avatarUrl;
+  if (avatarUrl.startsWith("/")) return `${BASE_URL}${avatarUrl}`;
+  return avatarUrl;
+}
+
+/** Resolve an embedded author's avatar to an absolute URL (null author passes through). */
+function withResolvedAuthor<T extends { author?: BlogPost["author"] }>(post: T): T {
+  if (!post.author) return post;
+  return { ...post, author: { ...post.author, avatarUrl: resolveAvatar(post.author.avatarUrl) } };
+}
+
+function withResolvedCovers<T extends { coverHint?: string | null; author?: BlogPost["author"] }>(posts: T[]): T[] {
+  return posts.map((p) => withResolvedAuthor({ ...p, coverHint: resolveCoverHint(p.coverHint) }));
 }
 
 export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["posts"]> {
@@ -167,7 +189,7 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost
       throw new Error(`content-api ${url.pathname} → ${res.status}`);
     }
     const { post } = (await res.json()) as { post: BlogPost };
-    return { ...post, coverHint: resolveCoverHint(post.coverHint) };
+    return withResolvedAuthor({ ...post, coverHint: resolveCoverHint(post.coverHint) });
   } catch (err) {
     // API down → serve the matching demo post (keeps demo slugs from
     // listAllPosts() renderable). Returns null for an unknown slug.

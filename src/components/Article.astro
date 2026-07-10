@@ -11,6 +11,7 @@ import RelatedArticles from "~/components/RelatedArticles.astro";
 import TagList from "~/components/TagList.astro";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
 import { splitSections } from "~/lib/sections";
+import { authorHref } from "~/lib/nav";
 import { siteConfig } from "~/lib/seo";
 import type { LocalizedPost } from "~/lib/localizedPost";
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
@@ -19,7 +20,7 @@ interface Props {
   localized: LocalizedPost;
   lang: "de" | "en";
   /** One entry per distinct slug, for related + prev/next. */
-  posts: Array<Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt">>;
+  posts: Array<Pick<BlogPost, "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "author">>;
 }
 
 const { localized, lang, posts } = Astro.props;
@@ -122,6 +123,21 @@ const tx = lang === "de"
       contactCta: "Get in touch",
     };
 
+// Author byline. A real author links to its author page and shows its own
+// name/avatar/bio; a post without an author (deleted user, or legacy content)
+// falls back to a neutral studio byline — the byline stays, just unlinked.
+const author = post.author ?? null;
+const authorName = author?.name ?? (lang === "de" ? "Tracht Digital Redaktion" : "Tracht Digital Editorial");
+const authorPageHref = author ? authorHref(lang, author.slug) : null;
+const authorAvatar = author?.avatarUrl ?? null;
+const authorBio = author?.bio ?? tx.bio;
+const authorInitials = authorName
+  .split(/\s+/)
+  .map((w) => w[0] ?? "")
+  .join("")
+  .slice(0, 2)
+  .toUpperCase() || "TD";
+
 // Public, fire-and-forget view beacon. PUBLIC_ env so the inline script
 // below can read it (the build-time CONTENT_API_URL isn't exposed to the
 // browser); falls back to the production gateway. Disabled on demo builds.
@@ -138,7 +154,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   article={{
     publishedTime: post.publishedAt,
     modifiedTime: post.updatedAt,
-    author: "Julian Tracht",
+    author: authorName,
     section: post.category,
     slug: post.slug,
   }}
@@ -249,12 +265,27 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           {post.excerpt}
         </p>
         <p class="mt-4 inline-flex items-center gap-2.5">
-          <span
-            aria-hidden="true"
-            class="w-7 h-7 inline-flex items-center justify-center text-[11px] font-semibold tracking-wide"
-            style="background: var(--flat-tint); color: var(--color-primary);"
-          >JT</span>
-          <span class="text-[0.8125rem] font-medium">Julian Tracht</span>
+          {authorAvatar ? (
+            <img
+              src={authorAvatar}
+              alt=""
+              class="w-7 h-7 rounded-full object-cover"
+              width="28"
+              height="28"
+              loading="lazy"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              class="w-7 h-7 inline-flex items-center justify-center text-[11px] font-semibold tracking-wide"
+              style="background: var(--flat-tint); color: var(--color-primary);"
+            >{authorInitials}</span>
+          )}
+          {authorPageHref ? (
+            <a href={authorPageHref} class="text-[0.8125rem] font-medium link-underline">{authorName}</a>
+          ) : (
+            <span class="text-[0.8125rem] font-medium">{authorName}</span>
+          )}
         </p>
         {translated && (
           <p
@@ -311,19 +342,36 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             class="grid grid-cols-[64px_1fr] gap-5 items-start mt-6 p-5"
             style="background: var(--color-soft);"
           >
-            <span
-              aria-hidden="true"
-              class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
-              style="background: var(--color-surface-navy); font-family: var(--font-display);"
-            >JT</span>
+            {authorAvatar ? (
+              <img
+                src={authorAvatar}
+                alt=""
+                class="w-16 h-16 rounded-full object-cover"
+                width="64"
+                height="64"
+                loading="lazy"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                class="w-16 h-16 inline-flex items-center justify-center text-lg font-semibold tracking-wide text-white"
+                style="background: var(--color-surface-navy); font-family: var(--font-display);"
+              >{authorInitials}</span>
+            )}
             <div>
               <p class="eyebrow mb-2">{tx.aboutAuthor}</p>
               <p class="font-semibold">
-                Julian Tracht
-                <span class="font-normal text-sm text-[var(--color-muted)]">· {tx.owner}</span>
+                {authorPageHref ? (
+                  <a href={authorPageHref} class="link-underline">{authorName}</a>
+                ) : (
+                  authorName
+                )}
+                {!author && (
+                  <span class="font-normal text-sm text-[var(--color-muted)]">· {tx.owner}</span>
+                )}
               </p>
               <p class="text-sm leading-relaxed text-[var(--color-muted)] mt-2" style="text-wrap: pretty;">
-                {tx.bio}
+                {authorBio}
               </p>
             </div>
           </aside>

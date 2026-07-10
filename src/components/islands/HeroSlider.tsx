@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { AuthorChip, formatPostDate, type CardPost } from "../PostCard";
+import { AuthorChip, fallbackAuthorName, formatPostDate, type CardPost } from "../PostCard";
 import { PostCover } from "../Covers";
 
 /**
@@ -118,7 +118,7 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           {lead.excerpt}
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 18 }}>
-          <AuthorChip inverse />
+          <AuthorChip inverse name={lead.author?.name ?? fallbackAuthorName(lang)} avatarUrl={lead.author?.avatarUrl} />
           {lead.publishedAt && (
             <span className="tabular" style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
               {formatPostDate(lead.publishedAt, lang)}

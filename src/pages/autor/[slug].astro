@@ -1,0 +1,130 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
+import { listAllPosts } from "~/lib/content-api";
+import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
+import type { BlogAuthor } from "@tracht-digital-solutions/tds-shared";
+
+/**
+ * Author page (DE): one static page per author with published posts. Mirrors
+ * /kategorie/[cat].astro — `listAllPosts` pulls the full DE corpus at build
+ * time, we group by `author.slug` in JS. Posts without an author (deleted user
+ * / legacy) simply don't produce an author page. Sortable by date/views/trend
+ * via the AuthorPostList island. EN twin: /en/author/[slug].astro.
+ */
+export async function getStaticPaths() {
+  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
+  try {
+    posts = await listAllPosts("de");
+  } catch (err) {
+    console.error("[tds-blog] /autor getStaticPaths fetch failed:", err);
+    return [];
+  }
+
+  const bySlug = new Map<string, { author: BlogAuthor; list: typeof posts }>();
+  for (const p of posts) {
+    const author = p.author;
+    if (!author?.slug) continue;
+    const entry = bySlug.get(author.slug);
+    if (entry) entry.list.push(p);
+    else bySlug.set(author.slug, { author, list: [p] });
+  }
+
+  return Array.from(bySlug.entries()).map(([slug, { author, list }]) => ({
+    params: { slug },
+    props: { author, posts: list },
+  }));
+}
+
+interface PageProps {
+  author: BlogAuthor;
+  posts: Awaited<ReturnType<typeof listAllPosts>>;
+}
+
+const { author, posts } = Astro.props as PageProps;
+
+const pageUrl = `${siteConfig.url}/autor/${author.slug}`;
+const description = author.bio
+  ? author.bio
+  : `Beiträge von ${author.name} im Journal von Tracht Digital Solutions.`;
+
+const personSchema = {
+  "@type": "Person",
+  "@id": `${pageUrl}#person`,
+  name: author.name,
+  url: pageUrl,
+  ...(author.bio ? { description: author.bio } : {}),
+  ...(author.avatarUrl ? { image: author.avatarUrl } : {}),
+};
+
+const jsonLd = asGraph(
+  websiteSchema(),
+  blogSchema("de"),
+  personSchema,
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: author.name, url: pageUrl },
+  ]),
+);
+
+const cards = posts.map((p) => ({
+  slug: p.slug,
+  category: p.category,
+  title: p.title,
+  excerpt: p.excerpt,
+  publishedAt: p.publishedAt,
+  coverHint: p.coverHint,
+  viewCount: p.viewCount ?? 0,
+  author,
+}));
+---
+
+<Layout
+  title={`${author.name} — Journal`}
+  description={description}
+  jsonLd={jsonLd}
+  altUrl={null}
+>
+  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+    <header class="mb-10">
+      <a href="/" class="btn-back mb-6">
+        <span aria-hidden="true">←</span> Alle Beiträge
+      </a>
+      <p class="section-num mb-4 mt-6">Journal · Autor</p>
+      <div class="flex items-center gap-5">
+        {author.avatarUrl ? (
+          <img
+            src={author.avatarUrl}
+            alt=""
+            width="80"
+            height="80"
+            class="w-20 h-20 rounded-full object-cover shrink-0"
+            loading="eager"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            class="w-20 h-20 inline-flex items-center justify-center text-2xl font-semibold text-white shrink-0"
+            style="background: var(--color-surface-navy); font-family: var(--font-display); border-radius: 9999px;"
+          >
+            {author.name.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase()}
+          </span>
+        )}
+        <div>
+          <h1 class="display text-4xl md:text-5xl">{author.name}</h1>
+          <p class="marginalia mt-2">
+            {posts.length === 1 ? "Ein Artikel" : `${posts.length} Artikel`}
+          </p>
+        </div>
+      </div>
+      {author.bio && (
+        <p class="lead mt-5 text-[var(--color-muted)] max-w-2xl" style="text-wrap: pretty;">
+          {author.bio}
+        </p>
+      )}
+    </header>
+
+    <AuthorPostList posts={cards} lang="de" client:load />
+  </main>
+</Layout>

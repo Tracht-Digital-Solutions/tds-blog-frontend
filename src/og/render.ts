@@ -50,6 +50,8 @@ interface OgOptions {
   category: string;
   publishedAt: string | null;
   lang: "de" | "en";
+  /** Byline shown in the footer; falls back to the studio name. */
+  author?: string | null;
 }
 
 /**
@@ -203,7 +205,11 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                       },
                       {
                         type: "span",
-                        props: { children: "Julian Tracht" },
+                        props: {
+                          children:
+                            opts.author ??
+                            (opts.lang === "de" ? "Tracht Digital Redaktion" : "Tracht Digital Editorial"),
+                        },
                       },
                     ],
                   },

@@ -41,6 +41,7 @@ export const GET: APIRoute = async ({ params }) => {
     category: post.category,
     publishedAt: post.publishedAt,
     lang,
+    author: post.author?.name ?? null,
   });
 
   return new Response(new Uint8Array(png), {
