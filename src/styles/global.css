@@ -21,7 +21,7 @@
    title/heading weights are bumped at the end of this file (they were
    tuned for a serif at weight 400). */
 :root {
-  --font-display: "Hanken Grotesk Variable", "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Lato", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
