@@ -27,14 +27,14 @@ import { Resvg } from "@resvg/resvg-js";
 // Resolved from the project root because Astro bundles this file into dist/,
 // where `import.meta.url`-based relative paths no longer reach src/og/fonts.
 const FONT_DIR = path.join(process.cwd(), "src/og/fonts");
-let geistMedium: Buffer | null = null;
+let latoBold: Buffer | null = null;
 
 function loadFonts() {
-  if (geistMedium === null) {
-    geistMedium = fs.readFileSync(path.join(FONT_DIR, "Geist-Medium.ttf"));
+  if (latoBold === null) {
+    latoBold = fs.readFileSync(path.join(FONT_DIR, "Lato-Bold.ttf"));
   }
   return {
-    geist: geistMedium!,
+    lato: latoBold!,
   };
 }
 
@@ -67,7 +67,7 @@ function splitForAccent(title: string): { head: string; accent: string } {
 }
 
 export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
-  const { geist } = loadFonts();
+  const { lato } = loadFonts();
 
   const { head, accent } = splitForAccent(opts.title);
   const locale = opts.lang === "de" ? "de-DE" : "en-US";
@@ -96,7 +96,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
           justifyContent: "space-between",
           backgroundColor: PAPER,
           padding: "72px 80px",
-          fontFamily: "Geist",
+          fontFamily: "Lato",
           color: INK,
           position: "relative",
         },
@@ -125,7 +125,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "div",
                   props: {
                     style: {
-                      fontFamily: "Geist",
+                      fontFamily: "Lato",
                       fontSize: "20px",
                       letterSpacing: "0.16em",
                       textTransform: "uppercase",
@@ -142,8 +142,8 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
             type: "div",
             props: {
               style: {
-                fontFamily: "Geist",
-                fontWeight: 500,
+                fontFamily: "Lato",
+                fontWeight: 700,
                 fontSize: "78px",
                 lineHeight: 1.04,
                 letterSpacing: "-0.03em",
@@ -182,7 +182,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                 justifyContent: "space-between",
                 borderTop: `1px solid ${LINE}`,
                 paddingTop: "32px",
-                fontFamily: "Geist",
+                fontFamily: "Lato",
                 fontSize: "22px",
                 color: MUTED,
               },
@@ -218,8 +218,8 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
                   type: "span",
                   props: {
                     style: {
-                      fontFamily: "Geist",
-                      fontWeight: 500,
+                      fontFamily: "Lato",
+                      fontWeight: 700,
                       fontSize: "24px",
                       color: INK,
                     },
@@ -237,9 +237,9 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
       height: 630,
       fonts: [
         {
-          name: "Geist",
-          data: geist,
-          weight: 500,
+          name: "Lato",
+          data: lato,
+          weight: 700,
           style: "normal",
         },
       ],
