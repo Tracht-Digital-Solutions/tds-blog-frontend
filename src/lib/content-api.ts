@@ -7,7 +7,7 @@
  * staging/local content-api during dev.
  */
 
-import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
 
 export type { TopicItem, TopicsBlock } from "./demoContent";
@@ -16,7 +16,7 @@ const BASE_URL =
   import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
 
 interface ListResponse {
-  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author">>;
+  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode">>;
   nextCursor: number | null;
 }
 
@@ -174,6 +174,78 @@ export async function cookieBannerEnabled(): Promise<boolean> {
     console.warn("[tds-blog] content-api unreachable — cookie banner off:", err);
     return false;
   }
+}
+
+/** Resolved AdSense config for the blog (from the language-agnostic `ads`
+ *  landing content block). Off/empty on absent block, demo mode or API error. */
+export interface AdsConfig {
+  enabled: boolean;
+  publisherId: string;
+  defaultMode: "auto" | "manual";
+  slotInArticle: string;
+  slotEndArticle: string;
+}
+
+const ADS_OFF: AdsConfig = {
+  enabled: false,
+  publisherId: "",
+  defaultMode: "auto",
+  slotInArticle: "",
+  slotEndArticle: "",
+};
+
+let adsConfigCache: Promise<AdsConfig> | null = null;
+
+/**
+ * The global AdSense config, baked at build time (an admin save fires a blog
+ * rebuild). `enabled` is the master switch; without an `enabled` block or a
+ * `publisherId` the whole feature is off — the safe default. Memoised for the
+ * whole build so the 1000+ static pages share a single fetch.
+ */
+export function adsConfig(): Promise<AdsConfig> {
+  if (!adsConfigCache) adsConfigCache = loadAdsConfig();
+  return adsConfigCache;
+}
+
+async function loadAdsConfig(): Promise<AdsConfig> {
+  if (DEMO_MODE) return ADS_OFF;
+
+  const url = new URL(`${BASE_URL}/landing`);
+  url.searchParams.set("lang", "de");
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return ADS_OFF;
+    const data = (await res.json()) as {
+      blocks?: Record<string, Record<string, unknown> | undefined>;
+    };
+    const b = data.blocks?.["ads"];
+    if (!b || b.enabled !== true) return ADS_OFF;
+    const publisherId = typeof b.publisherId === "string" ? b.publisherId : "";
+    if (!publisherId) return ADS_OFF;
+    return {
+      enabled: true,
+      publisherId,
+      defaultMode: b.defaultMode === "manual" ? "manual" : "auto",
+      slotInArticle: typeof b.slotInArticle === "string" ? b.slotInArticle : "",
+      slotEndArticle: typeof b.slotEndArticle === "string" ? b.slotEndArticle : "",
+    };
+  } catch (err) {
+    console.warn("[tds-blog] content-api unreachable — ads off:", err);
+    return ADS_OFF;
+  }
+}
+
+/** Resolve a post's effective ad mode against the global config. */
+export function effectiveAdsMode(
+  postAdsMode: AdsMode | undefined,
+  ads: AdsConfig,
+): "off" | "auto" | "manual" {
+  if (!ads.enabled || !ads.publisherId) return "off";
+  const m = postAdsMode ?? "default";
+  if (m === "off") return "off";
+  if (m === "auto" || m === "manual") return m;
+  return ads.defaultMode; // "default" → inherit
 }
 
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {

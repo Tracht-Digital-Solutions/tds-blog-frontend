@@ -14,7 +14,7 @@ import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
 import { CookieNotice } from "@tracht-digital-solutions/tds-shared/components";
 import { siteConfig } from "~/lib/seo";
-import { cookieBannerEnabled } from "~/lib/content-api";
+import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
 
 interface Props {
   title: string;
@@ -55,6 +55,9 @@ interface Props {
   sidebar?: boolean;
   /** Render only the slot — no header/footer/sidebar. Used by error pages. */
   bare?: boolean;
+  /** Effective ad mode for this page (article pages resolve it from the post's
+   *  `adsMode` + global config). Absent → inherit the global default mode. */
+  adsMode?: "off" | "auto" | "manual";
 }
 
 const {
@@ -69,6 +72,7 @@ const {
   noindex = false,
   sidebar = false,
   bare = false,
+  adsMode,
 } = Astro.props;
 
 // Journal-specific default (resolved after destructuring — the default
@@ -100,10 +104,18 @@ const altLang = lang === "de" ? "en" : "de";
 // Language-matched RSS autodiscovery (the EN feed carries EN posts).
 const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
 
-// Admin-toggleable cookie banner — the `cookie_banner` content block is
-// resolved at build time (baked; toggling it in tds-admin fires a blog
-// rebuild). Off when absent / demo / API down.
-const showCookieNotice = !bare && (await cookieBannerEnabled());
+// AdSense config (build-time, admin-toggleable `ads` block). When ads are
+// enabled the page's effective mode is either the one the page passed
+// (article pages resolve it per-post) or the global default (other pages).
+const ads = bare ? null : await adsConfig();
+const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off";
+
+// Cookie/privacy banner. When ads run we show the *consent* variant (a real
+// opt-in gate that also covers the cookie disclosure); otherwise the existing
+// informational one, baked from the `cookie_banner` toggle. Off when absent /
+// demo / API down.
+const showConsent = !!ads && ads.enabled;
+const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
 ---
 
 <!DOCTYPE html>
@@ -155,6 +167,9 @@ const showCookieNotice = !bare && (await cookieBannerEnabled());
     <link rel="dns-prefetch" href="https://api.tracht-digital.de" />
     <link rel="preconnect" href="https://tracht-digital.de" crossorigin />
     <link rel="dns-prefetch" href="https://tracht-digital.de" />
+    {adsActive && (
+      <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+    )}
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
@@ -214,6 +229,36 @@ const showCookieNotice = !bare && (await cookieBannerEnabled());
         the cookie_banner content block; links the central privacy policy
         on the marketing site (the component's default URL). */}
     {showCookieNotice && <CookieNotice client:idle lang={lang} />}
+
+    {/* AdSense consent gate — when ads are enabled this replaces the
+        informational notice with a real Accept/Decline opt-in; the loader
+        below only runs after "granted". */}
+    {showConsent && <CookieNotice client:idle lang={lang} consent />}
+
+    {/* Consent-gated AdSense loader. Injects adsbygoogle.js only after the
+        visitor grants ad consent (now or via the banner event) — nothing
+        loads and no ad cookie is set beforehand. */}
+    {adsActive && ads && (
+      <script is:inline define:vars={{ adsClient: ads.publisherId }}>
+        (function () {
+          function load() {
+            if (window.__tdsAdsLoaded) return;
+            window.__tdsAdsLoaded = true;
+            var s = document.createElement("script");
+            s.async = true;
+            s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + adsClient;
+            s.crossOrigin = "anonymous";
+            document.head.appendChild(s);
+          }
+          try {
+            if (localStorage.getItem("tds-ad-consent") === "granted") { load(); return; }
+          } catch (e) {}
+          window.addEventListener("tds-ad-consent", function (e) {
+            if (e && e.detail === "granted") load();
+          });
+        })();
+      </script>
+    )}
 
     {/* Dynamic document.title — prefixes the tab with the heading
         of whichever `<section id="…">` is currently in the viewport.
