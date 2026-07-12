@@ -112,7 +112,10 @@ in this repo only.
   render gate — otherwise the photo cover would 404 against the blog origin.
 - `src/components/islands/NewsletterSignup.tsx` — newsletter block in
   the footer; posts a well-formed message to tds-contact-api (no
-  dedicated newsletter backend — Julian gets a signup mail)
+  dedicated newsletter backend — Julian gets a signup mail). While
+  submitting the button shows the shared `<Spinner size="sm" />` from
+  `@tracht-digital-solutions/tds-shared/components` (the one loading
+  primitive the blog uses; CSS ships in tds-shared `styles/base.css`).
 - `src/components/ArticleSidebar.astro` — fixed collapsible left nav
   on article pages (lg+ only; small screens keep the top nav via the
   `sidebar` Layout prop). Collapsed = 64px icon rail, CTA becomes a

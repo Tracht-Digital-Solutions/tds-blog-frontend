@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Spinner } from "@tracht-digital-solutions/tds-shared/components";
 
 /**
  * Newsletter block from the design-system blog kit: inverse ink panel,
@@ -118,9 +119,10 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
                 type="submit"
                 className="btn-flat"
                 disabled={state === "submitting"}
+                aria-busy={state === "submitting"}
                 style={{ height: 48, background: "#fff", color: "var(--color-surface-ink)" }}
               >
-                {t.cta}
+                {state === "submitting" ? (<><Spinner size="sm" /> {t.cta}</>) : t.cta}
               </button>
             </form>
           )}
