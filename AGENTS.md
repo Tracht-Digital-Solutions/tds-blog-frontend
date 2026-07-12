@@ -241,6 +241,19 @@ in this repo only.
   (Landingpage → Cookie-Banner); a save fires a blog rebuild. Absent
   block / demo / API down = banner off; dismissal persists per origin
   in localStorage (`tds-cookie-notice`)
+- **AdSense monetisation** (blog only) — `adsConfig()` reads the language-
+  agnostic `ads` landing block (`{ enabled, publisherId, defaultMode:
+  auto|manual, slotInArticle?, slotEndArticle? }`, admin-toggled, blog rebuild
+  on save). Per post, `post.adsMode` (`default|off|auto|manual`) overrides it;
+  `effectiveAdsMode()` resolves it (master switch + inherit). `Layout.astro`
+  loads `adsbygoogle.js` **only after ad consent** — when `ads.enabled` it shows
+  the `CookieNotice` **consent** variant (Accept/Decline → `tds-ad-consent`) and
+  a `define:vars` inline gate that injects the loader on `granted` (now or via
+  the `tds-ad-consent` event); nothing loads and no ad cookie is set beforehand.
+  `manual` mode places `AdSlot.astro` units after the intro + before the contact
+  CTA (`Article.astro`); `auto` relies on Auto Ads (account-level). `JournalFooter`
+  shows an "Werbe-Einwilligung ändern" revoke link when ads are enabled. Off by
+  default; the Datenschutz (landingpage) discloses AdSense.
 - `src/lib/nav.ts` — shared public-nav item list + active-state helper
 - `src/lib/pagination.ts` — page-window slicing
 - `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage)

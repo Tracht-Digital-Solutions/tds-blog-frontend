@@ -9,6 +9,8 @@
 import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
 import TagList from "~/components/TagList.astro";
+import AdSlot from "~/components/AdSlot.astro";
+import { adsConfig, effectiveAdsMode } from "~/lib/content-api";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
 import { splitSections } from "~/lib/sections";
 import { authorHref } from "~/lib/nav";
@@ -25,6 +27,13 @@ interface Props {
 
 const { localized, lang, posts } = Astro.props;
 const { post, bodyHtml, translated, sourceLang } = localized;
+
+// AdSense: the effective mode for this post (per-post override resolved against
+// the global config). `manual` places the AdSlots below; the loader + consent
+// gate live in Layout.
+const ads = await adsConfig();
+const adsMode = effectiveAdsMode(post.adsMode, ads);
+const showManualAds = adsMode === "manual";
 
 const pfx = lang === "en" ? "/en" : "";
 const postHref = (slug: string) => `${pfx}/${slug}`;
@@ -160,6 +169,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   }}
   jsonLd={jsonLd}
   sidebar
+  adsMode={adsMode}
 >
   <div
     id="reading-progress"
@@ -301,6 +311,9 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           {intro.trim().length > 0 && (
             <div class="prose-article drop-cap" set:html={intro}></div>
           )}
+          {showManualAds && ads.slotInArticle && (
+            <AdSlot client={ads.publisherId} slot={ads.slotInArticle} lang={lang} />
+          )}
           {sections.map((sec) => (
             <section class="article-sec">
               <h2 id={sec.id}>
@@ -316,6 +329,10 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
               </div>
             </section>
           ))}
+
+          {showManualAds && ads.slotEndArticle && (
+            <AdSlot client={ads.publisherId} slot={ads.slotEndArticle} lang={lang} />
+          )}
 
           <aside
             class="mt-9 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"

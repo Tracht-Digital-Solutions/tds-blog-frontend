@@ -13,6 +13,7 @@
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
 import { entdeckenLabels, categoryHref, topicsHref } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
+import { adsConfig } from "~/lib/content-api";
 
 interface Props {
   lang?: "de" | "en";
@@ -20,6 +21,9 @@ interface Props {
 
 const { lang = "de" } = Astro.props;
 const year = new Date().getFullYear();
+// Ad-consent revoke link — only meaningful when AdSense is enabled.
+const adsEnabled = (await adsConfig()).enabled;
+const adConsentLabel = lang === "de" ? "Werbe-Einwilligung ändern" : "Ad-consent settings";
 const labels = entdeckenLabels(lang);
 const { categories } = await getTaxonomy(lang);
 
@@ -129,7 +133,31 @@ const groups =
       style="border-top: 1px solid rgb(255 255 255 / 0.1); font-family: var(--font-mono); color: rgb(255 255 255 / 0.5);"
     >
       <p>© {year} Tracht Digital Solutions</p>
-      <p>DE / EN</p>
+      <div class="flex items-center gap-4">
+        {adsEnabled && (
+          <button
+            type="button"
+            id="tds-ad-consent-reset"
+            class="text-white/50 hover:text-white transition-colors bg-transparent border-0 cursor-pointer p-0"
+            style="font-family: var(--font-mono); font-size: inherit;"
+          >
+            {adConsentLabel}
+          </button>
+        )}
+        <p>DE / EN</p>
+      </div>
     </div>
+    {adsEnabled && (
+      <script is:inline>
+        (function () {
+          var b = document.getElementById("tds-ad-consent-reset");
+          if (!b) return;
+          b.addEventListener("click", function () {
+            try { localStorage.removeItem("tds-ad-consent"); } catch (e) {}
+            location.reload();
+          });
+        })();
+      </script>
+    )}
   </div>
 </footer>
