@@ -10,9 +10,11 @@ import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
 import TagList from "~/components/TagList.astro";
 import AdSlot from "~/components/AdSlot.astro";
-import { adsConfig, effectiveAdsMode } from "~/lib/content-api";
+import BlockRenderer from "~/components/BlockRenderer.astro";
+import { adsConfig, effectiveAdsMode, blogSnippets } from "~/lib/content-api";
 import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
 import { splitSections } from "~/lib/sections";
+import { splitBlockSections } from "~/lib/blockSections";
 import { authorHref } from "~/lib/nav";
 import { siteConfig } from "~/lib/seo";
 import type { LocalizedPost } from "~/lib/localizedPost";
@@ -26,19 +28,33 @@ interface Props {
 }
 
 const { localized, lang, posts } = Astro.props;
-const { post, bodyHtml, translated, sourceLang } = localized;
+const { post, bodyHtml, blocks, translated, sourceLang } = localized;
+
+// Two body formats: a block post carries a parsed `blocks` array (rendered by
+// BlockRenderer), a legacy markdown post carries `bodyHtml`.
+const isBlocks = blocks != null;
+const snippets = isBlocks ? await blogSnippets() : [];
 
 // AdSense: the effective mode for this post (per-post override resolved against
 // the global config). `manual` places the AdSlots below; the loader + consent
-// gate live in Layout.
+// gate live in Layout. For block posts the author places ads inline (adsense
+// blocks), so the Article-level manual slots only apply to markdown posts.
 const ads = await adsConfig();
 const adsMode = effectiveAdsMode(post.adsMode, ads);
-const showManualAds = adsMode === "manual";
+const showManualAds = adsMode === "manual" && !isBlocks;
+const showBlockAds = adsMode !== "off";
 
 const pfx = lang === "en" ? "/en" : "";
 const postHref = (slug: string) => `${pfx}/${slug}`;
 
-const { intro, sections } = splitSections(bodyHtml);
+// Unified section model for the TOC + collapsible bodies. Both formats split at
+// level-2 headings; the body of each is rendered format-appropriately below.
+const mdSplit = isBlocks ? { intro: "", sections: [] } : splitSections(bodyHtml);
+const blkSplit = isBlocks ? splitBlockSections(blocks!) : { intro: [], sections: [] };
+const sections = isBlocks
+  ? blkSplit.sections.map((s) => ({ id: s.id, heading: s.heading }))
+  : mdSplit.sections.map((s) => ({ id: s.id, heading: s.heading }));
+const intro = mdSplit.intro;
 const showToc = sections.length >= 2;
 
 // Chronological neighbours over the distinct-slug list (every post is
@@ -68,8 +84,17 @@ const dateLabel = post.publishedAt
     })
   : null;
 
-// Word count from the rendered (possibly translated) HTML.
-const plain = bodyHtml.replace(/<[^>]+>/g, " ");
+// Word count from the rendered HTML (markdown) or the block text fields.
+const plain = isBlocks
+  ? blocks!
+      .map((b) => {
+        if (b.type === "paragraph" || b.type === "heading" || b.type === "quote" || b.type === "callout") return b.text;
+        if (b.type === "list") return b.items.join(" ");
+        if (b.type === "code") return b.code;
+        return "";
+      })
+      .join(" ")
+  : bodyHtml.replace(/<[^>]+>/g, " ");
 const wordCount = plain.split(/\s+/).filter(Boolean).length;
 const readingMinutes = Math.max(1, Math.round(wordCount / 220));
 
@@ -169,6 +194,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   }}
   jsonLd={jsonLd}
   sidebar
+  focusable
   adsMode={adsMode}
 >
   <div
@@ -243,12 +269,29 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">
             {dateLabel && <>{dateLabel} · </>}~{readingMinutes} {tx.read}
           </p>
+          {/* Reader focus mode — hides all chrome for distraction-free reading.
+              Toggled here or with the `f` key; state persists per reader. */}
+          <button
+            type="button"
+            id="focus-toggle"
+            class="ml-auto inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors"
+            aria-pressed="false"
+            title={lang === "de" ? "Fokusmodus (Taste F)" : "Focus mode (press F)"}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+            </svg>
+            <span data-focus-label>{lang === "de" ? "Fokus" : "Focus"}</span>
+          </button>
           {/* Opens the colourless print / PDF view in its own tab. */}
           <a
             href={`${pfx}/${post.slug}/print`}
             target="_blank"
             rel="noopener"
-            class="ml-auto inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] no-underline transition-colors"
+            class="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] no-underline transition-colors"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M6 9V2h12v7"></path>
@@ -308,34 +351,56 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       </header>
 
       <div class="mt-4">
-          {intro.trim().length > 0 && (
-            <div class="prose-article drop-cap" set:html={intro}></div>
+          {isBlocks ? (
+            blkSplit.intro.length > 0 && (
+              <BlockRenderer blocks={blkSplit.intro} ads={ads} showAds={showBlockAds} lang={lang} snippets={snippets} dropCap />
+            )
+          ) : (
+            intro.trim().length > 0 && (
+              <div class="prose-article drop-cap" set:html={intro}></div>
+            )
           )}
           {showManualAds && ads.slotInArticle && (
             <AdSlot client={ads.publisherId} slot={ads.slotInArticle} lang={lang} />
           )}
-          {sections.map((sec) => (
-            <section class="article-sec">
-              <h2 id={sec.id}>
-                <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
-                  <span>{sec.heading}</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-                </button>
-              </h2>
-              <div class="sec-body" id={`${sec.id}-body`}>
-                <div class="sec-body-inner">
-                  <div class="prose-article" set:html={sec.html}></div>
-                </div>
-              </div>
-            </section>
-          ))}
+          {isBlocks
+            ? blkSplit.sections.map((sec) => (
+                <section class="article-sec">
+                  <h2 id={sec.id}>
+                    <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
+                      <span>{sec.heading}</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                    </button>
+                  </h2>
+                  <div class="sec-body" id={`${sec.id}-body`}>
+                    <div class="sec-body-inner">
+                      <BlockRenderer blocks={sec.blocks} ads={ads} showAds={showBlockAds} lang={lang} snippets={snippets} />
+                    </div>
+                  </div>
+                </section>
+              ))
+            : mdSplit.sections.map((sec) => (
+                <section class="article-sec">
+                  <h2 id={sec.id}>
+                    <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
+                      <span>{sec.heading}</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                    </button>
+                  </h2>
+                  <div class="sec-body" id={`${sec.id}-body`}>
+                    <div class="sec-body-inner">
+                      <div class="prose-article" set:html={sec.html}></div>
+                    </div>
+                  </div>
+                </section>
+              ))}
 
           {showManualAds && ads.slotEndArticle && (
             <AdSlot client={ads.publisherId} slot={ads.slotEndArticle} lang={lang} />
           )}
 
           <aside
-            class="mt-9 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            class="focus-hide mt-9 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             style="background: var(--color-soft);"
             aria-label={tx.contactHead}
           >
@@ -356,7 +421,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 
           {/* Author bio sits below the contact CTA (moved further down). */}
           <aside
-            class="grid grid-cols-[64px_1fr] gap-5 items-start mt-6 p-5"
+            class="focus-hide grid grid-cols-[64px_1fr] gap-5 items-start mt-6 p-5"
             style="background: var(--color-soft);"
           >
             {authorAvatar ? (
@@ -394,20 +459,22 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           </aside>
       </div>
 
-      <RelatedArticles
-        posts={posts}
-        currentSlug={post.slug}
-        currentCategory={post.category}
-        lang={lang}
-      />
+      <div class="focus-hide">
+        <RelatedArticles
+          posts={posts}
+          currentSlug={post.slug}
+          currentCategory={post.category}
+          lang={lang}
+        />
+      </div>
 
       {/* Tags moved further down — below the related-articles strip. */}
-      <div class="mt-10">
+      <div class="focus-hide mt-10">
         <TagList tags={post.tags} lang={lang} label="Tags" />
       </div>
 
       {(newerPost || olderPost) && (
-        <nav class="mt-16 grid sm:grid-cols-2 gap-4" aria-label={tx.nav}>
+        <nav class="focus-hide mt-16 grid sm:grid-cols-2 gap-4" aria-label={tx.nav}>
           {newerPost ? (
             <a href={postHref(newerPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)]">
               <p class="eyebrow mb-2">← {tx.newer}</p>
@@ -439,6 +506,37 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       </footer>
     </article>
   </main>
+
+  <script>
+    // Reader focus mode: toggles `focus-mode` on <html> (pre-paint restore lives
+    // in Layout), persists the choice, and binds the `f` key (toggle) + `Escape`
+    // (exit). Ignores key presses while typing in a field.
+    (function () {
+      const root = document.documentElement;
+      const btn = document.getElementById("focus-toggle");
+      const KEY = "tds-blog-focus";
+      const sync = () => {
+        if (btn) btn.setAttribute("aria-pressed", String(root.classList.contains("focus-mode")));
+      };
+      const set = (on: boolean) => {
+        root.classList.toggle("focus-mode", on);
+        try { localStorage.setItem(KEY, on ? "1" : "0"); } catch { /* no-op */ }
+        sync();
+      };
+      sync();
+      btn?.addEventListener("click", () => set(!root.classList.contains("focus-mode")));
+      document.addEventListener("keydown", (e) => {
+        const t = e.target as HTMLElement | null;
+        if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+        if (e.key === "f" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+          e.preventDefault();
+          set(!root.classList.contains("focus-mode"));
+        } else if (e.key === "Escape" && root.classList.contains("focus-mode")) {
+          set(false);
+        }
+      });
+    })();
+  </script>
 
   <script>
     // Fold the section nav into a tick rail (each section = one line; the

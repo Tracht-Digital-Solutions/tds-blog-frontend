@@ -1,0 +1,83 @@
+---
+/**
+ * Renders a block document (`bodyFormat = "blocks"`) at build time. Runs of
+ * text/structural blocks are rendered to one `.prose-article` container (so
+ * long-form typography flows correctly); embeds break the flow:
+ *   - `adsense` → the real `<AdSlot>` Astro component (its inline push script
+ *     runs, unlike script injected through `set:html`);
+ *   - `custom` → resolved from the snippet catalog (a `preset` renders as its
+ *     block; an `embed` injects its raw HTML — no `<script>` execution).
+ *
+ * The markdown path (splitSections + set:html) is untouched; Article.astro
+ * chooses between them by `post.bodyFormat`.
+ */
+import type { BlogBlock } from "@tracht-digital-solutions/tds-shared";
+import AdSlot from "./AdSlot.astro";
+import { renderBlockHtml } from "../lib/renderBlock";
+
+interface SnippetLike {
+  id: number;
+  kind: "preset" | "embed";
+  definition: Record<string, unknown>;
+}
+
+interface Props {
+  blocks: BlogBlock[];
+  /** Global ads config (for `adsense` blocks). */
+  ads?: { publisherId?: string; slotInArticle?: string } | null;
+  /** Whether ad units should be emitted at all (adsMode + config decide). */
+  showAds?: boolean;
+  lang?: "de" | "en";
+  snippets?: SnippetLike[];
+  /** Drop-cap the first paragraph (used for the intro run). */
+  dropCap?: boolean;
+}
+
+const { blocks, ads = null, showAds = false, lang = "de", snippets = [], dropCap = false } = Astro.props;
+
+type Part =
+  | { kind: "prose"; html: string }
+  | { kind: "raw"; html: string }
+  | { kind: "ad"; slot: string | null };
+
+const parts: Part[] = [];
+let buf = "";
+const flush = () => {
+  if (buf.trim() !== "") parts.push({ kind: "prose", html: buf });
+  buf = "";
+};
+
+for (const block of blocks) {
+  if (block.type === "adsense") {
+    flush();
+    parts.push({ kind: "ad", slot: block.slot ?? null });
+    continue;
+  }
+  if (block.type === "custom") {
+    const s = snippets.find((x) => x.id === block.snippetId);
+    if (!s) continue;
+    if (s.kind === "embed" && typeof s.definition.html === "string") {
+      flush();
+      parts.push({ kind: "raw", html: s.definition.html });
+    } else if (s.kind === "preset" && typeof s.definition.type === "string") {
+      buf += await renderBlockHtml(s.definition as unknown as BlogBlock);
+    }
+    continue;
+  }
+  buf += await renderBlockHtml(block);
+}
+flush();
+
+// Mark the first prose run for the drop-cap treatment.
+const firstProse = parts.findIndex((p) => p.kind === "prose");
+---
+
+{parts.map((part, i) =>
+  part.kind === "prose" ? (
+    <div class:list={["prose-article", dropCap && i === firstProse && "drop-cap"]} set:html={part.html} />
+  ) : part.kind === "raw" ? (
+    <div class="block-embed" set:html={part.html} />
+  ) : showAds && ads?.publisherId ? (
+    <AdSlot client={ads.publisherId} slot={part.slot ?? ads.slotInArticle ?? ""} lang={lang} />
+  ) : null,
+)}

@@ -55,6 +55,9 @@ interface Props {
   sidebar?: boolean;
   /** Render only the slot — no header/footer/sidebar. Used by error pages. */
   bare?: boolean;
+  /** Article pages: enable the reader "focus mode" (distraction-free reading).
+   *  Gates the pre-paint restore so the class is only ever set on article pages. */
+  focusable?: boolean;
   /** Effective ad mode for this page (article pages resolve it from the post's
    *  `adsMode` + global config). Absent → inherit the global default mode. */
   adsMode?: "off" | "auto" | "manual";
@@ -72,6 +75,7 @@ const {
   noindex = false,
   sidebar = false,
   bare = false,
+  focusable = false,
   adsMode,
 } = Astro.props;
 
@@ -150,6 +154,20 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
         document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
       })();
     </script>
+    {focusable && (
+      <script is:inline>
+        /* No-flash focus-mode restore. Gated behind `focusable` so the class is
+           only ever set on article pages — a persisted preference never leaks
+           onto listing/home pages and hides their chrome. */
+        (function () {
+          try {
+            if (localStorage.getItem("tds-blog-focus") === "1") {
+              document.documentElement.classList.add("focus-mode");
+            }
+          } catch (e) { /* storage disabled — start unfocused */ }
+        })();
+      </script>
+    )}
     <link rel="canonical" href={url} />
     {altUrl !== null && (
       <>
