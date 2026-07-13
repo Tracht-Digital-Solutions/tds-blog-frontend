@@ -11,6 +11,8 @@
 import Layout from "~/layouts/Layout.astro";
 import PrintControls from "~/components/islands/PrintControls.tsx";
 import { siteConfig } from "~/lib/seo";
+import { blogSnippets } from "~/lib/content-api";
+import { renderBlocksToHtml } from "~/lib/renderBlock";
 import type { LocalizedPost } from "~/lib/localizedPost";
 
 interface Props {
@@ -19,7 +21,10 @@ interface Props {
 }
 
 const { localized, lang } = Astro.props;
-const { post, bodyHtml } = localized;
+const { post, blocks } = localized;
+// A block post has no pre-rendered HTML — flatten its blocks for print.
+const bodyHtml =
+  blocks != null ? await renderBlocksToHtml(blocks, await blogSnippets()) : localized.bodyHtml;
 
 const pfx = lang === "en" ? "/en" : "";
 const backHref = `${pfx}/${post.slug}`;

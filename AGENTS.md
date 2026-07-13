@@ -269,6 +269,43 @@ Markdown rendering uses `set:html` directly. Bodies are admin-only
 today — if user-generated content ever ships, sanitise via DOMPurify
 or similar.
 
+## Block posts (`bodyFormat = "blocks"`)
+
+A post's body is one of two formats (`post.bodyFormat`, from tds-content-api). A
+**markdown** post takes the pipeline above (`renderMarkdown` → `splitSections` →
+`set:html`). A **block** post carries a JSON `BlogDocument` (tds-shared) that
+`resolveLocalizedPost` parses into `localized.blocks`; `Article.astro` branches on
+that and renders each section body with **`BlockRenderer.astro`** instead of
+`set:html`.
+
+- `src/lib/renderBlock.ts` — one block → HTML. Text fields are inline markdown
+  (`marked.parseInline`); **code blocks reuse the shared Shiki `renderMarkdown`**
+  so highlighting matches the markdown path. `renderBlocksToHtml` flattens a whole
+  document (used by the print view).
+- `src/components/BlockRenderer.astro` — runs of text/structural blocks render to
+  one `.prose-article` container; **embeds break the flow**: `adsense` → the real
+  `<AdSlot>` (its inline push script runs, unlike script injected via `set:html`);
+  `custom` → resolved from the `blogSnippets()` catalog (`preset` renders as its
+  block, `embed` injects raw HTML — **`<script>` still won't execute** under
+  `set:html`, so script-bearing third-party embeds beyond AdSense need their own
+  allowlisted component). Video/callout/button are plain HTML (no script).
+- `src/lib/blockSections.ts` — the block-aware analogue of `sections.ts`: groups
+  blocks at level-2 `heading` blocks so TOC / collapsible / scroll-spy are
+  unchanged.
+- `blogSnippets()` in `content-api.ts` — build-time snippet catalog fetch (memoised
+  for the whole build; empty on demo/outage).
+
+## Reader focus mode
+
+Article pages pass `focusable` to `Layout`, enabling a **distraction-free reading
+toggle** (`html.focus-mode`). Restored pre-paint by a gated inline script in the
+Layout head (mirrors the theme/TOC no-flash pattern; keyed `tds-blog-focus`, only
+applied on article pages so it never leaks onto listings). The header button
+(`#focus-toggle`) + the **`f`** key toggle it, **`Escape`** exits; state persists.
+The CSS (`global.css`, `html.focus-mode …`) hides the sidebar/header/footer/TOC/
+ads and every `.focus-hide` extra (contact CTA, author bio, related, tags,
+prev/next), centring `.article-col`. Fully reversible, no layout dependency on it.
+
 ## Blog authors & author pages
 
 Every post now carries a **denormalised author** (`post.author`: name/slug/

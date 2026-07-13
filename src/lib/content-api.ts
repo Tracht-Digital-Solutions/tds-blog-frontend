@@ -248,6 +248,38 @@ export function effectiveAdsMode(
   return ads.defaultMode; // "default" → inherit
 }
 
+/** A custom building block referenced by a post's `custom` blocks. */
+export interface BlogSnippet {
+  id: number;
+  kind: "preset" | "embed";
+  definition: Record<string, unknown>;
+}
+
+let snippetsCache: Promise<BlogSnippet[]> | null = null;
+
+/**
+ * The custom-snippet catalog, baked at build time (an admin snippet save fires a
+ * blog rebuild). Memoised for the whole build so every article page that renders
+ * a `custom` block shares a single fetch. Empty on demo mode or an API outage.
+ */
+export function blogSnippets(): Promise<BlogSnippet[]> {
+  if (!snippetsCache) snippetsCache = loadSnippets();
+  return snippetsCache;
+}
+
+async function loadSnippets(): Promise<BlogSnippet[]> {
+  if (DEMO_MODE) return [];
+  try {
+    const res = await fetch(new URL(`${BASE_URL}/snippets`));
+    if (!res.ok) return [];
+    const data = (await res.json()) as { snippets?: BlogSnippet[] };
+    return data.snippets ?? [];
+  } catch (err) {
+    console.warn("[tds-blog] content-api unreachable — no custom snippets:", err);
+    return [];
+  }
+}
+
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
   if (DEMO_MODE) return demoPost(slug, lang);
 
