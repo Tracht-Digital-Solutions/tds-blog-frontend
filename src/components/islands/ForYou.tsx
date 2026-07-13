@@ -32,14 +32,12 @@ const LABELS = {
   de: {
     eyebrow: "Für Sie",
     heading: "Weil Sie dafür gelesen haben.",
-    note: "Basiert auf den Themen der Artikel, die Sie hier gelesen haben — gespeichert nur in Ihrem Browser.",
     reset: "Zurücksetzen",
     read: "Lesen →",
   },
   en: {
     eyebrow: "For you",
     heading: "Because you read about this.",
-    note: "Based on the topics of articles you read here — stored only in your browser.",
     reset: "Reset",
     read: "Read →",
   },
@@ -150,8 +148,6 @@ export default function ForYou({ lang, limit = 3 }: { lang: "de" | "en"; limit?:
           </li>
         ))}
       </ul>
-
-      <p className="marginalia mt-6">{t.note}</p>
     </aside>
   );
 }
