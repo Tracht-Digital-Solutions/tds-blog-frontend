@@ -3,6 +3,11 @@
 Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
+
+> Status: **required, not superseded.** Still deployed. Posts come from
+> `tds-content-api` today; after the panel-platform cutover the source becomes
+> `tds-ext-blog-cms` (`/blogs/...`), read at build time the same way. See the root
+> `MIGRATION-STATUS.md`.
 Self-hosted Hanken Grotesk (display) + Plus Jakarta Sans (body); the
 editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes from
 `@tracht-digital-solutions/tds-shared` (`styles/base.css` +
