@@ -5,7 +5,7 @@
  * journal renders it via TagList. Remove this file once tds-shared ships
  * with `tags` and tds-blog upgrades to that version.
  *
- * Tracking issue: https://github.com/Tracht-Digital-Solutions/tds-shared/issues
+ * Tracking issue: https://github.com/Tracht-Digital-Solutions/tds-shared-pkg/issues
  */
 import "@tracht-digital-solutions/tds-shared";
 
