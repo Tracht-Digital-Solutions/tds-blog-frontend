@@ -31,7 +31,7 @@ launch.
 | **Per-article** | `/og/${lang}/${slug}.png` — generated at build time via Satori (see `src/og/render.ts` if the pipeline is mirrored from the landingpage). |
 | **Dimensions** | **1200 × 630 px** (Open Graph spec — also satisfies Twitter `summary_large_image`; LinkedIn / WhatsApp pull the same file). |
 | **Status** | Per-article cards build dynamically. The default fallback PNG should ship in `public/og-default.png`. |
-| **Recommended** | Same Satori-rendered brand card pattern used by tds-landingpage (`src/og/render.ts` + `src/pages/og/default.png.ts`) so the two properties stay visually consistent. |
+| **Recommended** | Same Satori-rendered brand card pattern used by tds-landingpage-frontend (`src/og/render.ts` + `src/pages/og/default.png.ts`) so the two properties stay visually consistent. |
 
 ## 3. Article content images
 
@@ -53,6 +53,6 @@ post layout when present.
 
 ## Related
 
-See [`../tds-landingpage/IMAGES.md`](https://github.com/Tracht-Digital-Solutions/tds-landingpage/blob/main/IMAGES.md)
+See [`../tds-landingpage/IMAGES.md`](https://github.com/Tracht-Digital-Solutions/tds-landingpage-frontend/blob/main/IMAGES.md)
 for the bigger image-swap guide — the OG-card Satori pipeline and
 favicon recommendations there apply 1:1 to this repo.

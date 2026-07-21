@@ -1,7 +1,7 @@
-# Installation — tds-blog
+# Installation — tds-blog-frontend
 
 > Part of the Tracht Digital Solutions multi-repo project.
-> tds-blog is the **public journal** at `blog.tracht-digital.de`. Astro
+> tds-blog-frontend is the **public journal** at `blog.tracht-digital.de`. Astro
 > SSG → static HTML; every post is fetched from `tds-content-api` at
 > build time + each post also gets a per-post OG preview PNG rendered
 > at build time via Satori + Resvg.
@@ -27,13 +27,13 @@
 
 …or set `NPM_TOKEN` in the env (the repo's `.npmrc` references it).
 For the 403 on `read_package`, see
-[tds-shared INSTALL §5](https://github.com/Tracht-Digital-Solutions/tds-shared/blob/main/INSTALL.md).
+[tds-shared-pkg INSTALL §5](https://github.com/Tracht-Digital-Solutions/tds-shared-pkg/blob/main/INSTALL.md).
 
 ## 2. Clone + install
 
 ```bash
-git clone https://github.com/Tracht-Digital-Solutions/tds-blog.git
-cd tds-blog
+git clone https://github.com/Tracht-Digital-Solutions/tds-blog-frontend.git
+cd tds-blog-frontend
 npm install
 ```
 
@@ -128,7 +128,7 @@ workflow" in the Actions tab.
 
 ## Related repos
 
-- [tds-shared](https://github.com/Tracht-Digital-Solutions/tds-shared) — `BlogPost` type, i18n strings
+- [tds-shared-pkg](https://github.com/Tracht-Digital-Solutions/tds-shared-pkg) — `BlogPost` type, i18n strings
 - [tds-content-api](https://github.com/Tracht-Digital-Solutions/tds-content-api) — post source, fetched at build time
 
 ## Troubleshooting

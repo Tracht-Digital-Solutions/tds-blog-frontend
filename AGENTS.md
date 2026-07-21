@@ -1,4 +1,4 @@
-# Agent notes — tds-blog
+# Agent notes — tds-blog-frontend
 
 Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
 fetched at **build time** from `tds-content-api` so the rendered HTML
@@ -6,7 +6,7 @@ ships static — no runtime API calls, no client-side data fetching.
 
 > Status: **required, not superseded.** Still deployed. Posts come from
 > `tds-content-api` today; after the panel-platform cutover the source becomes
-> `tds-ext-blog-cms` (`/blogs/...`), read at build time the same way. See the root
+> `tds-ext-blog-cms-pkg` (`/blogs/...`), read at build time the same way. See the root
 > `MIGRATION-STATUS.md`.
 Self-hosted Hanken Grotesk (display) + Plus Jakarta Sans (body); the
 editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes from
@@ -19,7 +19,7 @@ colour blocks (`--color-soft`), fixed dark panels (hero, newsletter,
 footer) on the `--color-surface-*` tokens so dark mode never inverts
 them. This includes the shared `.chip` tag pills: `global.css` squares
 them off with a blog-local `border-radius: 0` override (geometry is
-app-local per repo convention — don't "fix" this in tds-shared). The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
+app-local per repo convention — don't "fix" this in tds-shared-pkg). The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
 `.toc`, `.btn-flat`, `.btn-back`, `.sec-head`/`.sec-body`,
 `.blog-sidebar`/`.with-sidebar`, `.nav-search`, `.lang-toggle`) and the
 brand-aware `.prose-article` long-form class live in
@@ -36,11 +36,11 @@ hook calls `BindingViteResolvePluginConfig` with a shape missing
 `tsconfigPaths` (withastro/astro#16542). Don't add `@tailwindcss/vite`
 back. CSS minification routes through lightningcss, configured via the
 shared `tdsViteBuild` preset spread into `vite.build` (from
-`@tracht-digital-solutions/tds-shared/astro`, tds-shared 0.4.0). Don't
+`@tracht-digital-solutions/tds-shared/astro`, tds-shared-pkg 0.4.0). Don't
 hand-author the `cssTarget` — the preset pins the Safari floor that keeps
 lightningcss emitting `-webkit-backdrop-filter` on the frosted
 `.brand-header`; without it the blur silently dies in Safari ≤17
-(tds-shared#10). Small stylesheets inline into the initial HTML via
+(tds-shared-pkg#10). Small stylesheets inline into the initial HTML via
 `build.inlineStylesheets: "auto"`.
 Sharp is pinned as the image service so `<Image />` consumers auto-
 emit WebP/AVIF — see `IMAGES.md` for the per-asset swap pattern and
@@ -51,7 +51,7 @@ handshake.
 ## Page chrome
 
 * **Favicon** — `public/favicon.png` (901 × 901) is the real TDS
-  logomark, shared verbatim with tds-landingpage / admin / customer
+  logomark, shared verbatim with tds-landingpage-frontend / admin / customer
   so the four properties read as one identity. The favicon bundle
   table in IMAGES.md documents the optional full set (ICO,
   apple-touch-icon, PWA icons) if you ever want it.
@@ -120,7 +120,7 @@ in this repo only.
   dedicated newsletter backend — Julian gets a signup mail). While
   submitting the button shows the shared `<Spinner size="sm" />` from
   `@tracht-digital-solutions/tds-shared/components` (the one loading
-  primitive the blog uses; CSS ships in tds-shared `styles/base.css`).
+  primitive the blog uses; CSS ships in tds-shared-pkg `styles/base.css`).
 - `src/components/ArticleSidebar.astro` — fixed collapsible left nav
   on article pages (lg+ only; small screens keep the top nav via the
   `sidebar` Layout prop). Collapsed = 64px icon rail, CTA becomes a
@@ -212,7 +212,7 @@ in this repo only.
   so the build-time path above is a rarely-firing fallback for content the
   backfill hasn't covered. `resolveLocalizedPost` treats a stored
   `machineTranslated` row like a build-time translation (`translated: true`) so
-  the notice still shows; the flag is optional on tds-shared's `BlogPost`
+  the notice still shows; the flag is optional on tds-shared-pkg's `BlogPost`
   (≥ 0.8.7). `_build.yml` exports the `DEEPL_API_KEY` repo secret into the
   Build step for the fallback (optional; unset = graceful no-op).
 - `src/pages/interests-index.json.ts` — build-time static JSON index
@@ -241,7 +241,7 @@ in this repo only.
   `listTopics(lang)` fetches the `/topics` block for `/aktuelles`;
   `cookieBannerEnabled()` reads the language-agnostic `cookie_banner`
   landing block (`/landing?lang=de`) — `Layout.astro` bakes the shared
-  `CookieNotice` island (tds-shared ≥0.8.8, `client:idle`) on every
+  `CookieNotice` island (tds-shared-pkg ≥0.8.8, `client:idle`) on every
   non-bare page when `{ enabled: true }`. Toggled in tds-admin
   (Landingpage → Cookie-Banner); a save fires a blog rebuild. Absent
   block / demo / API down = banner off; dismissal persists per origin
@@ -261,7 +261,7 @@ in this repo only.
   default; the Datenschutz (landingpage) discloses AdSense.
 - `src/lib/nav.ts` — shared public-nav item list + active-state helper
 - `src/lib/pagination.ts` — page-window slicing
-- `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage)
+- `src/lib/seo.ts` — org/person identity (mirrors tds-landingpage-frontend)
 - `src/lib/jsonld.ts` — Schema.org generators (BlogPosting, Blog,
   WebSite, BreadcrumbList)
 - `src/components/JsonLd.astro` — head-injected ld+json utility
@@ -278,7 +278,7 @@ or similar.
 
 A post's body is one of two formats (`post.bodyFormat`, from tds-content-api). A
 **markdown** post takes the pipeline above (`renderMarkdown` → `splitSections` →
-`set:html`). A **block** post carries a JSON `BlogDocument` (tds-shared) that
+`set:html`). A **block** post carries a JSON `BlogDocument` (tds-shared-pkg) that
 `resolveLocalizedPost` parses into `localized.blocks`; `Article.astro` branches on
 that and renders each section body with **`BlockRenderer.astro`** instead of
 `set:html`.
@@ -335,9 +335,9 @@ lives in `nav.ts`. Indexable (DE + EN), `altUrl={null}` like the category pages
 (routes don't mirror by a prefix swap), with a JSON-LD **Person** node. Demo
 content ships one author so a no-API build still generates + exercises the pages.
 
-Depends on **tds-shared ≥ 0.9.1** (the `BlogAuthor` type + `BlogPost.author` /
+Depends on **tds-shared-pkg ≥ 0.9.1** (the `BlogAuthor` type + `BlogPost.author` /
 `authorId` / `viewCount`). Build against the published package — a stale
-tds-shared makes the author types unresolvable.
+tds-shared-pkg makes the author types unresolvable.
 
 ## Open
 
@@ -380,7 +380,7 @@ after the props destructure.
   (the marketing origin), so this site references them by `@id`
   rather than redefining them.
 
-When updating identity in tds-landingpage (address/phone/socials),
+When updating identity in tds-landingpage-frontend (address/phone/socials),
 mirror the change in `src/lib/seo.ts` here so the Organization graph
 stays consistent across both domains.
 
@@ -400,12 +400,12 @@ stays consistent across both domains.
   woff2 only, which Satori can't read.
 - Don't redefine Organization or Person nodes here — the marketing
   site is the canonical home for those.
-- Don't delete `src/types/shared-augment.d.ts` until tds-shared
+- Don't delete `src/types/shared-augment.d.ts` until tds-shared-pkg
   ships `BlogPost.tags` and we bump the dep. The installed
   `@tracht-digital-solutions/tds-shared@0.4.0` `BlogPost` type
   is missing the field that the content-api already returns and
   `TagList` already renders. The augmentation patches it
-  locally; tracked in tds-shared#8.
+  locally; tracked in tds-shared-pkg#8.
 - Don't write `WithContext<object>` on Schema.org node builders.
   TypeScript treats `object` as too narrow to accept additional
   named property literals (`@type`, `@graph`), and the type-check

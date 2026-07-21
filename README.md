@@ -1,4 +1,4 @@
-# tds-blog
+# tds-blog-frontend
 
 > **Setting this up from scratch?** See [`INSTALL.md`](INSTALL.md) for
 > the step-by-step bring-up (Packages auth → npm install → OG fonts
@@ -10,7 +10,7 @@
 
 Public blog at `blog.tracht-digital.de`. **Astro** SSG + **Tailwind v4**
 with self-hosted **Hanken Grotesk + Plus Jakarta Sans** on the shared token
-system from **tds-shared**. The surface design is the **flat/"kantig"
+system from **tds-shared-pkg**. The surface design is the **flat/"kantig"
 blog design** from the Tracht design-system handoff: no border radii,
 colour blocks instead of hairlines, compact spacing, fixed dark panels
 (hero, newsletter, footer) on the `--color-surface-*` tokens. Every
@@ -197,7 +197,7 @@ src/
 │   ├── marked.ts                   # markdown → HTML with Shiki-highlighted code blocks
 │   ├── pagination.ts               # window slicing (PAGE_SIZE = 10)
 │   ├── sections.ts                 # split article HTML at h2s for collapsible sections + TOC
-│   └── seo.ts                      # Org/person identity (mirrors tds-landingpage)
+│   └── seo.ts                      # Org/person identity (mirrors tds-landingpage-frontend)
 ├── og/
 │   ├── render.ts                   # Satori → Resvg pipeline, exports renderOgPng()
 │   └── fonts/                      # Geist Medium (ttf) — the OG card renders in Geist
@@ -214,7 +214,7 @@ src/
 ├── scripts/og-smoke.ts             # render two fixture OG images to disk
 ├── styles/global.css               # flat design vocabulary + .prose-article
 └── types/
-    └── shared-augment.d.ts         # tds-shared@0.1.0 patch: BlogPost.tags (tds-shared#8)
+    └── shared-augment.d.ts         # tds-shared-pkg@0.1.0 patch: BlogPost.tags (tds-shared-pkg#8)
 ```
 
 ## Per-post OG images
