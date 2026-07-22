@@ -12,7 +12,7 @@ Public blog at `blog.tracht-digital.de`. **Astro** SSG + **Tailwind v4**
 with self-hosted **Hanken Grotesk + Plus Jakarta Sans** on the shared token
 system from **tds-shared-pkg**. The surface design is the **flat/"kantig"
 blog design** from the Tracht design-system handoff: no border radii,
-colour blocks instead of hairlines, compact spacing, fixed dark panels
+colour blocks instead of hairlines, compact spacing, fixed dark frontends
 (hero, newsletter, footer) on the `--color-surface-*` tokens. Every
 post is fetched from **`tds-content-api`** at build time and rendered
 to static HTML — no runtime API calls for content; the only
@@ -131,7 +131,7 @@ branch ready to deploy). Implementation lives in
 
 All pages share `JournalHeader.astro` (flat top nav: wordmark, nav
 items, live search field, DE/EN toggle, CTA) and
-`JournalFooter.astro` (newsletter panel + navy footer block with link
+`JournalFooter.astro` (newsletter frontend + navy footer block with link
 columns and the Schwarzenbek location). Article pages additionally get
 `ArticleSidebar.astro` — a fixed, collapsible left nav on `lg+` (the
 top nav stays for small screens) that minimises to an icon rail with a
@@ -180,7 +180,7 @@ src/
 │   ├── Covers.tsx                  # 6 abstract brand-geometry covers (slug-hashed) + photo cover
 │   ├── PostCard.tsx                # flat post card (island + static render in RelatedArticles)
 │   ├── JournalHeader.astro         # flat top nav with live search, DE/EN toggle, CTA
-│   ├── JournalFooter.astro         # newsletter panel + navy footer block
+│   ├── JournalFooter.astro         # newsletter frontend + navy footer block
 │   ├── JsonLd.astro                # Inline <script type="application/ld+json"> utility
 │   ├── RelatedArticles.astro       # 3-card strip on /[slug] (same-category + fallback)
 │   ├── TagChip.astro / TagList.astro
