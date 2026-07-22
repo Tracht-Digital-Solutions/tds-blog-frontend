@@ -5,7 +5,7 @@ fetched at **build time** from `tds-content-api` so the rendered HTML
 ships static — no runtime API calls, no client-side data fetching.
 
 > Status: **required, not superseded.** Still deployed. Posts come from
-> `tds-content-api` today; after the panel-platform cutover the source becomes
+> `tds-content-api` today; after the frontend-platform cutover the source becomes
 > `tds-ext-blog-cms-pkg` (`/blogs/...`), read at build time the same way. See the root
 > `MIGRATION-STATUS.md`.
 Self-hosted Hanken Grotesk (display) + Plus Jakarta Sans (body); the
@@ -15,7 +15,7 @@ editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes
 
 **Surface design: flat/"kantig"** (from the Tracht design-system
 handoff, 2026-06): no border radii or hairline cards — separation via
-colour blocks (`--color-soft`), fixed dark panels (hero, newsletter,
+colour blocks (`--color-soft`), fixed dark frontends (hero, newsletter,
 footer) on the `--color-surface-*` tokens so dark mode never inverts
 them. This includes the shared `.chip` tag pills: `global.css` squares
 them off with a blog-local `border-radius: 0` override (geometry is
@@ -131,7 +131,7 @@ in this repo only.
   in `Article.astro`) is a **fixed rail on the RIGHT viewport edge**
   (`right: 14px`, vertically centered, z-30) that visually merges with
   the brand scrollbar; the article shell reserves `padding-right`
-  (`--toc-w`) for it instead of a grid column. **Expanded panel is a peek
+  (`--toc-w`) for it instead of a grid column. **Expanded frontend is a peek
   nav:** the section-heading rows rest faint (`opacity: .5`) + small
   (`.toc-label` `0.6875rem`) and only rise to full opacity/size on
   `.toc:hover`/`:focus-within` — the in-view section (`.toc-link.on`) stays
@@ -187,7 +187,7 @@ in this repo only.
   page-sized (`148/210/297mm`) with a 16mm **Seitenabstand** (padding mirrored
   by the `@page` margin);
   `@media print` resets the sheet frame so the margin isn't doubled and drops
-  the panel. A "Drucken / Als PDF" button calls `window.print()`. No runtime
+  the frontend. A "Drucken / Als PDF" button calls `window.print()`. No runtime
   fetch — the body is baked at build time.
 - `src/pages/og/[lang]/[slug].png.ts` — build-time per-post OG image
   via the renderer in `src/og/render.ts` (Satori → Resvg)
@@ -227,7 +227,7 @@ in this repo only.
   a reset action. Renders nothing without a profile.
 - `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome.
   Below `md` the section links/search/CTA collapse into a flat slide-down
-  panel behind a hamburger. Nav links come from `src/lib/nav.ts` (the single
+  frontend behind a hamburger. Nav links come from `src/lib/nav.ts` (the single
   source shared with `ArticleSidebar.astro`): **Journal**, **Aktuelles**,
   **RSS** — "Kundenportal" lives in the footer only. Active/hover is a flat
   accent underline (`.jnav-item`) / left bar (`.snav-item`), no filled pill.
@@ -315,7 +315,7 @@ prev/next), centring `.article-col`. Fully reversible, no layout dependency on i
 
 Every post now carries a **denormalised author** (`post.author`: name/slug/
 avatar/bio) served by tds-content-api's `blog_author` snapshot (synced from the
-panel's app_user). `content-api.ts` widens the list/get shapes to include
+frontend's app_user). `content-api.ts` widens the list/get shapes to include
 `author` + `viewCount` and **resolves the avatar** (`resolveAvatar`, the same
 `/uploads/...` → absolute-URL trick as `resolveCoverHint`). The byline replaced
 the hard-coded "Julian Tracht" everywhere — `Article.astro` (header byline +
