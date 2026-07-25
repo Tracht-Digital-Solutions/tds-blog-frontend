@@ -1,7 +1,7 @@
 ---
 /**
  * Renders a block document (`bodyFormat = "blocks"`) at build time. Runs of
- * text/structural blocks are rendered to one `.prose-article` container (so
+ * text/structural blocks are rendered to one `.tds-prose` container (so
  * long-form typography flows correctly); embeds break the flow:
  *   - `adsense` → the real `<AdSlot>` Astro component (its inline push script
  *     runs, unlike script injected through `set:html`);
@@ -74,9 +74,9 @@ const firstProse = parts.findIndex((p) => p.kind === "prose");
 
 {parts.map((part, i) =>
   part.kind === "prose" ? (
-    <div class:list={["prose-article", dropCap && i === firstProse && "drop-cap"]} set:html={part.html} />
+    <div class:list={["tds-prose", dropCap && i === firstProse && "drop-cap"]} set:html={part.html} />
   ) : part.kind === "raw" ? (
-    <div class="block-embed" set:html={part.html} />
+    <div class="tds-block-embed" set:html={part.html} />
   ) : showAds && ads?.publisherId ? (
     <AdSlot client={ads.publisherId} slot={part.slot ?? ads.slotInArticle ?? ""} lang={lang} />
   ) : null,

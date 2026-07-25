@@ -63,10 +63,10 @@ export async function renderBlockHtml(block: BlogBlock): Promise<string> {
     case "divider":
       return `<hr />`;
     case "callout":
-      return `<div class="callout callout--${block.variant}">${inline(block.text)}</div>`;
+      return `<div class="tds-callout tds-callout--${block.variant}">${inline(block.text)}</div>`;
     case "button":
       return block.href
-        ? `<p class="block-button"><a class="btn btn-${block.style}" href="${esc(block.href)}">${esc(block.label || "")}</a></p>`
+        ? `<p class="tds-block-button"><a class="btn btn-${block.style}" href="${esc(block.href)}">${esc(block.label || "")}</a></p>`
         : "";
     case "video": {
       const id = block.provider === "youtube" ? youtubeId(block.url) : vimeoId(block.url);
@@ -75,7 +75,7 @@ export async function renderBlockHtml(block: BlogBlock): Promise<string> {
         block.provider === "youtube"
           ? `https://www.youtube-nocookie.com/embed/${id}`
           : `https://player.vimeo.com/video/${id}`;
-      return `<div class="video-embed"><iframe src="${src}" loading="lazy" allowfullscreen title="Video"></iframe></div>`;
+      return `<div class="tds-video-embed"><iframe src="${src}" loading="lazy" allowfullscreen title="Video"></iframe></div>`;
     }
     default:
       return ""; // adsense / custom handled in BlockRenderer.astro

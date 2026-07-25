@@ -101,7 +101,11 @@ const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navig
   </nav>
 
   <div class="flex justify-center mb-3 mt-3">
-    <ThemeToggle client:idle />
+    <ThemeToggle
+          client:idle
+          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
+          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+        />
   </div>
 
   <div class="lang-toggle mb-2.5 sidebar-hide-collapsed" role="group" aria-label="Sprache / Language">

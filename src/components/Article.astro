@@ -331,7 +331,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             <span
               aria-hidden="true"
               class="w-7 h-7 inline-flex items-center justify-center text-[11px] font-semibold tracking-wide"
-              style="background: var(--flat-tint); color: var(--color-primary);"
+              style="background: var(--tds-flat-tint); color: var(--color-primary);"
             >{authorInitials}</span>
           )}
           {authorPageHref ? (
@@ -357,7 +357,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             )
           ) : (
             intro.trim().length > 0 && (
-              <div class="prose-article drop-cap" set:html={intro}></div>
+              <div class="tds-prose drop-cap" set:html={intro}></div>
             )
           )}
           {showManualAds && ads.slotInArticle && (
@@ -389,7 +389,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
                   </h2>
                   <div class="sec-body" id={`${sec.id}-body`}>
                     <div class="sec-body-inner">
-                      <div class="prose-article" set:html={sec.html}></div>
+                      <div class="tds-prose" set:html={sec.html}></div>
                     </div>
                   </div>
                 </section>
@@ -476,7 +476,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       {(newerPost || olderPost) && (
         <nav class="focus-hide mt-16 grid sm:grid-cols-2 gap-4" aria-label={tx.nav}>
           {newerPost ? (
-            <a href={postHref(newerPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)]">
+            <a href={postHref(newerPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--tds-flat-hover)]">
               <p class="eyebrow mb-2">← {tx.newer}</p>
               <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
                 {newerPost.title}
@@ -486,7 +486,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
             <span class="hidden sm:block" aria-hidden="true"></span>
           )}
           {olderPost && (
-            <a href={postHref(olderPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--flat-hover)] sm:text-right">
+            <a href={postHref(olderPost.slug)} class="block px-5 py-4 group transition-colors bg-[var(--color-soft)] hover:bg-[var(--tds-flat-hover)] sm:text-right">
               <p class="eyebrow mb-2">{tx.older} →</p>
               <p class="display-tight text-lg group-hover:text-[var(--color-primary)] transition-colors">
                 {olderPost.title}

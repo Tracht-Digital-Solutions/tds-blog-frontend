@@ -8,24 +8,55 @@ ships static — no runtime API calls, no client-side data fetching.
 > `tds-content-api` today; after the frontend-platform cutover the source becomes
 > `tds-ext-blog-cms-pkg` (`/blogs/...`), read at build time the same way. See the root
 > `MIGRATION-STATUS.md`.
-Self-hosted Hanken Grotesk (display) + Plus Jakarta Sans (body); the
-editorial type vocabulary (`.display`, `.section-num`, `.marginalia`, …) comes from
-`@tracht-digital-solutions/tds-shared` (`styles/base.css` +
-`styles/app.css`), shared with the portals.
+Self-hosted **Lato** (display) + **Plus Jakarta Sans** (body) +
+**JetBrains Mono** (mono). The editorial type vocabulary (`.display`,
+`.section-num`, `.marginalia`, …) comes from
+`@tracht-digital-solutions/tds-shared`. Any note claiming the display face
+is Hanken Grotesk is stale — that was retired, as was Instrument Serif
+before it.
 
 **Surface design: flat/"kantig"** (from the Tracht design-system
 handoff, 2026-06): no border radii or hairline cards — separation via
-colour blocks (`--color-soft`), fixed dark frontends (hero, newsletter,
-footer) on the `--color-surface-*` tokens so dark mode never inverts
-them. This includes the shared `.chip` tag pills: `global.css` squares
-them off with a blog-local `border-radius: 0` override (geometry is
-app-local per repo convention — don't "fix" this in tds-shared-pkg). The flat vocabulary (`.post-card`, `.post-row`, `.sidenav`,
-`.toc`, `.btn-flat`, `.btn-back`, `.sec-head`/`.sec-body`,
-`.blog-sidebar`/`.with-sidebar`, `.nav-search`, `.lang-toggle`) and the
-brand-aware `.prose-article` long-form class live in
-`src/styles/global.css`. The display face is **Hanken Grotesk** (the
-flat, modern grotesk that replaced the former Instrument Serif brand-wide);
-the body is Plus Jakarta Sans. Instrument Serif is retired.
+colour blocks (`--color-soft`, `--tds-flat-tint`), fixed dark surfaces
+(hero, newsletter, footer) on the `--color-surface-*` tokens so dark mode
+never inverts them.
+
+**This app is the `blog` surface of the shared design library.**
+`<html data-surface="blog">` in `Layout.astro` activates
+`tds-shared/styles/surfaces/blog.css`, which owns the flat kit: every
+radius collapses to 0, no elevation, the 800 display voice, the
+display-face eyebrow, and `--tds-flat-tint` / `--tds-flat-hover`.
+`global.css` imports `base.css` → `primitives.css` → `prose.css` →
+`app.css` → `surfaces/blog.css`.
+
+> **The rule here used to say the opposite** — *"geometry is app-local per
+> repo convention — don't 'fix' this in tds-shared-pkg"* — and that is
+> exactly what let one design drift into three separately-maintained
+> variations. It is reversed. Set a token in the surface layer; never
+> re-declare a shared class in `global.css`.
+
+Removed from `global.css` by the unification (do not reintroduce): the
+`--font-display`/`-body`/`-mono` re-declarations, the `.display` (800) /
+`.display-tight` (700) / `.eyebrow` forks, the byte-identical
+`.brand-wordmark` copy, `.chip { border-radius: 0 }`, and the local
+`--flat-tint` / `--flat-hover` (now `--tds-flat-*`, from the surface layer).
+
+The long-form class is **`.tds-prose`**, promoted out of this repo into
+`tds-shared/styles/prose.css`: it was the only long-form typography
+implementation in the project, and the blog-CMS editor's preview pane
+needed it too (that pane asked for `@tailwindcss/typography`'s `prose`
+class — a plugin installed in no product — so it had always rendered
+unstyled). The block-renderer classes moved with it: `.tds-callout*`,
+`.tds-block-button`, `.tds-video-embed`, `.tds-block-embed`. Callouts are
+square on this surface now, their radius following `--tds-radius-alert`
+instead of the hard-coded `0.4rem` this file used to flag as breaking the
+flat kit.
+
+Still local, and correctly so: the flat vocabulary (`.post-card`,
+`.post-row`, `.sidenav`, `.toc`, `.btn-flat`, `.btn-back`,
+`.sec-head`/`.sec-body`, `.blog-sidebar`/`.with-sidebar`, `.nav-search`,
+`.lang-toggle`), the hero carousel, the print/PDF sheet (deliberately
+theme-free with hard-coded neutrals so it never inverts) and focus mode.
 
 ## Build pipeline
 
@@ -288,7 +319,7 @@ that and renders each section body with **`BlockRenderer.astro`** instead of
   so highlighting matches the markdown path. `renderBlocksToHtml` flattens a whole
   document (used by the print view).
 - `src/components/BlockRenderer.astro` — runs of text/structural blocks render to
-  one `.prose-article` container; **embeds break the flow**: `adsense` → the real
+  one `.tds-prose` container; **embeds break the flow**: `adsense` → the real
   `<AdSlot>` (its inline push script runs, unlike script injected via `set:html`);
   `custom` → resolved from the `blogSnippets()` catalog (`preset` renders as its
   block, `embed` injects raw HTML — **`<script>` still won't execute** under

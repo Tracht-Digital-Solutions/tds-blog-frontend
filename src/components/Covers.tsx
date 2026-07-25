@@ -55,7 +55,7 @@ export function AbstractCover({ variant, style }: { variant: number; style?: CSS
     );
   if (v === 4)
     return (
-      <div style={{ ...base, background: "var(--flat-tint)" }} aria-hidden="true">
+      <div style={{ ...base, background: "var(--tds-flat-tint)" }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
