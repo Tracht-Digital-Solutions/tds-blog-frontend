@@ -12,7 +12,7 @@ import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
-import { CookieNotice } from "@tracht-digital-solutions/tds-shared/components";
+import { CookieNotice, LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
 import { siteConfig } from "~/lib/seo";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
 
@@ -252,6 +252,17 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
         informational notice with a real Accept/Decline opt-in; the loader
         below only runs after "granted". */}
     {showConsent && <CookieNotice client:idle lang={lang} consent />}
+
+    {/* Floating support widget — self-hides unless the live-chat-cta extension
+        enables the "blog" frontend in the admin. Talks to the API gateway. */}
+    {!bare && (
+      <LiveChatCta
+        client:idle
+        frontend="blog"
+        apiBase="https://api.tracht-digital.de"
+        lang={lang}
+      />
+    )}
 
     {/* Consent-gated AdSense loader. Injects adsbygoogle.js only after the
         visitor grants ad consent (now or via the banner event) — nothing
