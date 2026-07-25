@@ -71,7 +71,7 @@ export function AuthorChip({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            background: inverse ? "rgba(255,255,255,.14)" : "var(--flat-tint)",
+            background: inverse ? "rgba(255,255,255,.14)" : "var(--tds-flat-tint)",
             color: inverse ? "#fff" : "var(--color-primary)",
             fontSize: 11,
             fontWeight: 600,

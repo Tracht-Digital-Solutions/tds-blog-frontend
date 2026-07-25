@@ -1,59 +1,47 @@
 @import "tailwindcss";
 
-/* Tracht Design System typefaces — self-hosted. Hanken Grotesk is the
-   shared display face (headings + wordmark); Plus Jakarta Sans the body.
-   The @fontsource-variable imports live in Layout.astro, NOT here: an
+/* The @fontsource-variable imports live in Layout.astro, NOT here: an
    @import in this file is inlined by @tailwindcss/postcss, which does
    not rebase the packages' relative url(./files/*.woff2) references —
    Vite then never emits the woff2 assets and every font 404s at runtime. */
 
-/* Brand design system + shared application chrome. The tokens, dark
-   theme, base resets, type primitives, chips, header shell and
-   link/row interactions all live in tds-shared so every TDS frontend
-   stays consistent. See @tracht-digital-solutions/tds-shared/styles. */
+/* === Shared design library — this app is the `blog` surface =========
+   One library, three surfaces (marketing / blog / panel). The geometry,
+   display voice and flat tints of the "kantig" blog design all come from
+   surfaces/blog.css now; this file only carries genuinely blog-specific
+   components (nav, sidebar, TOC rail, hero carousel, print sheet, focus
+   mode).
+
+     base.css        tokens, dark theme, resets, type primitives
+     primitives.css  cross-surface components (.chip*, .btn*, .field, …)
+     prose.css       .tds-prose — promoted FROM this repo's .prose-article
+     app.css         dashboard/editorial chrome (.editorial-grid, …)
+     surfaces/blog.css  the flat kit: every radius 0, no elevation, the
+                     800 display voice, --tds-flat-tint/-hover
+
+   `<html data-surface="blog">` in Layout.astro activates the layer.
+
+   DELETED FROM HERE (do not reintroduce — the surface layer owns them):
+     :root { --font-display / --font-body / --font-mono }   3-way duplicate
+     .display { font-weight: 800 }  .display-tight { 700 }
+     .eyebrow { font-family: display; font-weight: 600 }
+     .brand-wordmark { … }          byte-identical to primitives.css
+     .chip { border-radius: 0 }     now --tds-radius-chip: 0
+     :root { --flat-tint / --flat-hover }  now --tds-flat-tint/-hover,
+                                    declared by surfaces/blog.css
+   The old repo rule was "geometry is app-local per repo convention —
+   don't 'fix' this in tds-shared-pkg". That rule is gone: it is precisely
+   what let one design drift into three separately-maintained variations. */
 @import "@tracht-digital-solutions/tds-shared/styles/base.css";
+@import "@tracht-digital-solutions/tds-shared/styles/primitives.css";
+@import "@tracht-digital-solutions/tds-shared/styles/prose.css";
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
-
-/* === Tracht Design System type stack ===============================
-   Adopt the grotesk display + humanist body from the design handoff
-   (colors_and_type.css). Overrides the shared --font-* tokens for this
-   app; the landing page keeps the serif-editorial stack. The blog's own
-   title/heading weights are bumped at the end of this file (they were
-   tuned for a serif at weight 400). */
-:root {
-  --font-display: "Lato", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-}
-.display { font-weight: 800; letter-spacing: -0.03em; }
-.display-tight { font-weight: 700; letter-spacing: -0.02em; }
-.eyebrow { font-family: var(--font-display); font-weight: 600; }
-/* Logo wordmark in the display grotesk — pin the weight so it reads as a
-   crisp title; the accent word ("Journal") stays upright, not a serif italic. */
-.brand-wordmark { font-family: var(--font-display); font-weight: 600; }
-.brand-wordmark .accent-italic { font-style: normal; }
-
-/* === Flat blog design ("kantig") ===================================
-   From the Tracht design system handoff: the blog surface is flat and
-   angular — no border radii, no shadows, separation through colour
-   blocks (--color-soft) instead of hairlines, compact spacing. Brand
-   fonts + tokens stay the shared ones so dark mode keeps working;
-   fixed dark blocks (hero, newsletter, footer) use the surface-*
-   tokens that never flip. */
+@import "@tracht-digital-solutions/tds-shared/styles/surfaces/blog.css";
 
 :root {
-  /* blue-50 analog — active nav / chip tint that follows the theme */
-  --flat-tint: color-mix(in srgb, var(--color-primary) 9%, var(--color-paper));
-  /* one step darker than --color-soft, for hovers on soft surfaces */
-  --flat-hover: color-mix(in srgb, var(--color-soft) 70%, var(--color-line));
   /* width of the expanded article section-nav rail (right viewport edge) */
   --toc-w: 220px;
 }
-
-/* Angular blog: the shared .chip pills go square (app-local geometry
-   override, per the repo convention — the dashboards do the same with
-   0.75rem; shared app.css only ships the colour). */
-.chip { border-radius: 0; }
 
 /* ---- Brand logomark ----
    The TD mark rendered via CSS mask so it follows a colour token rather
@@ -147,11 +135,11 @@
   transition: width 180ms ease, background-color 180ms ease;
 }
 .nav-search input::placeholder { color: var(--color-muted); }
-.nav-search input:hover { background: var(--flat-hover); }
+.nav-search input:hover { background: var(--tds-flat-hover); }
 .nav-search input:focus {
   outline: none;
   width: 14rem;
-  background: var(--flat-tint);
+  background: var(--tds-flat-tint);
 }
 .nav-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
@@ -229,7 +217,7 @@
   font-weight: 500;
   transition: background-color 180ms ease, color 180ms ease;
 }
-.chip-flat:hover { background: var(--flat-hover); }
+.chip-flat:hover { background: var(--tds-flat-hover); }
 .chip-flat.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -382,7 +370,7 @@
   color: inherit;
   transition: background-color 180ms ease;
 }
-.post-card:hover { background: var(--flat-hover); }
+.post-card:hover { background: var(--tds-flat-hover); }
 .post-card .card-title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -412,7 +400,7 @@
 @media (min-width: 640px) {
   .post-row { grid-template-columns: 150px 1fr auto; gap: 1.75rem; }
 }
-.post-row:hover { background: var(--flat-hover); }
+.post-row:hover { background: var(--tds-flat-hover); }
 .post-row .row-title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -461,7 +449,7 @@
   color: var(--color-muted);
   transition: background-color 180ms ease, color 180ms ease;
 }
-.sidenav-toggle:hover { background: var(--flat-hover); color: var(--color-ink); }
+.sidenav-toggle:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
 .sidenav button.sidenav-item {
   display: flex;
   align-items: center;
@@ -481,7 +469,7 @@
   font-weight: 500;
   transition: color 180ms ease, background-color 180ms ease;
 }
-.sidenav button.sidenav-item:hover { background: var(--flat-hover); color: var(--color-ink); }
+.sidenav button.sidenav-item:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
 .sidenav button.sidenav-item.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -506,7 +494,7 @@
   font-weight: 500;
   transition: background-color 180ms ease;
 }
-.btn-back:hover { background: var(--flat-hover); }
+.btn-back:hover { background: var(--tds-flat-hover); }
 
 /* Author-page sort control (AuthorPostList island). Flat, angular to match the
    design-system blog kit; the active option inverts to the ink surface. */
@@ -520,7 +508,7 @@
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease;
 }
-.author-sort-btn:hover { background: var(--flat-hover); color: var(--color-ink); }
+.author-sort-btn:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
 .author-sort-btn[data-active] {
   background: var(--color-ink);
   color: var(--color-paper);
@@ -542,7 +530,7 @@
   text-decoration: none;
   transition: background-color 180ms ease;
 }
-.back-rail:hover { background: var(--flat-hover); }
+.back-rail:hover { background: var(--tds-flat-hover); }
 .title-row {
   display: flex;
   align-items: flex-start;
@@ -574,7 +562,7 @@
 }
 a.topic-card:hover,
 a.topic-card:focus-visible {
-  background: var(--flat-hover);
+  background: var(--tds-flat-hover);
 }
 .topic-title {
   font-family: var(--font-display);
@@ -716,7 +704,7 @@ a.topic-card:focus-visible {
   text-decoration: none;
   transition: color 180ms ease, background-color 180ms ease;
 }
-.toc a:hover { background: var(--flat-hover); color: var(--color-ink); }
+.toc a:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
 .toc a.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -768,7 +756,7 @@ a.topic-card:focus-visible {
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
-.toc-toggle:hover { background: var(--flat-hover); color: var(--color-ink); }
+.toc-toggle:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
 .toc-toggle svg { transition: transform 280ms ease; }
 .toc-list { list-style: none; margin: 0; padding: 0; }
 .toc-tick { display: none; }
@@ -887,7 +875,7 @@ a.topic-card:focus-visible {
   color: var(--color-muted);
   transition: background-color 180ms ease, color 180ms ease;
 }
-.sidebar-toggle:hover { background: var(--flat-tint); color: var(--color-primary); }
+.sidebar-toggle:hover { background: var(--tds-flat-tint); color: var(--color-primary); }
 .sidebar-toggle svg { transition: transform 320ms ease; }
 .blog-sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 .blog-sidebar a.snav-item {
@@ -946,136 +934,6 @@ a.topic-card:focus-visible {
   background: rgb(255 255 255 / 0.2);
 }
 
-/* Article prose — applied to MDX body content. Blog-specific, so it
-   stays local rather than in the shared library. */
-.prose-article {
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.7;
-  color: var(--color-ink);
-  max-width: 65ch;
-}
-.prose-article p { margin: 1.25em 0; }
-.prose-article p + p { margin-top: 1.25em; }
-.prose-article h2 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  font-size: 1.875rem;
-  line-height: 1.15;
-  margin-top: 2.5em;
-  margin-bottom: 0.5em;
-}
-.prose-article h3 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 1.375rem;
-  line-height: 1.2;
-  margin-top: 2em;
-  margin-bottom: 0.5em;
-}
-.prose-article a {
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  /* long bare URLs shouldn't force horizontal page scroll on mobile */
-  overflow-wrap: break-word;
-}
-.prose-article a:hover { text-decoration-thickness: 2px; }
-.prose-article em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-.prose-article strong { color: var(--color-black); font-weight: 600; }
-/* Flat colour-block quote (kantig — surface instead of a rule line) */
-.prose-article blockquote {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 1.5rem;
-  line-height: 1.35;
-  color: var(--color-primary);
-  background: var(--flat-tint);
-  margin: 1.5em 0;
-  padding: 1.25rem 1.5rem;
-}
-.prose-article code {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  background: var(--color-soft);
-  padding: 0.0625em 0.375em;
-}
-.prose-article pre {
-  /* Shiki sets its own background/foreground via inline `style` —
-     these defaults only apply to non-highlighted blocks (no `lang`
-     hint or unsupported language). */
-  background: var(--color-surface-ink);
-  color: #f5f3ec;
-  padding: 1.25rem 1.5rem;
-  overflow-x: auto;
-  margin: 1.75em 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.prose-article pre code {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  font-size: inherit;
-  color: inherit;
-  font-family: var(--font-mono);
-}
-/* Shiki output: each line is a <span class="line"> — keep the
-   pre's own padding and let Shiki's inline colours render. */
-.prose-article pre.shiki .line { display: block; }
-.prose-article pre.shiki { font-family: var(--font-mono); }
-.prose-article ul, .prose-article ol { padding-left: 1.5em; margin: 1.25em 0; }
-.prose-article li { margin: 0.5em 0; }
-.prose-article hr { border: 0; border-top: 1px solid var(--color-line); margin: 3em 0; }
-
-/* Responsive media + overflow guards — markdown bodies can contain
-   images, embeds, GFM tables and long inline tokens (URLs, code) that
-   would otherwise blow out the page width on a phone. Constrain media
-   to the column, let wide tables scroll inside their own box, and let
-   long tokens wrap. */
-.prose-article :is(img, video, iframe) {
-  max-width: 100%;
-  height: auto;
-  margin: 1.75em 0;
-}
-.prose-article :not(pre) > code { overflow-wrap: break-word; }
-.prose-article table {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  border-collapse: collapse;
-  margin: 1.75em 0;
-  font-size: 0.9375rem;
-}
-.prose-article :is(th, td) {
-  border: 1px solid var(--color-line);
-  padding: 0.5em 0.75em;
-  text-align: left;
-}
-.prose-article thead th { background: var(--color-soft); }
-
-/* Phone widths: the generous desktop padding on quote/code/table blocks
-   eats into the already-narrow reading column. Trim it (and the oversized
-   pull-quote) so these blocks breathe on small screens. `pre`/`table`
-   keep their own `overflow-x: auto` for wide content. */
-@media (max-width: 640px) {
-  .prose-article blockquote {
-    font-size: 1.25rem;
-    padding: 1rem 1.125rem;
-  }
-  .prose-article pre {
-    padding: 1rem 1.125rem;
-  }
-  .prose-article :is(th, td) {
-    padding: 0.4em 0.6em;
-  }
-}
-
 /* === Grotesk heading weights =======================================
    The card/row/article headings above were first tuned for a serif
    display (which read fine at weight 400). With the design-system grotesk
@@ -1083,10 +941,7 @@ a.topic-card:focus-visible {
    last so it wins over the definitions above. */
 .post-card .card-title,
 .post-row .row-title { font-weight: 700; }
-.article-sec h2,
-.prose-article h2 { font-weight: 700; }
-.prose-article h3 { font-weight: 600; }
-.prose-article blockquote { font-weight: 600; }
+.article-sec h2 { font-weight: 700; }
 
 /* === Motion & interactivity (flat-safe) ============================
    Keep the kit angular: no radii, no drop-shadows. Interactivity is
@@ -1570,60 +1425,6 @@ html.js [data-reveal].is-in {
   .prose-print p, .prose-print blockquote, .prose-print li { orphans: 3; widows: 3; }
   .prose-print pre, .prose-print img, .prose-print blockquote { break-inside: avoid; }
   a { color: #000 !important; }
-}
-
-/* === Block-renderer output (bodyFormat="blocks") ===================
-   Callouts, buttons, responsive video + custom embeds baked into the
-   prose by BlockRenderer.astro. */
-.prose-article .callout {
-  border-left: 3px solid var(--color-info);
-  background: color-mix(in srgb, var(--color-info) 8%, transparent);
-  padding: 0.85rem 1.1rem;
-  border-radius: 0.4rem;
-  margin: 1.5rem 0;
-}
-.prose-article .callout--warn {
-  border-color: var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
-}
-.prose-article .callout--tip {
-  border-color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 8%, transparent);
-}
-.prose-article .block-button {
-  margin: 1.5rem 0;
-}
-.prose-article .block-button .btn-primary,
-.prose-article .block-button .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.3rem;
-  border-radius: 0.6rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
-}
-.prose-article .block-button .btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-}
-.prose-article .block-button .btn-ghost {
-  border: 1px solid var(--color-line);
-  color: var(--color-ink);
-}
-.video-embed {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  margin: 1.75rem 0;
-}
-.video-embed iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0.6rem;
-}
-.block-embed {
-  margin: 1.75rem 0;
 }
 
 /* === Reader focus mode (html.focus-mode) ==========================

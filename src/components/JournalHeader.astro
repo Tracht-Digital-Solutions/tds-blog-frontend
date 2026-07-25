@@ -153,7 +153,11 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
           <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
         </div>
 
-        <ThemeToggle client:idle />
+        <ThemeToggle
+          client:idle
+          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
+          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+        />
 
         <a href="https://tracht-digital.de/#contact" class="btn-flat" style="height: 2.25rem;">
           {cta}
@@ -268,7 +272,11 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
           <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
           <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
         </div>
-        <ThemeToggle client:idle />
+        <ThemeToggle
+          client:idle
+          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
+          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+        />
       </div>
       <a
         href="https://tracht-digital.de/#contact"
