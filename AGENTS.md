@@ -258,7 +258,11 @@ in this repo only.
   a reset action. Renders nothing without a profile.
 - `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome.
   Below `md` the section links/search/CTA collapse into a flat slide-down
-  frontend behind a hamburger. Nav links come from `src/lib/nav.ts` (the single
+  frontend behind a hamburger. **The hamburger bars are `.tds-menu-bar*` from
+  tds-shared `primitives.css`**, not the old local `.jnl-menu-bar*` — that block
+  and the landingpage's were the same rules under two names. The bars stay
+  square because `[data-surface="blog"]` sets `--tds-radius-bar: 0`, which was
+  the only real difference. Nav links come from `src/lib/nav.ts` (the single
   source shared with `ArticleSidebar.astro`): **Journal**, **Aktuelles**,
   **RSS** — "Kundenportal" lives in the footer only. Active/hover is a flat
   accent underline (`.jnav-item`) / left bar (`.snav-item`), no filled pill.
