@@ -90,7 +90,16 @@ handshake.
   three frontends. A no-flash inline script in `Layout.astro` sets
   `data-theme` on `<html>` from the `tds-theme` localStorage key (or
   the OS `prefers-color-scheme` fallback); the `ThemeToggle` island
-  flips and persists it. Tokens live in `src/styles/global.css`: the
+  flips and persists it. **That script is now shared** — it is
+  `themeBootstrapScript` from
+  `@tracht-digital-solutions/tds-shared/astro`, injected as
+  `<script is:inline set:html={themeBootstrapScript} />` (never as a
+  template body — Astro would leak the literal braces into `dist/`), and
+  `THEME_STORAGE_KEY` lives in `tds-shared/design`. The
+  `document.documentElement.classList.add("js")` flag stays a **separate**
+  inline script here: it is blog-only (the scroll-reveal CSS lives in this
+  repo), so it does not ride along inside the shared bootstrap. Both must
+  stay in `<head>` and stay `is:inline`. Tokens live in `src/styles/global.css`: the
   structural tokens flip, while fixed dark surfaces use
   `--color-surface-navy/-accent/-ink` and elevated/glass surfaces use
   `--color-card`. The dark ground is a deep-navy family with warm
