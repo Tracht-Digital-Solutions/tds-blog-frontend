@@ -13,6 +13,7 @@ import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
 import { CookieNotice, LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
+import { themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
 import { siteConfig } from "~/lib/seo";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
 
@@ -137,28 +138,19 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
     {noindex && <meta name="robots" content="noindex,nofollow" />}
     <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
 
-    {/* No-flash theme bootstrap — runs synchronously in <head>
-        before the body parses so the correct `data-theme` is on
-        <html> by the time CSS resolves. localStorage wins over OS
-        preference; if neither, follow the OS. Same key as the other
-        TDS frontends so the choice carries across properties. */}
+    {/* Flag JS so progressive-enhancement-only styling (scroll-reveal) never
+        hides content when scripting is unavailable. Blog-only — the reveal CSS
+        lives here — so it stays a separate script from the shared bootstrap
+        below rather than riding along inside it. */}
     <script is:inline>
-      // Flag JS so progressive-enhancement-only styling (scroll-reveal)
-      // never hides content when scripting is unavailable.
       document.documentElement.classList.add("js");
-      (function () {
-        try {
-          var saved = localStorage.getItem("tds-theme");
-          if (saved === "light" || saved === "dark") {
-            document.documentElement.setAttribute("data-theme", saved);
-            return;
-          }
-        } catch (e) { /* storage disabled — fall through to OS */ }
-        var dark = window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-      })();
     </script>
+
+    {/* No-flash theme bootstrap — shared with the landingpage and the frontend
+        host (tds-shared/astro), which is what makes the choice carry across
+        properties: one key, one implementation. Must stay `is:inline` and stay
+        in <head> so it runs before the body parses. */}
+    <script is:inline set:html={themeBootstrapScript} />
     {focusable && (
       <script is:inline>
         /* No-flash focus-mode restore. Gated behind `focusable` so the class is
