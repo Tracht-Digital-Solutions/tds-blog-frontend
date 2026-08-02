@@ -137,7 +137,10 @@
 .nav-search input::placeholder { color: var(--color-muted); }
 .nav-search input:hover { background: var(--tds-flat-hover); }
 .nav-search input:focus {
-  outline: none;
+  /* No `outline: none` here. It used to suppress the global focus ring, which
+     left the width + background change as the only focus indicator — neither
+     of which is a focus indicator under WCAG 2.4.11. Both stay as
+     supplementary cues; the ring does the actual work. */
   width: 14rem;
   background: var(--tds-flat-tint);
 }
@@ -930,7 +933,9 @@ a.topic-card:focus-visible {
 }
 .newsletter-input::placeholder { color: rgb(255 255 255 / 0.45); }
 .newsletter-input:focus {
-  outline: none;
+  /* Same correction as `.nav-search input:focus` above — the ring stays. This
+     one sits on a dark band, where the global accent ring is still the most
+     legible indicator available. */
   background: rgb(255 255 255 / 0.2);
 }
 
