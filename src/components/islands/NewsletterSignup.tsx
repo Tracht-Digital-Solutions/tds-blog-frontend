@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { Spinner } from "@tracht-digital-solutions/tds-shared/components";
 
 /**
@@ -44,7 +44,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "submitting" | "done" | "error">("idle");
 
-  const submit = async (e: FormEvent) => {
+  const submit = async (e: SubmitEvent) => {
     e.preventDefault();
     if (!email.trim() || state === "submitting") return;
     setState("submitting");

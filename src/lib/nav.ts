@@ -15,14 +15,24 @@
 export type Lang = "de" | "en";
 
 export type BlogNavNode =
-  | { kind: "link"; key: "journal"; label: string; href: string }
+  | { kind: "link"; key: "journal" | "tools"; label: string; href: string; external?: boolean }
   | { kind: "group"; key: "entdecken"; label: string };
+
+/**
+ * The public tools site. A sibling first-party property, so it opens in the
+ * SAME tab — forcing `target="_blank"` on a link within one's own group of
+ * sites takes a decision away from the reader for no reason.
+ */
+export const TOOLS_URL = "https://tools.tracht-digital.de";
 
 export function primaryNav(lang: Lang): BlogNavNode[] {
   const home = lang === "de" ? "/" : "/en/";
   return [
     { kind: "link", key: "journal", label: "Journal", href: home },
     { kind: "group", key: "entdecken", label: lang === "de" ? "Entdecken" : "Discover" },
+    // `isActiveNav` simply never matches an absolute URL, so this entry is
+    // permanently inactive — which is correct: you are never "on" it here.
+    { kind: "link", key: "tools", label: "Tools", href: TOOLS_URL, external: true },
   ];
 }
 
