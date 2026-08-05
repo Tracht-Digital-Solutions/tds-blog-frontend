@@ -16,7 +16,13 @@ import TagChip from "./TagChip.astro";
 
 interface Props {
   /** Either a list of posts (aggregate mode) or null / not provided. */
-  posts?: Array<{ tags: string | null | undefined }>;
+  /**
+   * `tags` is OPTIONAL, not merely nullable: tds-shared declares it that way
+   * because older API deployments omit the field entirely. Requiring the
+   * property to be present (even as `undefined`) rejects a plain
+   * `Pick<BlogPost, "tags">`, which is exactly what a post list is.
+   */
+  posts?: Array<{ tags?: string | null }>;
   /** Raw tags string from a single post (`"foo,bar"`). */
   tags?: string | null;
   lang?: "de" | "en";
