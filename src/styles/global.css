@@ -38,6 +38,17 @@
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
 @import "@tracht-digital-solutions/tds-shared/styles/surfaces/blog.css";
 
+/* Tailwind ignores node_modules by default, and the shared React islands are
+   built out of utility classes (`ThemeToggle` is
+   `inline-flex items-center justify-center w-9 h-9 rounded-full … hover:bg-black/5`).
+   Without this the toggle shipped WITHOUT its 36px box and without hover
+   feedback: `w-9`, `h-9` and `hover:bg-black/5` were simply never generated,
+   while `inline-flex` and `rounded-full` survived only because this site
+   happens to use them in its own markup. No error, no warning — it just looked
+   wrong.
+   MUST come after the @imports; `@source` before an `@import` is a build error. */
+@source "../../node_modules/@tracht-digital-solutions/tds-shared";
+
 :root {
   /* width of the expanded article section-nav rail (right viewport edge) */
   --toc-w: 220px;
