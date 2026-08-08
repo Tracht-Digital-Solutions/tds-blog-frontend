@@ -67,7 +67,7 @@ const jsonLd = asGraph(
         {topics.intro && <p class="marginalia mb-6 max-w-prose">{topics.intro}</p>}
         <ul class="list-none p-0 m-0 grid gap-3 sm:grid-cols-2">
           {topics.items.map((t) => (
-            <li class="list-none" data-reveal>
+            <li class="list-none">
               {t.href ? (
                 <a href={t.href} class="topic-card">
                   <h3 class="topic-title">{t.title}</h3>
@@ -97,7 +97,7 @@ const jsonLd = asGraph(
       ) : (
         <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
           {latest.map((p, i) => (
-            <li class={`flex${i === 0 ? " sm:col-span-2 lg:col-span-3" : ""}`} data-reveal>
+            <li class={`flex${i === 0 ? " sm:col-span-2 lg:col-span-3" : ""}`}>
               {/* Static flat card — same component as the index grid. */}
               <PostCard post={p} lang="de" large={i === 0} />
             </li>
