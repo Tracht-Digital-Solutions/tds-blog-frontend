@@ -52,7 +52,6 @@ const LABELS: Record<"de" | "en", { intro: string; sets: Record<SetId, SetMeta>;
   },
 };
 
-const ROTATE_MS = 12000;
 // Drag distance (px) past which a release advances to the prev/next set.
 const DRAG_THRESHOLD = 64;
 
@@ -189,7 +188,6 @@ export default function HeroSlider({
   const t = LABELS[lang];
   const [recommended, setRecommended] = useState<SliderPost[]>([]);
   const [active, setActive] = useState<SetId>("aktuelles");
-  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const interacted = useRef(false);
 
@@ -260,7 +258,6 @@ export default function HeroSlider({
       if (e.pointerType === "mouse" && e.button !== 0) return;
       drag.current = { startX: e.clientX, dx: 0, active: true, moved: false };
       setDragging(true);
-      setPaused(true);
       e.currentTarget.setPointerCapture?.(e.pointerId);
     },
     [order.length],
@@ -301,20 +298,12 @@ export default function HeroSlider({
     if (s.moved) suppressClick.current = true;
     setDragDX(0);
     setDragging(false);
-    setPaused(false);
   }, [order, activeIndex]);
 
-  // Auto-rotation — paused on hover/focus and for reduced-motion users.
-  useEffect(() => {
-    if (paused || order.length < 2 || prefersReducedMotion()) return;
-    const id = window.setInterval(() => {
-      setActive((cur) => {
-        const i = order.indexOf(cur);
-        return order[(i + 1) % order.length];
-      });
-    }, ROTATE_MS);
-    return () => window.clearInterval(id);
-  }, [paused, order.join("|")]);
+  // No auto-rotation. The set used to advance itself every 12s, which moves
+  // content the reader did not ask to move — WCAG 2.2.2 territory, and the
+  // reason the hover/focus "pause" plumbing existed at all. The arrows and
+  // the drag gesture still change sets; nothing changes on its own.
 
   if (sets.length === 0) return null;
 
@@ -328,10 +317,6 @@ export default function HeroSlider({
       <div
         className="w-full px-6 sm:px-10 lg:px-16"
         style={{ paddingTop: 40, paddingBottom: 44 }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
       >
         <div
           className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3"

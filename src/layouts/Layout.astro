@@ -138,15 +138,7 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
     {noindex && <meta name="robots" content="noindex,nofollow" />}
     <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
 
-    {/* Flag JS so progressive-enhancement-only styling (scroll-reveal) never
-        hides content when scripting is unavailable. Blog-only — the reveal CSS
-        lives here — so it stays a separate script from the shared bootstrap
-        below rather than riding along inside it. */}
-    <script is:inline>
-      document.documentElement.classList.add("js");
-    </script>
-
-    {/* No-flash theme bootstrap — shared with the landingpage and the frontend
+        {/* No-flash theme bootstrap — shared with the landingpage and the frontend
         host (tds-shared/astro), which is what makes the choice carry across
         properties: one key, one implementation. Must stay `is:inline` and stay
         in <head> so it runs before the body parses. */}
@@ -338,32 +330,5 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
       }
     </script>
 
-    {/* Scroll-reveal — flat rise-in for [data-reveal] elements as they
-        enter the viewport. Honours reduced-motion (reveal immediately)
-        and degrades gracefully without IntersectionObserver. Items in
-        the same row get a small stagger. */}
-    <script>
-      const revealables = document.querySelectorAll<HTMLElement>("[data-reveal]");
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!revealables.length) {
-        // nothing to do
-      } else if (reduce || !("IntersectionObserver" in window)) {
-        revealables.forEach((el) => el.classList.add("is-in"));
-      } else {
-        const io = new IntersectionObserver(
-          (entries, obs) => {
-            entries.forEach((entry, i) => {
-              if (!entry.isIntersecting) return;
-              const el = entry.target as HTMLElement;
-              el.style.setProperty("--reveal-delay", `${Math.min(i, 5) * 60}ms`);
-              el.classList.add("is-in");
-              obs.unobserve(el);
-            });
-          },
-          { rootMargin: "0px 0px -10% 0px", threshold: 0.05 },
-        );
-        revealables.forEach((el) => io.observe(el));
-      }
-    </script>
   </body>
 </html>

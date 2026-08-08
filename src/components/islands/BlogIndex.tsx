@@ -238,7 +238,10 @@ export default function BlogIndex({
       >
         <div
           className="hidden lg:block shrink-0"
-          style={{ width: catsCollapsed ? 30 : 216, transition: "width 320ms ease" }}
+          // Width changes instantly. Animating `width` reflows the article
+          // grid beside it on every frame, so the 320ms transition made the
+          // whole listing judder for the sake of a decorative slide.
+          style={{ width: catsCollapsed ? 30 : 216 }}
         >
           <CategorySidebar
             posts={posts}

@@ -95,11 +95,12 @@ handshake.
   `@tracht-digital-solutions/tds-shared/astro`, injected as
   `<script is:inline set:html={themeBootstrapScript} />` (never as a
   template body — Astro would leak the literal braces into `dist/`), and
-  `THEME_STORAGE_KEY` lives in `tds-shared/design`. The
-  `document.documentElement.classList.add("js")` flag stays a **separate**
-  inline script here: it is blog-only (the scroll-reveal CSS lives in this
-  repo), so it does not ride along inside the shared bootstrap. Both must
-  stay in `<head>` and stay `is:inline`. Tokens live in `src/styles/global.css`: the
+  `THEME_STORAGE_KEY` lives in `tds-shared/design`. It must
+  stay in `<head>` and stay `is:inline`.
+  (There used to be a second inline script setting a `js` class on `<html>`.
+  It existed only so the scroll-reveal CSS could hide content safely; both are
+  gone — see "No decorative motion" below.)
+  Tokens live in `src/styles/global.css`: the
   structural tokens flip, while fixed dark surfaces use
   `--color-surface-navy/-accent/-ink` and elevated/glass surfaces use
   `--color-card`. The dark ground is a deep-navy family with warm
@@ -141,8 +142,9 @@ in this repo only.
   otherwise it springs back; the ends **rubber-band** (overscroll ÷3, no wrap
   past first/last on drag) and a real drag swallows the trailing click
   (`suppressClick`). Off-screen slides carry `inert`+`aria-hidden` so their
-  links aren't tabbable/clickable. Tabs/arrows/dots + 12s auto-rotation (paused
-  on hover/focus) still wrap via `step`. `prefers-reduced-motion` drops the
+  links aren't tabbable/clickable. Tabs/arrows/dots wrap via `step`.
+  **It does not auto-rotate** — the set only changes when the reader changes
+  it. `prefers-reduced-motion` drops the
   track transition (instant jump) — resolved after hydration into `reducedMotion`
   state to avoid an SSR mismatch. **Empfohlen** is client-scored from the
   `tds-interests` cookie (mirrors `ForYou`, no runtime content-api call)
@@ -343,6 +345,48 @@ that and renders each section body with **`BlockRenderer.astro`** instead of
   unchanged.
 - `blogSnippets()` in `content-api.ts` — build-time snippet catalog fetch (memoised
   for the whole build; empty on demo/outage).
+
+## No decorative motion
+
+The blog does not animate for effect. What used to be here and is now gone:
+
+- **Scroll-reveal.** `[data-reveal]` elements started at `opacity: 0` and rose
+  in on an IntersectionObserver, staggered. It was the largest piece of motion
+  on the site and it made every list arrive in pieces. Removing it also removed
+  the `html.js` flag, which existed *only* so that CSS could hide content
+  without trapping no-JS readers behind an `opacity: 0` it would never clear.
+- **The 404's looping animations** (`err-glow`, `err-float`, `err-in`). Two of
+  the three ran forever, on a page a visitor reaches by accident.
+- **The hero carousel's 12s auto-rotation** — content that moved without being
+  asked (WCAG 2.2.2). The tabs, arrows, dots and drag all still work; the
+  hover/focus "pause" plumbing went with it, because pausing is only needed by
+  something that moves on its own.
+- **Hover lift on post cards** and the 4px arrow nudges. The growing accent bar
+  and the colour change already say "interactive"; the movement was decoration
+  layered on a working affordance.
+- **The category rail's `transition: width`**, which reflowed the article grid
+  next to it on every frame.
+
+**What stays, and why.** Motion that reports something:
+
+| Kept | Because |
+|---|---|
+| colour / border / opacity transitions on hover + focus | affordance — it says the thing is interactive |
+| the nav underline (`scaleX`), dropdown caret, section chevron | they encode **state** (active / open / collapsed) |
+| the mobile menu slide | spatial — it says where the panel came from |
+| disclosure `grid-template-rows` | ties the expanded panel to the control that opened it |
+| the carousel track transform | a response to a deliberate action; `prefers-reduced-motion` drops it |
+| `tds-spin`, `tds-skeleton-pulse`, `tds-toast-in`, `tds-modal-in` | from tds-shared; all report loading or an outcome |
+
+The cheap regression check is the built bundle, not the source:
+
+```bash
+npm run build && cat dist/_astro/*.css | grep -o "animation:[^;}]*" | sort -u
+```
+
+Anything beyond the four `tds-*` keyframes above is new decoration. Note that
+`npm run type-check` will NOT catch a broken `<style>` block — astro check does
+not parse CSS, so a mangled rule only surfaces at build time.
 
 ## Reader focus mode
 

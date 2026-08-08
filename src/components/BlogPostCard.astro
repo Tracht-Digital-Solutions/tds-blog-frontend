@@ -17,7 +17,7 @@ const { slug, category, title, excerpt, publishedAt, lang = "de" } = Astro.props
 const locale = lang === "de" ? "de-DE" : "en-US";
 ---
 
-<li class="list-none" data-reveal>
+<li class="list-none">
   <a href={`${lang === "en" ? "/en" : ""}/${slug}`} class="post-row">
     <div class="flex flex-col gap-2.5">
       <p class="eyebrow card-meta" style="color: var(--color-accent);">
