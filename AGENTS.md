@@ -41,6 +41,19 @@ Removed from `global.css` by the unification (do not reintroduce): the
 `.brand-wordmark` copy, `.chip { border-radius: 0 }`, and the local
 `--flat-tint` / `--flat-hover` (now `--tds-flat-*`, from the surface layer).
 
+**Decoration on this surface is deliberately minimal ("Digitale
+Maßarbeit", tds-shared ≥0.23.0).** The shared layer ships `.tds-wash`,
+`.tds-shape*` and `.tds-circuit`, and the blog uses **none of them**: the
+flat kit separates with colour blocks and 2px accent bars, and a soft
+radial field is the opposite of "kantig". What it does take is the
+`.tds-brandbar` in the footer (square here, since `--tds-radius-bar` is 0
+on this surface) and `.tds-tone-navy` on the footer instead of the inline
+`background`/`color` pair — the tone also re-maps ink/muted/line/card, so
+hairlines inside it read on the dark ground. The warm `--color-line` and
+the rest of the palette arrive through the token layer with no work here.
+That is a decision, not an omission — don't "finish the job" by adding
+washes to the blog.
+
 The long-form class is **`.tds-prose`**, promoted out of this repo into
 `tds-shared/styles/prose.css`: it was the only long-form typography
 implementation in the project, and the blog-CMS editor's preview pane
