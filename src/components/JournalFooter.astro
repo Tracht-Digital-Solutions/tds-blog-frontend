@@ -97,7 +97,11 @@ const groups =
 
 <NewsletterSignup lang={lang} client:visible />
 
-<footer class="blog-footer" style="background: var(--color-surface-navy); color: #fff; padding: 48px 0 28px;">
+{/* `.tds-tone-navy` (tds-shared) replaces the inline background+colour
+    pair: besides the fill it re-maps the page tokens inside the footer,
+    so hairlines and any shared primitive rendered here read on the dark
+    ground instead of keeping the light page's warm line. */}
+<footer class="blog-footer tds-tone-navy" style="padding: 48px 0 28px;">
   <div class="max-w-5xl mx-auto px-6">
     <div class="grid gap-9 sm:grid-cols-2 lg:[grid-template-columns:1.4fr_repeat(4,1fr)]">
       <div>
@@ -105,6 +109,10 @@ const groups =
           <span class="brand-logo brand-logo--inverse" aria-hidden="true"></span>
           <span style="color: var(--color-accent-pink);">Digital</span>
         </p>
+        {/* The three-part brand accent as the footer's closing detail —
+            the blog's one piece of decoration, matching the landingpage
+            footer so the two properties read as one brand. */}
+        <span aria-hidden="true" class="tds-brandbar tds-brandbar--sm tds-brandbar--on-dark mb-4"></span>
         <p class="text-sm leading-relaxed" style="color: rgb(255 255 255 / 0.65); max-width: 32ch;">
           {blurb}
         </p>
