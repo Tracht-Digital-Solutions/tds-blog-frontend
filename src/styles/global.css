@@ -658,7 +658,23 @@ a.topic-card:focus-visible {
      anchor. */
   .with-sidebar .article-col {
     position: relative;
-    left: calc(var(--nav-w, 264px) / -2);
+    /* CLAMPED, and the clamp is the whole point.
+       The first term is the intent above: pull the column back by half the
+       sidebar so it lands on the true viewport centre. That is only safe while
+       the centred column still clears the FIXED sidebar, i.e. while
+       `(100vw − 48rem) / 2 ≥ --nav-w`, which needs ~1296px. At 1280 — the most
+       common desktop width there is — it slid 8px UNDER the sidebar and every
+       line of the article lost its first characters: the eyebrow read "ESIGN",
+       the lede "arben, Typografie…". Nothing overflowed and nothing errored;
+       the text was simply painted behind an opaque panel.
+       The second term is the largest shift that still leaves a 0.75rem gutter
+       beside the sidebar, derived from the same geometry. `max()` picks the
+       SMALLER leftward pull (both are negative), so wide viewports keep the
+       full recentring and narrow ones stop exactly at the sidebar edge. */
+    left: max(
+      calc(var(--nav-w, 264px) / -2),
+      calc((var(--nav-w, 264px) + 48rem - 100vw) / 2 + 0.75rem)
+    );
     transition: left 320ms ease;
   }
 }
