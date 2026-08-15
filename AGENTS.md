@@ -208,12 +208,24 @@ in this repo only.
   fix). The `.with-sidebar` wrapper stays offset by the sidebar (keeps the
   footer/newsletter clear of it), and `--nav-w` (264px / 64px collapsed, set on
   `#page-shift`) drives everything: `.with-sidebar .article-col` is nudged
-  `left: calc(var(--nav-w) / -2)` so it lands on the true viewport centre and
+  left by half of it so it lands on the true viewport centre and
   **doesn't move when the sidebar toggles** (the offset + nudge cancel). Uses
   `position/left`, not `transform`, so the fixed `.toc` keeps its viewport
-  anchor. The fixed TOC (right) and sidebar (left) overlay the side whitespace;
-  on narrow lg widths with the sidebar open the column can slip under it
-  (accepted trade-off for exact window-centring).
+  anchor. The fixed TOC (right) and sidebar (left) overlay the side whitespace.
+  - **The nudge is CLAMPED with `max()`, and that clamp is not optional.** The
+    recentring only clears the fixed sidebar while `(100vw − 48rem) / 2 ≥
+    --nav-w`, i.e. from ~1296px up. Below that the column slid *under* the
+    sidebar — at 1280, the most common desktop width there is, by 8px, so every
+    line of every article lost its first characters: the eyebrow rendered
+    "ESIGN", the lede "arben, Typografie…". Nothing overflowed, nothing errored,
+    nothing logged; the text was painted behind an opaque panel.
+  - This note used to call that an "accepted trade-off for exact
+    window-centring". **It was not a trade-off worth accepting, and the clamp
+    costs nothing:** the second term of the `max()` is the largest shift that
+    still leaves a 0.75rem gutter, so viewports ≥1296px keep the exact
+    window-centring the rule was written for (measured: 336px at 1440, 576px at
+    1920 — both the true centre) and narrower ones stop at the sidebar edge
+    instead of behind it.
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail
