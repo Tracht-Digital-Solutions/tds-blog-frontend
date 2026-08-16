@@ -126,6 +126,64 @@ manual Release). Implementation lives in
 Until then, push a trivial commit to this repo's main, or hit "Run
 workflow" in the Actions tab.
 
+
+## Setup auf dem Host: `/_setup/install.php`
+
+Jeder Produktions-Build enthält einen Setup-Assistenten unter
+`https://<domain>/_setup/install.php`. Er verbindet die ausgelieferte Site mit
+der API — **ohne Rebuild**.
+
+**Warum es ihn gibt.** Diese Site ist statisch: Vite backt jede `PUBLIC_*`-URL
+zur Buildzeit ein. Eine deployte `dist/` lässt sich deshalb nicht umkonfigurieren,
+und — schlimmer — eine Site, die die API gar nicht erreicht, fällt still auf ihre
+statischen Platzhalter zurück: kein Fehler, kein Log, nichts wird rot. Der
+Assistent prüft die Verbindung mit echten Aussagen („12 Blöcke", nicht „HTTP
+200"), fährt pro Origin einen CORS-Preflight und schreibt `tds-runtime.json`
+neben die `index.html`. Die Site liest diese Datei zur Laufzeit und zieht sie
+dem eingebackenen Wert vor.
+
+**Ablauf.**
+
+1. `https://<domain>/_setup/install.php` aufrufen.
+2. **Anmeldung** als Plattform-Administrator (dieselben Zugangsdaten wie
+   `auth.tracht-digital.de`). Der Assistent liegt auf einer öffentlich
+   erreichbaren Domain und kommt mit jedem Deploy zurück — ein reines Lockfile
+   wie beim Gateway-Installer würde jedes Deploy-Fenster offen lassen.
+3. **Konfiguration**: API-Basis-URL, Auth-URL, Login-Seite und der
+   Verbindungsmodus.
+4. **Verbinden**: erst prüfen, dann schreiben. Fehlschläge in den Prüfschritten
+   brechen den Lauf nicht ab, sie werden gemeldet.
+
+**Zwei Verbindungsmodi.**
+
+- **Same-Origin-Proxy** (Standard, wenn Rewrites verfügbar sind) — die Site ruft
+  `/api/…` auf dem eigenen Host auf; `api/index.php` reicht ausschließlich die
+  in ihrer Allowlist stehenden Routen an die API weiter. Kein CORS, und ein
+  Site-Token verlässt den Server nie. Die Allowlist ist die Sicherheitsgrenze:
+  `[Methode, Muster]`-Paare, beidseitig verankert, nie ein Präfix-Vergleich.
+- **Direkt** — der Browser ruft die API-Domain direkt. Setzt voraus, dass die
+  Origins dieser Site in `CORS_ALLOWED_ORIGINS` stehen; der Assistent sagt
+  genau, welche fehlen.
+
+**Was der Assistent nicht ablöst.** Die Inhalte, die beim `astro build` geholt
+werden, kommen weiterhin aus den Umgebungsvariablen der GitHub Action — dort
+gibt es keinen Host und keine `tds-runtime.json`. Laufzeit und Buildzeit sind
+getrennt konfiguriert und müssen zusammenpassen; der Assistent prüft beides,
+konfiguriert aber nur die Laufzeit.
+
+**Sperre und erneutes Ausführen.** Nach einem erfolgreichen Lauf setzt der
+Assistent `_setup/.tds-site-installed` und läuft ab dann nur noch im
+Diagnosemodus (er zeigt den aktuellen Stand, bietet aber kein Formular). Zum
+Neu-Verbinden diese Datei löschen. Es gibt bewusst keinen Selbstlöschen-Knopf:
+`_setup/` ist Teil von `dist/`, das nächste Release brächte die Datei ohnehin
+zurück.
+
+**Erzeugte Dateien.** `_setup/` wird vom `prebuild`-Schritt
+(`scripts/sync-installer.mjs`) aus `@tracht-digital-solutions/tds-shared/install`
+kopiert und ist deshalb nicht eingecheckt. `tds-runtime.json`, `api/` und die
+Geheimnis-Datei entstehen erst auf dem Host und liegen nicht in `dist/` — ein
+erneuter Deploy überschreibt sie nicht.
+
 ## Related repos
 
 - [tds-shared-pkg](https://github.com/Tracht-Digital-Solutions/tds-shared-pkg) — `BlogPost` type, i18n strings
