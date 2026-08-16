@@ -1,35 +1,58 @@
+# Every group below is INDEPENDENT: a crawler obeys only the group that names
+# it, and ignores the "*" group entirely. So every Disallow has to be repeated
+# in each group — that is why this file is more verbose than it looks like it
+# needs to be. (The /og/ rule used to sit at the bottom of the file, which meant
+# it applied to Applebot-Extended alone.)
+
 User-agent: *
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 # AI search crawlers are welcome — articles are meant to be cited.
 User-agent: GPTBot
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /_setup/
+Disallow: /og/
 
 User-agent: Applebot-Extended
 Allow: /
-
-# OG image endpoints are cheap to crawl but offer no human content.
+Disallow: /_setup/
 Disallow: /og/
 
 Sitemap: https://blog.tracht-digital.de/sitemap-index.xml

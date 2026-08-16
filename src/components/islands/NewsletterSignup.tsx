@@ -1,5 +1,6 @@
 import { useState, type SubmitEvent } from "react";
 import { Spinner } from "@tracht-digital-solutions/tds-shared/components";
+import { runtimeSetting } from "@tracht-digital-solutions/tds-shared/api";
 
 /**
  * Newsletter block from the design-system blog kit: inverse ink panel,
@@ -9,6 +10,11 @@ import { Spinner } from "@tracht-digital-solutions/tds-shared/components";
  * form) — Julian gets a signup notification by mail.
  */
 
+/**
+ * Fallback endpoint, baked in by Vite at build time. A host configured with
+ * `/_setup/install.php` overrides it through `tds-runtime.json` — see the
+ * matching note in the landingpage's ContactForm.
+ */
 const CONTACT_API_URL =
   (import.meta.env.PUBLIC_CONTACT_API_URL as string | undefined) ??
   "https://api.tracht-digital.de/contact";
@@ -49,7 +55,8 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
     if (!email.trim() || state === "submitting") return;
     setState("submitting");
     try {
-      const res = await fetch(CONTACT_API_URL, {
+      const endpoint = await runtimeSetting("contactUrl", CONTACT_API_URL);
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
