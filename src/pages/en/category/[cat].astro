@@ -5,6 +5,7 @@ import { listAllPosts } from "~/lib/content-api";
 import { categorySlug } from "~/lib/taxonomy";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
+import { categoryDescription } from "~/lib/metaDescription";
 
 /**
  * Category-filtered journal index (EN). Mirror of /kategorie/[cat].astro
@@ -56,7 +57,7 @@ const jsonLd = asGraph(
 
 <Layout
   title={`${name} — Journal`}
-  description={`Articles in the “${name}” category.`}
+  description={categoryDescription(name, "en")}
   lang="en"
   jsonLd={jsonLd}
   altUrl={null}

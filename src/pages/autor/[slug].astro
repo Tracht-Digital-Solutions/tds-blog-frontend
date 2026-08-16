@@ -4,6 +4,7 @@ import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
 import { listAllPosts } from "~/lib/content-api";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
+import { authorDescription } from "~/lib/metaDescription";
 import type { BlogAuthor } from "@tracht-digital-solutions/tds-shared";
 
 /**
@@ -45,9 +46,9 @@ interface PageProps {
 const { author, posts } = Astro.props as PageProps;
 
 const pageUrl = `${siteConfig.url}/autor/${author.slug}`;
-const description = author.bio
-  ? author.bio
-  : `Beiträge von ${author.name} im Journal von Tracht Digital Solutions.`;
+// A real bio is CMS-authored and is the better description whenever it
+// exists; the fallback only has to work for an author who has not written one.
+const description = author.bio ? author.bio : authorDescription(author.name, "de");
 
 const personSchema = {
   "@type": "Person",

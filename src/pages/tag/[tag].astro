@@ -5,6 +5,7 @@ import TagList from "~/components/TagList.astro";
 import { listAllPosts } from "~/lib/content-api";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
+import { tagDescription } from "~/lib/metaDescription";
 
 /**
  * Tag-filtered journal index (DE). One static page per unique tag
@@ -57,7 +58,7 @@ const jsonLd = asGraph(
 
 <Layout
   title={`#${tag} — Journal`}
-  description={`Artikel im Journal mit dem Tag „${tag}“.`}
+  description={tagDescription(tag, "de")}
   jsonLd={jsonLd}
   altUrl={null}
 >

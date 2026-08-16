@@ -14,9 +14,22 @@ export const siteConfig = {
   /** Sister origin — used in WebSite + Organization references. */
   marketingUrl: "https://tracht-digital.de",
   defaultLocale: "de" as const,
+  /**
+   * Meta descriptions. Google renders roughly the first 155–160 characters,
+   * so both stay under 160 — `metaDescription.test.ts` fails the build if
+   * either grows past it or shrinks below the length at which a description
+   * carries any information.
+   *
+   * The blog is one of the two INDEXABLE properties, so it carries the same
+   * two keyword commitments as the landingpage (root CLAUDE.md): the exact
+   * phrase "Digitalisierung für Unternehmen" and the local signal
+   * Schwarzenbek/Hamburg. The local half was missing here entirely until
+   * 2026-08-16 — the journal ranked as a generic dev blog with nothing tying
+   * it to the business it belongs to. Trim the topic list before either.
+   */
   description: {
-    de: "Das Journal von Tracht Digital Solutions — Artikel über Digitalisierung für Unternehmen, Software-Entwicklung und den Alltag dazwischen.",
-    en: "The Tracht Digital Solutions journal — articles on digitalization for businesses, software development and everything in between.",
+    de: "Praxisnahe Artikel über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung — das Journal von Tracht Digital Solutions aus Schwarzenbek.",
+    en: "Hands-on articles on digitalization for businesses, web development and automation — the journal of Tracht Digital Solutions, Schwarzenbek near Hamburg.",
   },
   blogName: {
     de: "TDS Journal",
