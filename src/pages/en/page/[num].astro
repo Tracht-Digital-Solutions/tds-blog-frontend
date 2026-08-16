@@ -4,6 +4,7 @@ import BlogPostCard from "~/components/BlogPostCard.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { listAllPosts } from "~/lib/content-api";
 import { paginate, PAGE_SIZE } from "~/lib/pagination";
+import { archiveDescription } from "~/lib/metaDescription";
 import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
 export async function getStaticPaths() {
@@ -41,7 +42,7 @@ const jsonLd = asGraph(websiteSchema(), blogSchema("en"));
 
 <Layout
   title={`Journal · Page ${page} — Tracht Digital Solutions`}
-  description={`Journal archive, page ${page} — articles on digitalization and software development.`}
+  description={archiveDescription(page, "en")}
   lang="en"
   jsonLd={jsonLd}
   altUrl={null}

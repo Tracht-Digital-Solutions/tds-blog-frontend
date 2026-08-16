@@ -485,6 +485,33 @@ default description is `siteConfig.description[lang]` (journal
 copy with the "Digitalisierung für Unternehmen" keyword), resolved
 after the props destructure.
 
+- **Generated pages build their description in `src/lib/metaDescription.ts`,
+  never as an inline template literal.** Category, tag, archive and the
+  author fallback all interpolate a variable-length name, so their length is
+  not knowable from the source — a category called "SEO" and one called
+  "Prozessautomatisierung im Mittelstand" differ by 40 characters, and the
+  long case ran past what Google renders. The helper is a **two-tier
+  sentence**: the rich form when it fits, a shorter COMPLETE sentence when
+  the name is long, with `clampToWord` only as the backstop. Truncating the
+  rich form instead would leave a dangling clause in the SERP; truncating
+  the *name* would misreport what the page lists.
+  These descriptions were also far too thin before 2026-08-16 (39–58 chars,
+  "Artikel im Journal mit dem Tag „x“."), which is below the length at which
+  a description carries information — search engines discard one that thin
+  and synthesise their own, so the copy did no work at all.
+  `metaDescription.test.ts` asserts ONE budget (80 < n ≤ 160) over every
+  generated description at realistic worst-case names, and that the taxonomy
+  name always survives — it is the only thing distinguishing one listing page
+  from the next.
+- **The blog is one of the two INDEXABLE properties, so `siteConfig.description`
+  carries both keyword commitments** from the root CLAUDE.md: the exact phrase
+  "Digitalisierung für Unternehmen" and the local Schwarzenbek/Hamburg signal.
+  The local half was missing entirely until 2026-08-16 — the journal read as a
+  generic dev blog with nothing tying it to the business it belongs to.
+- **A post's description is its CMS `excerpt`** and an author's is their CMS
+  `bio`; both are content, not code. The helper only supplies the fallback for
+  an author who has not written a bio.
+
 - **`altUrl` prop (Layout):** `undefined` = auto-derive the hreflang
   alternate by swapping the `/en/` prefix (correct for posts — every
   post exists in both languages via the DeepL build fallback — and

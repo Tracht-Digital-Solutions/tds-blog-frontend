@@ -5,6 +5,7 @@ import TagList from "~/components/TagList.astro";
 import { listAllPosts } from "~/lib/content-api";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
+import { tagDescription } from "~/lib/metaDescription";
 
 /**
  * Tag-filtered journal index (EN). Mirror of /tag/[tag].astro
@@ -54,7 +55,7 @@ const jsonLd = asGraph(
 
 <Layout
   title={`#${tag} — Journal`}
-  description={`Articles tagged with “${tag}”.`}
+  description={tagDescription(tag, "en")}
   lang="en"
   jsonLd={jsonLd}
   altUrl={null}

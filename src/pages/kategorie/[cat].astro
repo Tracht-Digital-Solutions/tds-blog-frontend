@@ -3,6 +3,7 @@ import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import { listAllPosts } from "~/lib/content-api";
 import { categorySlug } from "~/lib/taxonomy";
+import { categoryDescription } from "~/lib/metaDescription";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
 
@@ -59,7 +60,7 @@ const jsonLd = asGraph(
 
 <Layout
   title={`${name} — Journal`}
-  description={`Artikel im Journal in der Kategorie „${name}“.`}
+  description={categoryDescription(name, "de")}
   jsonLd={jsonLd}
   altUrl={null}
 >
