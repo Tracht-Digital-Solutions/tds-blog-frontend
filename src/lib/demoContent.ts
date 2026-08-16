@@ -1,11 +1,24 @@
 /**
- * Demo content for a no-API build. When PUBLIC_DEMO_MODE=true the
- * build-time content client serves these posts instead of fetching
- * tds-content-api, so the blog renders fully without a backend.
+ * Demo content for a no-API build. When PUBLIC_DEMO_MODE=true — or when the
+ * content API is unreachable — the build-time content client serves these
+ * posts instead, so the blog renders fully without a backend.
  *
  * Fixtures are cast to the API return types so the demo stays decoupled
  * from the exact BlogPost shape (which carries a couple of fields beyond
  * what the pages read).
+ *
+ * **These mirror the launch articles seeded by `tds-ext-blog-cms-pkg`'s
+ * `BlogCmsSeedPosts` migration** — same slugs, same titles, condensed bodies.
+ * The point of a fallback is that a visitor cannot tell it apart from the real
+ * thing; three developer-topic articles about SSG and design tokens (what used
+ * to be here) advertised something the business does not sell. The canonical
+ * full text lives in the migration; keep the slugs and titles in step with it,
+ * and don't bother matching the bodies word for word.
+ *
+ * Each seed carries BOTH languages. Until 2026-08-16 the seeds were German
+ * only and `demoPostList("en")` handed the German text back labelled
+ * `lang: "en"`, so an English demo build rendered a German blog with no
+ * warning anywhere.
  */
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
 
@@ -33,128 +46,181 @@ const DEMO_AUTHOR = {
   name: "Julian Tracht",
   slug: "julian-tracht",
   avatarUrl: null,
-  bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
+  bio: "Freier Entwickler aus Schwarzenbek bei Hamburg. Baut Websites, Webshops und individuelle Werkzeuge für Selbstständige, kleine Unternehmen und lokale Betriebe.",
 };
 
 const day = 86_400_000;
 const date = (offsetDays: number): string =>
   new Date(Date.now() + offsetDays * day).toISOString().slice(0, 10);
 
-interface DemoSeed {
-  slug: string;
+/** The language-specific half of a seed. */
+interface DemoVariant {
   category: string;
   title: string;
   excerpt: string;
   tags: string;
-  publishedAt: string;
   body: string;
+}
+
+interface DemoSeed {
+  slug: string;
+  publishedAt: string;
+  de: DemoVariant;
+  en: DemoVariant;
 }
 
 const SEEDS: DemoSeed[] = [
   {
-    slug: "statisch-ausliefern",
-    category: "Technik",
-    title: "Warum wir statisch ausliefern",
-    excerpt:
-      "Astro + SSG bringen schnelle Seiten ohne Server-Runtime. Was das für Wartung, Sicherheit und Kosten bedeutet.",
-    tags: "astro,performance,ssg",
+    slug: "digitalisierung-faengt-klein-an",
     publishedAt: date(-4),
-    body: [
-      "Statische Auslieferung heißt: Jede Seite wird einmal zur Build-Zeit erzeugt und danach als fertiges HTML ausgeliefert. Kein Server-Prozess, der pro Anfrage rechnet, keine Datenbank, die im Moment des Klicks antworten muss. Der Browser bekommt genau die Datei, die beim letzten Build entstanden ist — und die liegt idealerweise schon im Cache am nächsten Netzknoten.",
-      "Für ein Marketing-Angebot, einen Blog oder eine Dokumentation ist das kein Kompromiss, sondern der Normalfall. Wir bauen die öffentlichen Seiten von Tracht Digital Solutions mit Astro im Modus `output: 'static'` — und liefern sie ohne Node-Runtime auf dem Produktionsserver aus.",
-      "## Was „statisch“ wirklich bedeutet",
-      "Statisch heißt nicht „unveränderlich“ und schon gar nicht „ohne Inhalte aus einer Datenbank“. Es heißt nur: Der teure Teil — Daten holen, Templates rendern, HTML zusammensetzen — passiert einmal beim Build, nicht bei jedem Besuch.",
-      "Der Unterschied zu einer klassisch server-gerenderten Seite ist der Zeitpunkt. Server-Rendering rechnet pro Anfrage; statische Auslieferung rechnet pro Veröffentlichung. Bei Inhalten, die sich stündlich und nicht pro Sekunde ändern, ist der zweite Weg um Größenordnungen effizienter.",
-      "## Schnell, weil nichts dazwischensteht",
-      "Ohne Runtime gibt es keine Cold Starts, keine Datenbank im kritischen Pfad, keinen Anwendungsserver, der unter Last einbricht. Eine HTML-Datei vom CDN ist praktisch immer schneller ausgeliefert als eine, die erst berechnet werden muss.",
-      "Astro hilft zusätzlich mit „Islands“: Interaktive Komponenten werden nur dort geladen, wo sie wirklich gebraucht werden. Der Rest der Seite bleibt reines HTML ganz ohne JavaScript. Das Ergebnis sind kleine Bundles, kurze Ladezeiten und stabile Core-Web-Vitals-Werte — messbar, nicht nur gefühlt.",
-      "## Sicherheit durch Weglassen",
-      "Die sicherste Komponente ist die, die es gar nicht gibt. Wo kein Anwendungsserver läuft und keine Datenbank am öffentlichen Endpunkt hängt, fehlt die halbe Angriffsfläche: keine SQL-Injection, kein verwundbarer Server-Prozess, keine veraltete Runtime, die ständig gepatcht werden will.",
-      "Dynamik, die tatsächlich einen Server braucht — Login, Zahlungen, Kundendaten — kapseln wir bewusst in getrennte APIs hinter einem einzigen Gateway. Die öffentliche Seite selbst bleibt eine Sammlung statischer Dateien und ist damit denkbar schwer anzugreifen.",
-      "## Was das für Kosten und Wartung heißt",
-      "Statisches Hosting ist günstig und langweilig — im besten Sinn. Es gibt keinen Prozess, der nachts abstürzt, kein Autoscaling, das konfiguriert werden will, keine Runtime-Version, die zum Sicherheitsrisiko wird. Ein Fehler im Build fällt vor dem Deploy auf, nicht um drei Uhr nachts im Log.",
-      "Für kleine und mittlere Unternehmen ist das der eigentliche Gewinn: planbare Kosten und eine Seite, die auch dann zuverlässig läuft, wenn monatelang niemand am Server schraubt.",
-      "## Wie Inhalte trotzdem frisch bleiben",
-      "Der häufigste Einwand lautet: „Aber unsere Inhalte ändern sich doch.“ Genau dafür fließen sie zur Build-Zeit ein. Blogbeiträge und redaktionelle Abschnitte kommen aus einem Headless-CMS und werden beim Bauen als HTML eingebacken. Wer im Redaktionswerkzeug auf „Veröffentlichen“ klickt, stößt einen neuen Build an — Sekunden später ist die Änderung live.",
-      "Schlägt der Abruf einmal fehl, fällt die Seite auf ihren statischen Standardinhalt zurück, statt kaputtzugehen. Der Build bricht nicht an einem kurzen Schluckauf der Schnittstelle.",
-      "## Wann statisch nicht passt",
-      "Hochdynamische, pro Nutzer personalisierte Ansichten gehören nicht in eine statische Seite, sondern in eine App: ein Kundenkonto, ein Warenkorb, ein Dashboard mit Live-Daten. Dort ist ein Server-Prozess kein Ballast, sondern die eigentliche Aufgabe.",
-      "Die ehrliche Antwort ist deshalb selten „entweder/oder“. Öffentliche Seiten liefern wir statisch aus; die App-Teile bekommen ihre eigene, klar abgegrenzte Infrastruktur. So zahlt jede Seite genau den Aufwand, den sie wirklich braucht — und keinen Cent mehr.",
-    ].join("\n\n"),
+    de: {
+      category: "Digitalisierung",
+      title: "Digitalisierung fängt nicht beim Großprojekt an",
+      excerpt:
+        "Sie fängt bei dem einen Ablauf an, der jede Woche Stunden kostet — und den außer Ihnen niemand sieht.",
+      tags: "digitalisierung,prozesse,kleine-unternehmen",
+      body: [
+        "Wenn von Digitalisierung die Rede ist, denken viele sofort an ein großes Vorhaben: neue Software für den ganzen Betrieb, Schulungen, Umstellung, monatelang Unruhe. Das schreckt zu Recht ab. Und es ist meistens gar nicht der richtige Anfang.",
+        "Der bessere Anfang ist kleiner und unspektakulärer. Er liegt bei der einen Aufgabe, die jede Woche Zeit frisst und über die sich niemand mehr beschwert, weil alle sich daran gewöhnt haben.",
+        "## Drei Fragen, die den Anfang finden",
+        "**Welche Zahl schreiben Sie mehr als einmal auf?** Ein Preis, der in der Kasse steht, in einer Preisliste und noch einmal auf der Website. Jede Stelle, an der dieselbe Information ein zweites Mal eingegeben wird, ist eine Stelle, an der sie auseinanderlaufen kann.",
+        "**Was fragen Sie regelmäßig bei jemand anderem nach?** Wenn Sie nicht selbst nachsehen können, wie viel noch da ist, dann hängt eine Information an einer Person statt an einem Ort. Das funktioniert, solange die Person da ist.",
+        "**Welche Aufgabe schieben Sie regelmäßig auf?** Aufschieben ist ein zuverlässiger Hinweis darauf, dass etwas unnötig umständlich ist. Nicht unwichtig — umständlich.",
+        "## Warum klein anfangen der schnellere Weg ist",
+        "Ein kleiner Anfang ist schnell wieder rückgängig zu machen. Wenn sich nach vier Wochen zeigt, dass die Lösung nicht passt, haben Sie vier Wochen verloren und nicht ein Jahr.",
+        "Er beweist außerdem etwas: Nach der ersten Umstellung wissen Sie nicht mehr theoretisch, sondern konkret, ob digitale Abläufe in Ihrem Betrieb Zeit sparen. Und er zieht den Rest hinter sich her — wer die Artikeldaten einmal sauber an einem Ort hat, hat den Webshop, die Preisliste und die Inventur schon halb gelöst.",
+        "## Wo es sich nicht lohnt",
+        "Auch das gehört dazu. Ein Ablauf, den Sie zweimal im Jahr durchlaufen, lohnt keine eigene Lösung, egal wie lästig er ist. Und wenn eine bestehende Standardlösung das Problem zu achtzig Prozent trifft, ist das oft besser als eine eigene, die zu hundert Prozent trifft und gepflegt werden muss.",
+        "Die Frage ist nie „geht das digital?“ — es geht fast immer. Die Frage ist, ob der Aufwand sich innerhalb eines überschaubaren Zeitraums zurückzahlt.",
+      ].join("\n\n"),
+    },
+    en: {
+      category: "Digitalization",
+      title: "Digitalization doesn't start with a big project",
+      excerpt:
+        "It starts with the one routine that costs hours every week — the one nobody but you can see.",
+      tags: "digitalization,workflows,small-business",
+      body: [
+        "When digitalization comes up, most people picture something large: new software for the whole company, training, migration, months of disruption. That is off-putting for good reason. It is also, usually, the wrong place to start.",
+        "The better start is smaller and far less dramatic. It sits with the one task that eats time every week and that nobody complains about any more, because everyone has got used to it.",
+        "## Three questions that find the start",
+        "**Which number do you write down more than once?** A price that lives in the till, in a price list, and again on the website. Every place the same information is entered a second time is a place where the two can drift apart.",
+        "**What do you regularly have to ask somebody else?** If you can't look up yourself how much is left, then a piece of information is attached to a person rather than to a place. That works for exactly as long as the person is there.",
+        "**Which task do you keep putting off?** Procrastination is a reliable sign that something is needlessly awkward. Not unimportant — awkward.",
+        "## Why starting small is the faster route",
+        "A small start is quick to undo. If it turns out after four weeks that the solution doesn't fit, you have lost four weeks and not a year.",
+        "It also proves something: after the first change you no longer know in theory but concretely whether digital workflows save time in your business. And it pulls the rest along — get your product data into one place properly and you have half-solved the online shop, the price list and the stocktake.",
+        "## Where it isn't worth it",
+        "That matters too. A workflow you go through twice a year doesn't justify its own solution, however irritating it is. And where an existing off-the-shelf product hits eighty per cent of the problem, that is often better than a bespoke one that hits a hundred per cent and has to be maintained.",
+        "The question is never “can this be done digitally?” — it almost always can. The question is whether the effort pays for itself within a sensible period.",
+      ].join("\n\n"),
+    },
   },
   {
-    slug: "design-system-tokens",
-    category: "Design",
-    title: "Ein Design-System aus Tokens",
-    excerpt:
-      "Farben, Typografie und Komponenten zentral pflegen — einmal ändern, überall konsistent.",
-    tags: "design-system,tokens,css",
+    slug: "lohnt-sich-ein-webshop",
     publishedAt: date(-18),
-    body: [
-      "Ein Design-System lebt von einer einzigen Quelle der Wahrheit. Statt Farbwerte, Abstände und Schriftgrößen über Dutzende Dateien zu verstreuen, beschreibt man sie einmal als Tokens — benannte Werte, unabhängig vom konkreten Bauteil, das sie später verwendet.",
-      "Ein Token ist nichts Kompliziertes: `--color-primary`, `--space-4`, `--font-display`. Ein Name, ein Wert, eine Bedeutung. Der Trick liegt nicht in der Technik, sondern in der Disziplin, einen Wert nie wieder direkt in eine Komponente zu schreiben.",
-      "## Tokens statt Hardcoding",
-      "Wer eine Farbe direkt als `#1e3a5f` in zwanzig Komponenten schreibt, hat zwanzig Stellen zu ändern, sobald der Ton nicht mehr passt — und übersieht garantiert eine. Wer stattdessen `var(--color-primary)` schreibt, ändert den Wert an einer einzigen Stelle, und jede Oberfläche zieht automatisch nach.",
-      "Derselbe Gedanke gilt für Abstände, Rundungen, Schriftgrößen und Schatten. Je konsequenter man Rohwerte durch Tokens ersetzt, desto mehr wird aus „hier und da nachbessern“ ein einziger, überschaubarer Handgriff.",
-      "## Eine Quelle der Wahrheit",
-      "Bei Tracht Digital Solutions liegen alle Tokens in einem gemeinsamen Paket, das jede Oberfläche einbindet — die Landingpage, der Blog und die internen Panels. Die Marken-Tokens stehen zentral in einem `@theme`-Block; geteilte Komponenten und ihre Stile kommen aus demselben Paket.",
-      "Eine Farbe, eine Schrift oder ein Komponentenstil wird also genau einmal geändert: im geteilten Paket, mit einer neuen Version. Kein Kopieren in einzelne Projekte, kein Auseinanderdriften. Die Regel ist einfach — und sie einzuhalten spart auf Dauer mehr Zeit als jedes Werkzeug.",
-      "## Dark Mode fällt fast von allein ab",
-      "Der eigentliche Beweis für ein sauberes Token-System ist der Dark Mode. Wenn Farben über Tokens laufen, ist ein dunkles Theme kein zweiter Satz Komponenten, sondern nur ein zweiter Satz Werte für dieselben Namen.",
-      "Wichtig ist dabei eine Unterscheidung: Strukturelle Tokens dürfen im dunklen Theme kippen — was hell der Hintergrund war, wird dunkel der Vordergrund. Flächen, die in beiden Themes bewusst dunkel bleiben sollen, brauchen dagegen eigene, feste Tokens. Wer eine kippende Farbe als festen dunklen Hintergrund missbraucht, bekommt im Dark Mode ein invertiertes Ergebnis — der klassische Fehler, den ein System mit klar benannten Tokens von vornherein vermeidet.",
-      "## Komponenten erben, statt zu kopieren",
-      "Über den reinen Werten stehen die geteilten Komponenten: Buttons, Karten, Statusanzeigen, Ladeindikatoren. Auch sie leben einmal im gemeinsamen Paket und werden von allen Oberflächen konsumiert, nicht pro Projekt nachgebaut.",
-      "Das hält nicht nur das Aussehen konsistent, sondern auch das Verhalten: Ein Ladespinner sieht überall gleich aus und funktioniert überall gleich. Bessert man ihn an einer Stelle nach, profitieren alle Seiten — ohne dass irgendwo eine vergessene Kopie zurückbleibt.",
-      "## Versionieren und ausrollen",
-      "Damit „einmal ändern, überall konsistent“ auch praktisch trägt, wird das Token-Paket versioniert wie jede andere Abhängigkeit. Eine Änderung bekommt eine neue Versionsnummer; die Oberflächen ziehen sie beim nächsten Build. So bleibt nachvollziehbar, welcher Stand wo läuft — und ein Update lässt sich gezielt einspielen, statt heimlich zu passieren.",
-      "## Was ein Token-System im Alltag spart",
-      "Der Gewinn zeigt sich selten am ersten Tag, sondern beim zehnten Änderungswunsch. Eine neue Markenfarbe, eine angepasste Schrift, ein etwas ruhigerer Schatten: Was ohne System ein Nachmittag Suchen-und-Ersetzen wäre, ist mit Tokens eine kleine, sichere Änderung an einer Stelle.",
-      "Für ein wachsendes Digitalangebot ist das kein Luxus, sondern die Voraussetzung dafür, dass es über die Jahre konsistent und pflegbar bleibt — statt bei jedem neuen Projekt ein Stück weiter auseinanderzulaufen.",
-    ].join("\n\n"),
+    de: {
+      category: "Webshop",
+      title: "Lohnt sich ein Webshop für mein Ladengeschäft?",
+      excerpt:
+        "Nicht für jedes Sortiment. Vier Fragen, die die Antwort meist schon vorwegnehmen.",
+      tags: "webshop,onlineverkauf,lokaler-handel",
+      body: [
+        "Ein Webshop wird oft als naheliegender nächster Schritt gehandelt: Sie haben Produkte, also verkaufen Sie sie eben auch online. In der Praxis ist die Entscheidung weniger eindeutig, weil ein Shop etwas mitbringt, was eine Website nicht hat — **laufende Arbeit**.",
+        "Eine Website ist irgendwann fertig. Ein Shop nie: Bestände ändern sich, Preise ändern sich, Bestellungen wollen bearbeitet, verpackt und versendet werden. Das ist der eigentliche Kostenpunkt, nicht die Einrichtung.",
+        "## 1. Ist Ihr Sortiment gut versendbar?",
+        "Leicht, haltbar, unempfindlich, nicht zu sperrig — das ist die freundliche Seite. Schwer, zerbrechlich, kühlpflichtig oder frisch macht den Versand schnell teurer als die Marge hergibt. Dann kann **Abholung** das bessere Modell sein: online aussuchen und bezahlen, im Laden mitnehmen.",
+        "## 2. Wie oft ändern sich Preise und Bestände?",
+        "Die kritische Frage ist nicht, ob Sie die Pflege schaffen, sondern **wo** Sie sie tun. Ist sie nur am Rechner im Büro möglich, passiert sie abends oder gar nicht. Geht sie vom Handy aus, während Sie ohnehin an der Ware stehen, passiert sie nebenbei.",
+        "## 3. Wer soll dort kaufen?",
+        "Es macht einen großen Unterschied, ob der Shop Ihre bestehenden Kunden bequemer bedienen oder neue Kunden aus ganz Deutschland bringen soll. Das erste ist realistisch und schnell zu erreichen. Das zweite bedeutet Wettbewerb mit Anbietern, die Versand im großen Stil betreiben.",
+        "## 4. Wer bearbeitet die Bestellungen?",
+        "Die unspektakulärste und wichtigste Frage. Eine Bestellung, die drei Tage liegt, weil im Laden Betrieb war, kostet Sie den Kunden. Wenn es keine Antwort darauf gibt, ist der Shop noch nicht bereit — unabhängig davon, wie gut er gebaut ist.",
+        "## Ein guter Zwischenschritt",
+        "Wenn Sie bei zwei der vier Fragen zögern: eine Seite, die Ihr Sortiment mit Preisen und Verfügbarkeit **zeigt**, ohne zu verkaufen. Das bringt einen großen Teil des Nutzens ohne Zahlungsabwicklung, Versandkosten und tägliche Bestellbearbeitung — und ist die Grundlage, auf der ein echter Shop später aufsetzt.",
+      ].join("\n\n"),
+    },
+    en: {
+      category: "Online shop",
+      title: "Is an online shop worth it for my local business?",
+      excerpt:
+        "Not for every range of products. Four questions that usually answer it for you.",
+      tags: "online-shop,ecommerce,local-retail",
+      body: [
+        "An online shop gets treated as the obvious next step: you have products, so sell them online as well. In practice the decision is less clear-cut, because a shop brings something a website doesn't — **ongoing work**.",
+        "A website is finished at some point. A shop never is: stock changes, prices change, orders need processing, packing and sending. That is the real cost, not the setup.",
+        "## 1. Does your range ship well?",
+        "Light, durable, robust, not too bulky — that's the friendly end. Heavy, fragile, chilled or fresh makes shipping more expensive than the margin allows, fast. Then **collection** may be the better model: choose and pay online, pick up in the shop.",
+        "## 2. How often do prices and stock change?",
+        "The critical question isn't whether you can manage the upkeep but **where** you do it. If it's only possible at the office computer, it happens in the evening or not at all. If it works from a phone while you're standing next to the goods anyway, it happens in passing.",
+        "## 3. Who is meant to buy there?",
+        "There's a large difference between serving your existing customers more conveniently and winning new customers from across the country. The first is realistic and quick to reach. The second means competing with sellers who ship at scale.",
+        "## 4. Who processes the orders?",
+        "The least glamorous and most important question. An order left sitting for three days because the shop was busy costs you the customer. If there's no answer to it, the shop isn't ready — regardless of how well it's built.",
+        "## A sensible halfway step",
+        "If you hesitate on two of the four questions: a page that **shows** your range with prices and availability without selling. That delivers a large share of the benefit without payment handling, shipping costs and daily order processing — and it is the foundation a real shop can later sit on.",
+      ].join("\n\n"),
+    },
   },
   {
-    slug: "headless-cms-workflow",
-    category: "Workflow",
-    title: "Redaktion mit Headless-CMS",
-    excerpt:
-      "Wie Inhalte zur Build-Zeit einfließen und der Blog trotzdem statisch bleibt.",
-    tags: "cms,workflow,content",
+    slug: "excel-oder-eigenes-werkzeug",
     publishedAt: date(-33),
-    body: [
-      "Ein Headless-CMS trennt zwei Dinge, die klassische Systeme vermischen: den Inhalt und seine Darstellung. Die Redaktion pflegt Texte, Bilder und Metadaten in einer aufgeräumten Oberfläche; wie daraus eine Seite wird, entscheidet die Website selbst. Das „headless“ meint genau das — das CMS hat keinen eigenen Kopf, keine fest verdrahtete Ausgabe.",
-      "Für einen statisch ausgelieferten Blog ist das die ideale Kombination: bequem redigieren wie in einem klassischen CMS, am Ende aber trotzdem reines, schnelles HTML ausliefern.",
-      "## Inhalt und Darstellung trennen",
-      "In einem klassischen CMS steckt der Text im selben System, das ihn auch rendert — Theme, Plugins und Datenbank hängen untrennbar zusammen. Ein Headless-Ansatz schneidet diese Kopplung durch: Das CMS stellt Inhalte über eine schlichte Schnittstelle bereit, und die Website holt sich, was sie braucht.",
-      "Der Vorteil ist Freiheit auf beiden Seiten. Die Redaktion muss nichts über das Frontend wissen; das Frontend muss nichts über die Speicherung wissen. Beide können sich unabhängig voneinander weiterentwickeln.",
-      "## Veröffentlichen heißt bauen",
-      "Bei uns fließen die Inhalte zur Build-Zeit ein: Während die Seite gebaut wird, holt sie die veröffentlichten Beiträge aus der Content-API und bäckt daraus statisches HTML. Klickt jemand im Redaktionswerkzeug auf „Veröffentlichen“, stößt das einen neuen Build an — und Sekunden später ist der Artikel live, als fertige Datei.",
-      "Wichtig ist die Robustheit dieses Schritts: Schlägt der Abruf einmal fehl, liefert die API eine leere Liste, und die Seite fällt auf ihren statischen Bestand zurück. Der Build bricht nie an einem kurzen Aussetzer der Schnittstelle.",
-      "## Vorschau ohne Risiko",
-      "Entwürfe bleiben unsichtbar, bis sie freigegeben sind. Die öffentliche Seite listet ausschließlich veröffentlichte Beiträge — ein Entwurf existiert nur im Redaktionswerkzeug und taucht in keinem Build der Live-Seite auf.",
-      "So lässt sich in Ruhe schreiben, umstellen und liegen lassen, ohne dass ein halbfertiger Text versehentlich online geht. Der Übergang von „Entwurf“ zu „live“ ist ein bewusster Klick, kein Nebeneffekt.",
-      "## Mehrsprachigkeit, die sich selbst pflegt",
-      "Jeder Beitrag ist bei uns in Deutsch und Englisch erreichbar. Fehlt eine Sprachfassung, wird sie beim Speichern maschinell erzeugt und als solche gekennzeichnet — eine automatische Übersetzung, die eine handgeschriebene aber niemals überschreibt. Sobald jemand die Übersetzung selbst redigiert, löst sie sich aus der Automatik und gilt als eigenständig gepflegt.",
-      "Das Ergebnis ist ein zweisprachiger Blog ohne doppelte Handarbeit: Wer nur Deutsch schreibt, bekommt trotzdem eine brauchbare englische Fassung — und kann sie dort verbessern, wo es sich lohnt.",
-      "## Warum nicht am Client laden",
-      "Man könnte Inhalte auch erst im Browser nachladen. Für einen Blog wäre das aber der falsche Weg: Es kostet Ladezeit, belastet die Schnittstelle mit jedem einzelnen Besuch und macht die Seite abhängig von einer API, die im Moment des Klicks erreichbar sein muss.",
-      "Zur Build-Zeit einzubacken dreht das um. Der Abruf passiert einmal pro Veröffentlichung, nicht einmal pro Leser. Die Seite bleibt schnell, unabhängig und auch dann online, wenn die API gerade wartet.",
-      "## Für wen sich das lohnt",
-      "Der Aufwand, Inhalt und Darstellung sauber zu trennen, zahlt sich überall dort aus, wo regelmäßig publiziert wird und die Seite trotzdem schnell und wartungsarm bleiben soll — beim Unternehmensblog genauso wie bei einer Wissensdatenbank oder redaktionell gepflegten Landingpage-Abschnitten.",
-      "Man bekommt das Beste aus zwei Welten: den Komfort eines Redaktionssystems und die Ruhe einer statischen Seite. Genau diese Kombination macht einen Blog über Jahre pflegbar, ohne dass er zur Dauerbaustelle wird.",
-    ].join("\n\n"),
+    de: {
+      category: "Werkzeuge",
+      title: "Excel-Tabelle oder eigenes Werkzeug? Eine ehrliche Entscheidungshilfe",
+      excerpt:
+        "Eine Tabelle trägt erstaunlich weit. Es gibt aber drei Punkte, an denen sie zuverlässig kippt.",
+      tags: "excel,werkzeuge,auswertung",
+      body: [
+        "Excel bekommt zu Unrecht einen schlechten Ruf. Eine Tabelle ist sofort verfügbar, kostet nichts extra, jeder kann sie bedienen, und für erstaunlich viele Aufgaben ist sie schlicht die richtige Antwort. Ich habe schon Kunden davon abgeraten, eine gut funktionierende Tabelle zu ersetzen.",
+        "Es gibt aber drei Punkte, an denen eine Tabelle zuverlässig kippt. Wenn Sie zwei davon erreicht haben, wird ein eigenes Werkzeug meistens billiger — nicht in der Anschaffung, sondern über das Jahr gerechnet.",
+        "## Kipppunkt 1: Mehr als eine Person arbeitet daran",
+        "Sobald zwei Leute gleichzeitig hineinschreiben, beginnt die bekannte Kette aus `Preise_final.xlsx` und `Preise_final_neu_Mai.xlsx`. Das eigentliche Problem ist nicht die gleichzeitige Bearbeitung, sondern dass niemand mehr sicher sagen kann, **welche Datei die richtige ist**.",
+        "## Kipppunkt 2: Es gibt Regeln, die jemand einhalten muss",
+        "Eine Tabelle nimmt alles an: ein Datum in der Mengenspalte, einen Text im Preisfeld, eine halb leere Zeile. Sie sagt nichts. Der Fehler fällt drei Wochen später auf, und dann ist unklar, seit wann er drin ist. Menschen halten Regeln unter Zeitdruck nicht zuverlässig ein — das ist keine Kritik, das ist einfach so.",
+        "## Kipppunkt 3: Dieselben Daten liegen an zwei Orten",
+        "Sobald Artikelnummern oder Preise sowohl in der Tabelle als auch in der Kasse oder im Shop stehen, laufen die Stände auseinander. Nicht vielleicht, sondern sicher. Der eigentliche Gewinn eines Werkzeugs ist dann nicht die schönere Oberfläche, sondern dass es **eine Quelle** gibt.",
+        "## Was ein eigenes Werkzeug nicht besser kann",
+        "In einer Tabelle probieren Sie schnell etwas aus, ohne jemanden zu fragen. Diese Freiheit verlieren Sie zum Teil. Deshalb ist der übliche Fehler, zu viel auf einmal ersetzen zu wollen: Meist übernimmt das Werkzeug die **strukturierte Erfassung**, während die **freie Auswertung** ein Export nach Excel bleiben darf.",
+        "## Die einfache Faustregel",
+        "Wenn Sie die Tabelle allein pflegen, sie nicht mit anderen Systemen abgleichen müssen und Fehler darin schnell auffallen, dann bleiben Sie dabei. Bei zwei von drei anderslautenden Antworten lohnt es sich zu rechnen.",
+      ].join("\n\n"),
+    },
+    en: {
+      category: "Tools",
+      title: "Spreadsheet or a tool of your own? An honest way to decide",
+      excerpt:
+        "A spreadsheet carries you surprisingly far. There are three points, though, where it reliably tips over.",
+      tags: "spreadsheets,tools,reporting",
+      body: [
+        "Spreadsheets get an unfairly bad name. One is available immediately, costs nothing extra, everybody can use it, and for a surprising number of jobs it is simply the right answer. I have talked clients out of replacing a spreadsheet that was working fine.",
+        "There are, however, three points at which a spreadsheet reliably tips over. Once you've hit two of them, a purpose-built tool usually works out cheaper — not to buy, but measured across the year.",
+        "## Tipping point 1: more than one person works on it",
+        "The moment two people write into it at once, the familiar chain of `prices_final.xlsx` and `prices_final_new_may.xlsx` begins. The real problem isn't simultaneous editing; it's that nobody can say with confidence **which file is the right one**.",
+        "## Tipping point 2: there are rules somebody has to follow",
+        "A spreadsheet accepts everything: a date in the quantity column, text in the price field, a half-empty row. It says nothing. The error surfaces three weeks later, and by then nobody knows how long it's been there. People don't hold to rules reliably under time pressure — that isn't a criticism, it's just how it is.",
+        "## Tipping point 3: the same data lives in two places",
+        "As soon as product codes or prices sit both in the spreadsheet and in the till or the shop, the two will drift apart. Not possibly; certainly. At that stage the real gain from a tool isn't the nicer interface but that there is **one source**.",
+        "## What a purpose-built tool does worse",
+        "In a spreadsheet you try something out quickly without asking anyone. You give up part of that freedom. Which is why the usual mistake is trying to replace too much at once: normally **structured capture** moves into the tool, while **free-form analysis** stays an export to a spreadsheet.",
+        "## The simple rule of thumb",
+        "If you maintain the spreadsheet on your own, don't have to reconcile it with other systems, and errors in it surface quickly, then stay with it. If two of those three go the other way, it's worth doing the sums.",
+      ].join("\n\n"),
+    },
   },
 ];
 
 function summaryFor(seed: DemoSeed, id: number, lang: "de" | "en"): PostSummary {
+  const v = seed[lang];
   return {
     id,
     slug: seed.slug,
     lang,
-    category: seed.category,
-    title: seed.title,
-    excerpt: seed.excerpt,
+    category: v.category,
+    title: v.title,
+    excerpt: v.excerpt,
     coverHint: null,
-    tags: seed.tags,
+    tags: v.tags,
     publishedAt: seed.publishedAt,
     // Spread the view counts so the author page's views/trend sort is visibly
     // different from the date sort in a demo build.
@@ -190,16 +256,20 @@ export interface TopicsBlock {
   items: TopicItem[];
 }
 
-/** Demo "Aktuelle Themen" for a no-API build, per language. */
+/**
+ * Demo "Aktuelle Themen" for a no-API build, per language. The hrefs point at
+ * tag pages, so each tag must actually appear in a seed's `tags` above or the
+ * link lands on an empty listing.
+ */
 export function demoTopics(lang: "de" | "en"): TopicsBlock {
   if (lang === "en") {
     return {
       headline: "Current topics",
       intro: "What I'm thinking and writing about right now.",
       items: [
-        { title: "Static delivery", description: "Astro + SSG for fast, low-maintenance sites.", href: "/en/tag/ssg" },
-        { title: "Design tokens", description: "One source of truth for colour and type.", href: "/en/tag/design-system" },
-        { title: "Headless CMS", description: "Editing that bakes to static HTML.", href: "/en/tag/cms" },
+        { title: "Digitalization", description: "Starting with one workflow instead of a big project.", href: "/en/tag/digitalization" },
+        { title: "Online shops", description: "Selling online without complicating the shop floor.", href: "/en/tag/online-shop" },
+        { title: "Tools", description: "When a spreadsheet stops being the right answer.", href: "/en/tag/tools" },
       ],
     };
   }
@@ -207,9 +277,9 @@ export function demoTopics(lang: "de" | "en"): TopicsBlock {
     headline: "Aktuelle Themen",
     intro: "Worüber ich gerade nachdenke und schreibe.",
     items: [
-      { title: "Statisch ausliefern", description: "Astro + SSG für schnelle, wartungsarme Seiten.", href: "/tag/ssg" },
-      { title: "Design-Tokens", description: "Eine Quelle der Wahrheit für Farbe und Typografie.", href: "/tag/design-system" },
-      { title: "Headless-CMS", description: "Redaktion, die statisches HTML einbäckt.", href: "/tag/cms" },
+      { title: "Digitalisierung", description: "Mit einem Ablauf anfangen statt mit einem Großprojekt.", href: "/tag/digitalisierung" },
+      { title: "Webshops", description: "Online verkaufen, ohne den Ladenalltag zu verkomplizieren.", href: "/tag/webshop" },
+      { title: "Werkzeuge", description: "Wann eine Tabelle nicht mehr die richtige Antwort ist.", href: "/tag/werkzeuge" },
     ],
   };
 }
@@ -217,16 +287,17 @@ export function demoTopics(lang: "de" | "en"): TopicsBlock {
 export function demoPost(slug: string, lang: "de" | "en"): BlogPost | null {
   const seed = SEEDS.find((s) => s.slug === slug);
   if (!seed) return null;
+  const v = seed[lang];
   return {
     id: SEEDS.indexOf(seed) + 1,
     slug: seed.slug,
     lang,
-    category: seed.category,
-    title: seed.title,
-    excerpt: seed.excerpt,
-    body: seed.body,
+    category: v.category,
+    title: v.title,
+    excerpt: v.excerpt,
+    body: v.body,
     coverHint: null,
-    tags: seed.tags,
+    tags: v.tags,
     publishedAt: seed.publishedAt,
     draft: false,
     createdAt: seed.publishedAt,
