@@ -452,6 +452,26 @@ Depends on **tds-shared-pkg ≥ 0.9.1** (the `BlogAuthor` type + `BlogPost.autho
 `authorId` / `viewCount`). Build against the published package — a stale
 tds-shared-pkg makes the author types unresolvable.
 
+## Demo / fallback content (`src/lib/demoContent.ts`)
+
+Served when `PUBLIC_DEMO_MODE=true` **or** the content API is unreachable (a
+*reachable* API returning zero posts stays empty — see `content-api.ts`). Two
+rules:
+
+- **It mirrors the launch articles seeded by `tds-ext-blog-cms-pkg`'s
+  `BlogCmsSeedPosts` migration** — same slugs, same titles, condensed bodies.
+  A fallback exists so a visitor cannot tell it apart from the real site; the
+  three developer-topic articles that used to live here (SSG, design tokens,
+  headless CMS) advertised something the business does not sell. Keep slugs and
+  titles in step with the migration; the bodies need not match word for word.
+- **Every seed carries BOTH languages.** Until 2026-08-16 the seeds were German
+  only and `demoPostList("en")` returned the German text labelled `lang: "en"`,
+  so an English demo build rendered a German blog with nothing to flag it.
+
+`demoTopics`' hrefs point at tag pages, so each tag it links must actually occur
+in some seed's `tags`, and tags are used **verbatim** as the URL segment — keep
+them lowercase, hyphenated and free of spaces and umlauts.
+
 ## Open
 
 - (nothing tracked here right now — check the GitHub issues)
