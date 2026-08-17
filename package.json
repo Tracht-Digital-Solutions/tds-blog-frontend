@@ -23,7 +23,7 @@
     "@fontsource/lato": "^5.2.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "~4.3.3",
-    "@tracht-digital-solutions/tds-shared": "^0.24.0",
+    "@tracht-digital-solutions/tds-shared": "^0.24.4",
     "astro": "^7.1.6",
     "marked": "^18.0.0",
     "react": "^19.0.0",

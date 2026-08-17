@@ -54,85 +54,35 @@
   --toc-w: 220px;
 }
 
-/* === Fluid layout scale =============================================
-   These eight tokens replace the `max-w-5xl mx-auto px-6` utility that
-   used to be copy-pasted into 18 files, plus the hardcoded pixel widths
-   that were inline styles in BlogIndex.tsx.
+/* === Fluid layout — the blog's overrides ============================
+   `.tds-shell`, `.tds-grid-auto` and the whole token scale
+   (--tds-shell-*, --tds-measure, --tds-grid-min, --tds-gutter) live in
+   tds-shared's primitives.css / base.css as of 0.24.4. Only what this site
+   genuinely sets differently belongs here.
 
-   They are declared HERE and not in tds-shared/surfaces/blog.css on
-   purpose: since its 0.9.0 `tds-tools-frontend` renders the SAME blog
-   surface (`data-surface="blog"` + surfaces/blog.css), so a shell width
-   put there would silently widen the public tools site too. Only values
-   that are right for BOTH sites may be promoted into the surface layer;
-   the shell ceiling is not one of them.
+   These are NOT in tds-shared/surfaces/blog.css on purpose: since its 0.9.0
+   `tds-tools-frontend` renders the SAME blog surface (`data-surface="blog"` +
+   surfaces/blog.css), so a shell width put there would silently widen the
+   public tools site too. Only values that are right for BOTH sites may be
+   promoted into the surface layer; the shell ceiling is not one of them.
 
-   TOKEN NAMES CARRY NO DIGITS. tds-shared's design.test.ts scans surface
-   files with /var\((--tds-[a-z-]+)/ — that character class has no `0-9`,
-   so `var(--tds-shell-2xl)` would be captured as `--tds-shell-` and the
-   "surface references only tokens base.css defines" assertion goes red.
-   Use xs/sm/md/lg/xl word suffixes, never numerals.
-
-   THIS BLOCK IS IN TRANSITION. The same tokens (and .tds-shell /
-   .tds-grid-auto below) now also ship in tds-shared's base.css and
-   primitives.css, but this repo still pins `^0.24.0` and a 0.x caret is
-   MINOR-LOCKED — 0.25.0 reaches nothing here until the pin moves. So the
-   local copies stay and are load-bearing until then. Once this repo is on
-   ^0.25.0, delete everything here except the values the blog genuinely
-   overrides (--tds-shell-max, and --tds-rail, which is blog-only). Do not
-   delete them before the repin: the site would silently fall back to
-   unset tokens, which resolve to nothing rather than to a default. */
+   And no token name may carry a digit — tds-shared's design.test.ts scans
+   surface files with /var\((--tds-[a-z-]+)/, a class with no `0-9`, so
+   `var(--tds-shell-2xl)` is captured as `--tds-shell-` and fails naming a
+   token nobody wrote. Word suffixes only. */
 :root {
   /* No fixed ceiling by design: the shell keeps growing and the intrinsic
-     grid answers with MORE COLUMNS rather than longer lines. 120rem is the
-     practical stop — past ~1920px a 6th column would drop each card below
-     its comfortable minimum. Expect 1920 and 2560 to render identically;
-     that is the editorial answer (bigger content, not more of it), not a bug. */
+     grid answers with MORE COLUMNS rather than longer lines. 120rem (vs the
+     shared 90rem default) is the practical stop — past ~1920px a 6th column
+     would drop each card below its comfortable minimum. Expect 1920 and 2560
+     to render identically; that is the editorial answer (bigger content, not
+     more of it), not a bug. */
   --tds-shell-max: 120rem;
   --tds-shell-wide: 132rem;
-  --tds-shell-article: 82rem;
-  --tds-shell-prose: 48rem;
 
-  /* Reading measure. Stays a `ch` max-width so it can never overflow its
-     column — only the FONT SIZE is allowed to be viewport-fluid. */
-  --tds-measure: 65ch;
-
-  /* Intrinsic card floor. 16rem, not 17rem+: one rem higher freezes the
-     grid at three columns forever on every screen we ship to. */
-  --tds-grid-min: 16rem;
-
-  --tds-gutter: clamp(1.25rem, 0.9rem + 1.6vw, 2.5rem);
+  /* Blog-only: the index's category rail. Nothing in the shared library has
+     a rail, so this stays here rather than in base.css. */
   --tds-rail: clamp(11rem, 13vw, 15rem);
-}
-
-/* The centred page shell. One token now sets the width of every page,
-   the header, the footer and the newsletter band.
-
-   CASCADE TRAP: this file's first line imports `tailwindcss/index.css`,
-   which declares @layer theme, base, components, utilities. Every rule
-   here and in tds-shared is UNLAYERED, and unlayered rules beat layered
-   ones regardless of specificity or source order. So an element carrying
-   both `tds-shell` and `max-w-5xl` silently takes the shell width — a
-   half-finished migration LOOKS finished. To narrow one instance, set
-   `style="--tds-shell-max: 48rem"`, never a Tailwind width utility. */
-.tds-shell {
-  max-width: var(--tds-shell-max);
-  margin-inline: auto;
-  padding-inline: var(--tds-gutter);
-}
-.tds-shell--wide {
-  max-width: var(--tds-shell-wide);
-}
-
-/* Intrinsic multi-column grid — no breakpoint, at any width.
-   `auto-fill` derives the column count from the space actually available,
-   so the same rule yields 1 column on a phone and 5 at 1920px, and it
-   reacts to the category rail collapsing without knowing it exists.
-   The `min(100%, …)` is what stops a 16rem minimum from overflowing a
-   viewport narrower than 16rem. Same shape as tds-shared's .dashboard-grid. */
-.tds-grid-auto {
-  display: grid;
-  gap: var(--tds-gutter);
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--tds-grid-min)), 1fr));
 }
 
 /* ---- Brand logomark ----
