@@ -124,6 +124,67 @@ handshake.
   past it. No-ops on single-post layouts (most blog pages today)
   — kept for parity with the other frontends.
 
+## Fluid layout (2026-08-18)
+
+The site used to be frozen at 1024px: `max-w-5xl mx-auto px-6` was copied into
+**22** files, the largest breakpoint anywhere was `1024px`, `xl:`/`2xl:` did
+not occur once, and the card grid stopped at two columns on every screen up to
+2560px. It is token- and container-driven now.
+
+* **One shell, one token.** Every page container is `class="tds-shell"`
+  (`max-width: var(--tds-shell-max)` + `--tds-gutter`). The blog raises the
+  ceiling to **120rem**; the grid answers the extra room with more columns, not
+  longer lines. **Expect 1920 and 2560 to render identically** — the column
+  count freezes at the cap. That is the editorial answer (bigger content, not
+  more of it), not a bug.
+* **The card grid has no breakpoint.** `.tds-grid-auto` is
+  `repeat(auto-fill, minmax(min(100%, var(--tds-grid-min)), 1fr))` — 1 column
+  on a phone, 5 at 1920px, and it reacts to the category rail collapsing
+  without either component knowing about the other. `.tds-grid-roomy` raises
+  the floor to 22rem for short text cards (topics, RSS programs, ForYou).
+  `.grid-span-all` spans a lead item across however many tracks resolved;
+  `sm:col-span-2 lg:col-span-3` cannot, because `auto-fill` has no fixed count.
+* **The card is a container-query component — and the container is the SLOT.**
+  `.post-card-slot` declares `container-type: inline-size`; `.post-card`
+  responds. **A container styles its DESCENDANTS: an element can never respond
+  to its own `container-type`.** Putting it on the card and writing
+  `@container { .post-card { … } }` matches nothing at all — the card looks for
+  an ancestor container, finds none, and the rule is dead. This shipped once
+  (a 1830px lead card still stacked vertically) and it fails completely
+  silently. Above 34rem of slot width the card goes cover-beside-text.
+* **Two hard rules around that container.**
+  1. **Never wrap a `PostCard` in a flex item.** A flex item takes its base
+     size from `max-content`, and size containment makes `max-content` **zero**
+     — the card collapses to a 0px sliver and `overflow: hidden` renders it as
+     *nothing*. No error, no overflow, no failing test. `.post-card`'s
+     `height: 100%` does the row-filling job the old `<li class="flex">` did.
+  2. **`container-type` must never land on `body`, `.with-sidebar`,
+     `.article-shell`, `.brand-header` or `.print-shell`.** Containment makes
+     an element the containing block for `position: fixed` descendants, and
+     those subtrees hold `#reading-progress`, `.toc`, the fullscreen mobile
+     menu (`inset: 0`) and `.print-controls`.
+* **The article shell reserves its rails.** The old
+  `left: max(calc(--nav-w / -2), calc((--nav-w + 48rem - 100vw)/2 + .75rem))`
+  on `.article-col` is gone. It measured with `100vw` (which counts the
+  scrollbar), it sat where focus mode's existing reset could not reach it — so
+  the column was a permanent **132px left of centre in focus mode** — and it
+  only ever considered the LEFT rail, running the text under the TOC at
+  1024px. Now `.with-sidebar`'s own `margin-left` clears the sidebar,
+  `.article-shell.has-toc` pads for the TOC, and the column simply centres in
+  what is left, landing within 2px of the optical centre of the free band.
+* **Headings are fluid.** `.page-title` (`clamp(2.25rem, 1.75rem + 2.2vw,
+  4rem)`) replaces the `text-4xl md:text-5xl` pair that was on 12 headings and
+  had its larger step arrive at 768px — so the headline was the same size at
+  768 as at 2560.
+* **`src/__tests__/layout.test.ts` pins all of the above.** It exists because
+  every failure listed here is invisible: no error, no overflow, a green build,
+  and a page that is simply wrong at a width nobody opened.
+* **Token duplication is temporary.** The tokens and `.tds-shell` /
+  `.tds-grid-auto` also ship in tds-shared (base.css / primitives.css), but
+  this repo pins `^0.24.0` and a 0.x caret is minor-locked. The local copies in
+  `global.css` are load-bearing until the pin moves to `^0.25.0`; after that,
+  keep only what the blog genuinely overrides (`--tds-shell-max`, `--tds-rail`).
+
 ## How rebuilds get triggered
 
 When a post is published in `tds-admin`, the admin posts to

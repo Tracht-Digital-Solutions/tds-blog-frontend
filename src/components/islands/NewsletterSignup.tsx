@@ -74,7 +74,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
 
   return (
     <section style={{ background: "var(--color-surface-ink)", color: "#fff", padding: "52px 0" }}>
-      <div className="max-w-5xl mx-auto px-6 grid lg:grid-cols-2 items-center" style={{ gap: 40 }}>
+      <div className="tds-shell grid lg:grid-cols-2 items-center" style={{ gap: 40 }}>
         <div>
           <p className="eyebrow" style={{ color: "var(--color-accent-pink)", marginBottom: 18 }}>
             {t.eyebrow}

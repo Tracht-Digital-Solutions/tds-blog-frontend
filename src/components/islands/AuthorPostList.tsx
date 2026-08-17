@@ -89,16 +89,14 @@ export default function AuthorPostList({
         ))}
       </div>
 
-      <ul
-        className="list-none p-0 m-0"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: 20,
-        }}
-      >
+      {/* Was a hand-rolled auto-fill grid with an inline 260px floor and a
+          20px gap. Same idea, but the shared class takes both from tokens, so
+          this list widens with the page like every other grid on the site. */}
+      <ul className="tds-grid-auto list-none p-0 m-0">
         {sorted.map((p) => (
-          <li key={p.slug} style={{ display: "flex" }}>
+          // No `display: flex` here — see the note in RelatedArticles.astro:
+          // a flex item under size containment collapses to zero width.
+          <li className="post-card-slot" key={p.slug}>
             <PostCard post={p} lang={lang} />
           </li>
         ))}

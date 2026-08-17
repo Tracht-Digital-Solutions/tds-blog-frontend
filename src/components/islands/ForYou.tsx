@@ -120,7 +120,7 @@ export default function ForYou({ lang, limit = 3 }: { lang: "de" | "en"; limit?:
         </button>
       </div>
 
-      <ul className="grid md:grid-cols-3 gap-8 md:gap-10">
+      <ul className="tds-grid-auto tds-grid-roomy">
         {picks.map((p) => (
           <li key={p.slug}>
             {/* Article pages for both languages live at the root route. */}

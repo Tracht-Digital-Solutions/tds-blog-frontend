@@ -96,7 +96,7 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,.6)" }}>{lead.category}</span>
         </div>
         <a href={hrefFor(lang, lead.slug)} style={{ textDecoration: "none", color: "inherit" }}>
-          <h2 className="display" style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", margin: 0, textWrap: "balance" }}>
+          <h2 className="display" style={{ fontSize: "clamp(2rem, 1.6rem + 1.9vw, 3.25rem)", margin: 0, textWrap: "balance" }}>
             {lead.title}
           </h2>
         </a>
@@ -315,7 +315,12 @@ export default function HeroSlider({
   return (
     <section style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
       <div
-        className="w-full px-6 sm:px-10 lg:px-16"
+        // The navy band stays full-bleed on the <section> above; only its
+        // CONTENT is shelled. It used to be `w-full` with its own padding
+        // ladder, so the hero ran edge-to-edge while everything below it sat
+        // in a 1024px column — on a wide screen the page read as narrow
+        // strips inside wide colour blocks.
+        className="tds-shell"
         style={{ paddingTop: 40, paddingBottom: 44 }}
       >
         <div

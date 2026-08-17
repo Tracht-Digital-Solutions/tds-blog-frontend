@@ -49,7 +49,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
 ---
 
 <header class:list={["brand-header", className]}>
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 min-h-15 py-2.5 flex flex-nowrap items-center gap-x-2 sm:gap-x-4">
+  <div class="tds-shell min-h-15 py-2.5 flex flex-nowrap items-center gap-x-2 sm:gap-x-4">
     <a
       href={home}
       aria-label="Tracht Journal"
@@ -189,7 +189,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
     aria-hidden="true"
     aria-label={menuLabel}
   >
-    <div class="jnl-fullmenu-head max-w-5xl mx-auto w-full">
+    <div class="jnl-fullmenu-head mx-auto w-full">
       <span class="brand-wordmark inline-flex items-center gap-2 text-[1.0625rem] tracking-tight">
         <span class="brand-logo" aria-hidden="true"></span>
         <span class="accent-italic">Journal</span>
@@ -206,7 +206,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
       </button>
     </div>
 
-    <nav class="jnl-fullmenu-nav max-w-5xl mx-auto w-full" aria-label="Navigation">
+    <nav class="jnl-fullmenu-nav mx-auto w-full" aria-label="Navigation">
       {nav.map((node) =>
         node.kind === "link" ? (
           <a
@@ -266,7 +266,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
       )}
     </nav>
 
-    <div class="jnl-fullmenu-foot max-w-5xl mx-auto w-full">
+    <div class="jnl-fullmenu-foot mx-auto w-full">
       <div class="flex items-center gap-2">
         <div class="lang-toggle" role="group" aria-label="Sprache / Language">
           <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>

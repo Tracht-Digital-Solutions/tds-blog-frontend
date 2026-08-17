@@ -87,7 +87,7 @@ const cards = posts.map((p) => ({
   jsonLd={jsonLd}
   altUrl={null}
 >
-  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+  <main id="main" class="tds-shell py-16 lg:py-24">
     <header class="mb-10">
       <a href="/" class="btn-back mb-6">
         <span aria-hidden="true">←</span> Alle Beiträge
@@ -113,7 +113,7 @@ const cards = posts.map((p) => ({
           </span>
         )}
         <div>
-          <h1 class="display text-4xl md:text-5xl">{author.name}</h1>
+          <h1 class="display page-title">{author.name}</h1>
           <p class="marginalia mt-2">
             {posts.length === 1 ? "Ein Artikel" : `${posts.length} Artikel`}
           </p>
