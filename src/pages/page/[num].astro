@@ -46,10 +46,10 @@ const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
   jsonLd={jsonLd}
   altUrl={null}
 >
-  <main id="main" class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+  <main id="main" class="tds-shell py-16 lg:py-24">
     <header class="mb-10">
       <p class="section-num mb-4">{t.blog.label} · Seite {page} / {pageCount}</p>
-      <h1 class="display text-4xl md:text-5xl">
+      <h1 class="display page-title">
         {t.blog.headline}
         {" "}
         <span class="accent-italic">{t.blog.headlineAccent}</span>

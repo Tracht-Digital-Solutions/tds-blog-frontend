@@ -52,9 +52,16 @@ const labels = {
       {lang === "de" ? "Ähnliche Artikel." : "Adjacent articles."}
     </h2>
 
-    <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
+    <ul class="tds-grid-auto list-none p-0 m-0">
       {picks.map((p) => (
-        <li class="flex">
+        // `post-card-slot`, and NOT `class="flex"`. The slot is the container
+        // query container (a container styles its descendants, so the card
+        // cannot query itself), and a flex item takes its base size from
+        // max-content — which size containment makes ZERO, collapsing the card
+        // to a 0px sliver that `overflow: hidden` then renders as nothing at
+        // all. `.post-card { height: 100% }` does the row-filling job the flex
+        // wrapper used to do.
+        <li class="post-card-slot">
           {/* Static render of the flat design-system card — no hydration. */}
           <PostCard post={p} lang={lang} />
         </li>

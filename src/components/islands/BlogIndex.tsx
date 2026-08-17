@@ -223,7 +223,7 @@ export default function BlogIndex({
   const quoted = lang === "de" ? `„${q.trim()}“` : `“${q.trim()}”`;
 
   if (posts.length === 0) {
-    return <p className="max-w-5xl mx-auto px-6 py-16 text-[var(--color-muted)] italic">{t.empty}</p>;
+    return <p className="tds-shell py-16 text-[var(--color-muted)] italic">{t.empty}</p>;
   }
 
   return (
@@ -233,15 +233,19 @@ export default function BlogIndex({
       )}
 
       <section
-        className="max-w-5xl mx-auto px-6 lg:flex lg:items-start lg:gap-8"
+        className="tds-shell lg:flex lg:items-start lg:gap-8"
         style={{ paddingTop: 40, paddingBottom: 56 }}
       >
         <div
-          className="hidden lg:block shrink-0"
           // Width changes instantly. Animating `width` reflows the article
           // grid beside it on every frame, so the 320ms transition made the
           // whole listing judder for the sake of a decorative slide.
-          style={{ width: catsCollapsed ? 30 : 216 }}
+          //
+          // The two widths used to be inline pixels (216 / 30). They are CSS
+          // now because the expanded rail is fluid — var(--tds-rail) is a
+          // clamp() that grows with the screen, and an inline style cannot be
+          // a clamp of the viewport.
+          className={`hidden lg:block shrink-0 blog-cat-rail${catsCollapsed ? " is-collapsed" : ""}`}
         >
           <CategorySidebar
             posts={posts}
@@ -256,7 +260,7 @@ export default function BlogIndex({
         <div className="min-w-0 flex-1">
           {/* Mobile + tablet category filter — the sidebar is lg-only, so
               small screens get a horizontally scrollable chip strip. */}
-          <div className="lg:hidden -mx-6 px-6 mb-6 overflow-x-auto blog-cat-strip">
+          <div className="lg:hidden mb-6 overflow-x-auto blog-cat-strip">
             <div className="flex gap-2 w-max">
               {["all", ...cats].map((c) => (
                 <button
@@ -312,9 +316,23 @@ export default function BlogIndex({
               {searching ? t.noResults : t.empty}
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2" style={{ gap: 20 }}>
+            // Intrinsic grid: no breakpoint at any width. `auto-fill` derives
+            // the column count from the space actually left beside the rail,
+            // so collapsing the rail adds a column without either component
+            // knowing about the other. The old `sm:grid-cols-2` capped the
+            // listing at two columns on every screen up to 2560px.
+            //
+            // No inline `gap` here on purpose: an inline style outranks the
+            // unlayered .tds-grid-auto class, so a leftover `style={{gap:20}}`
+            // would silently pin the gutter and the token would do nothing.
+            <div className="tds-grid-auto">
               {gridPosts.map((p) => (
-                <PostCard key={p.slug} post={p} lang={lang} />
+                // The SLOT is the container query container, never the card:
+                // a container styles its descendants, so a card can never
+                // respond to its own container-type.
+                <div className="post-card-slot" key={p.slug}>
+                  <PostCard post={p} lang={lang} />
+                </div>
               ))}
             </div>
           )}

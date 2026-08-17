@@ -54,6 +54,87 @@
   --toc-w: 220px;
 }
 
+/* === Fluid layout scale =============================================
+   These eight tokens replace the `max-w-5xl mx-auto px-6` utility that
+   used to be copy-pasted into 18 files, plus the hardcoded pixel widths
+   that were inline styles in BlogIndex.tsx.
+
+   They are declared HERE and not in tds-shared/surfaces/blog.css on
+   purpose: since its 0.9.0 `tds-tools-frontend` renders the SAME blog
+   surface (`data-surface="blog"` + surfaces/blog.css), so a shell width
+   put there would silently widen the public tools site too. Only values
+   that are right for BOTH sites may be promoted into the surface layer;
+   the shell ceiling is not one of them.
+
+   TOKEN NAMES CARRY NO DIGITS. tds-shared's design.test.ts scans surface
+   files with /var\((--tds-[a-z-]+)/ — that character class has no `0-9`,
+   so `var(--tds-shell-2xl)` would be captured as `--tds-shell-` and the
+   "surface references only tokens base.css defines" assertion goes red.
+   Use xs/sm/md/lg/xl word suffixes, never numerals.
+
+   THIS BLOCK IS IN TRANSITION. The same tokens (and .tds-shell /
+   .tds-grid-auto below) now also ship in tds-shared's base.css and
+   primitives.css, but this repo still pins `^0.24.0` and a 0.x caret is
+   MINOR-LOCKED — 0.25.0 reaches nothing here until the pin moves. So the
+   local copies stay and are load-bearing until then. Once this repo is on
+   ^0.25.0, delete everything here except the values the blog genuinely
+   overrides (--tds-shell-max, and --tds-rail, which is blog-only). Do not
+   delete them before the repin: the site would silently fall back to
+   unset tokens, which resolve to nothing rather than to a default. */
+:root {
+  /* No fixed ceiling by design: the shell keeps growing and the intrinsic
+     grid answers with MORE COLUMNS rather than longer lines. 120rem is the
+     practical stop — past ~1920px a 6th column would drop each card below
+     its comfortable minimum. Expect 1920 and 2560 to render identically;
+     that is the editorial answer (bigger content, not more of it), not a bug. */
+  --tds-shell-max: 120rem;
+  --tds-shell-wide: 132rem;
+  --tds-shell-article: 82rem;
+  --tds-shell-prose: 48rem;
+
+  /* Reading measure. Stays a `ch` max-width so it can never overflow its
+     column — only the FONT SIZE is allowed to be viewport-fluid. */
+  --tds-measure: 65ch;
+
+  /* Intrinsic card floor. 16rem, not 17rem+: one rem higher freezes the
+     grid at three columns forever on every screen we ship to. */
+  --tds-grid-min: 16rem;
+
+  --tds-gutter: clamp(1.25rem, 0.9rem + 1.6vw, 2.5rem);
+  --tds-rail: clamp(11rem, 13vw, 15rem);
+}
+
+/* The centred page shell. One token now sets the width of every page,
+   the header, the footer and the newsletter band.
+
+   CASCADE TRAP: this file's first line imports `tailwindcss/index.css`,
+   which declares @layer theme, base, components, utilities. Every rule
+   here and in tds-shared is UNLAYERED, and unlayered rules beat layered
+   ones regardless of specificity or source order. So an element carrying
+   both `tds-shell` and `max-w-5xl` silently takes the shell width — a
+   half-finished migration LOOKS finished. To narrow one instance, set
+   `style="--tds-shell-max: 48rem"`, never a Tailwind width utility. */
+.tds-shell {
+  max-width: var(--tds-shell-max);
+  margin-inline: auto;
+  padding-inline: var(--tds-gutter);
+}
+.tds-shell--wide {
+  max-width: var(--tds-shell-wide);
+}
+
+/* Intrinsic multi-column grid — no breakpoint, at any width.
+   `auto-fill` derives the column count from the space actually available,
+   so the same rule yields 1 column on a phone and 5 at 1920px, and it
+   reacts to the category rail collapsing without knowing it exists.
+   The `min(100%, …)` is what stops a 16rem minimum from overflowing a
+   viewport narrower than 16rem. Same shape as tds-shared's .dashboard-grid. */
+.tds-grid-auto {
+  display: grid;
+  gap: var(--tds-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--tds-grid-min)), 1fr));
+}
+
 /* ---- Brand logomark ----
    The TD mark rendered via CSS mask so it follows a colour token rather
    than shipping a second dark asset. Default tracks --color-primary
@@ -366,7 +447,40 @@
 
 /* Mobile/tablet category strip (BlogIndex, <lg) — horizontal scroll
    without a visible scrollbar so the chips read as a clean filter row. */
+/* ---- Fluid page title ----
+   Replaces the `text-4xl md:text-5xl` pair that was repeated on 12 headings
+   (article h1, both aktuelles, both page/[num], category, tag, author, RSS).
+   That pair had exactly two sizes and its larger one arrived at 768px, so the
+   headline was the same 3rem at 768 as at 2560 — the single loudest reason
+   the page looked under-scaled on a big monitor.
+
+   `.display` deliberately ships no font-size (the app owns display sizing),
+   so this is the only rule setting it. Pair the two classes. */
+.page-title {
+  font-size: clamp(2.25rem, 1.75rem + 2.2vw, 4rem);
+  line-height: 1.05;
+}
+
+/* ---- Index: category rail (lg and up) ----
+   Was two inline pixel values in BlogIndex.tsx (216 / 30). The expanded rail
+   is fluid now, which an inline style cannot express — --tds-rail is a clamp()
+   of the viewport. Deliberately NOT transitioned: animating this width reflows
+   the article grid beside it on every frame. */
+.blog-cat-rail {
+  width: var(--tds-rail);
+}
+.blog-cat-rail.is-collapsed {
+  width: 1.875rem;
+}
+
+/* The mobile category strip bleeds to both page edges so the chips can be
+   scrolled from the very edge of the screen. The bleed has to be derived from
+   --tds-gutter, not from a `-mx-6 px-6` pair: the gutter is a clamp() now, so
+   a fixed 24px negative margin would leave a visible step at every width
+   except the one it was written for. */
 .blog-cat-strip {
+  margin-inline: calc(var(--tds-gutter) * -1);
+  padding-inline: var(--tds-gutter);
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -374,10 +488,34 @@
   display: none;
 }
 
-/* ---- Flat post cards (index grid, related strip) ---- */
+/* ---- Flat post cards (index grid, related strip) ----
+   The card is a CONTAINER: it re-composes itself from the width it is given,
+   not from the viewport. That is what lets one component serve a narrow
+   4-column cell, a 2-column cell and a full-width lead row with no `large`
+   variant plumbed through three call sites.
+
+   THREE RULES THAT MUST NOT BE BROKEN HERE:
+   1. THE CONTAINER IS THE SLOT, NEVER THE CARD. A container query styles the
+      DESCENDANTS of a container — an element can never respond to its own
+      container-type. Putting `container-type` on .post-card and then writing
+      `@container { .post-card { … } }` silently matches nothing: the card
+      looks for an ancestor container, finds none, and the rule is dead. It
+      fails quietly and looks exactly like a card that simply did not change.
+   2. `height: 100%` is load-bearing, not cosmetic. The cards used to fill
+      their row via a `<li class="flex">` wrapper. A flex item derives its
+      base size from max-content, and size containment makes max-content ZERO
+      — so with a flex parent a contained card collapses to a 0px sliver and,
+      thanks to `overflow: hidden`, disappears completely. No error, no
+      overflow, no failing test. The wrappers are gone; this replaces them.
+   3. Nothing inside the card may be inline-styled, because an @container rule
+      cannot beat an inline style. See PostCard.tsx. */
+.post-card-slot {
+  container-type: inline-size;
+}
 .post-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   background: var(--color-soft);
   overflow: hidden;
   text-decoration: none;
@@ -385,6 +523,57 @@
   transition: background-color 180ms ease;
 }
 .post-card:hover { background: var(--tds-flat-hover); }
+
+.post-card__cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.post-card--large .post-card__cover { aspect-ratio: 16 / 8.2; }
+
+.post-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  padding: 16px 18px 14px;
+}
+.post-card--large .post-card__body { padding: 22px 22px 18px; }
+
+.post-card__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.post-card__date {
+  font-size: 12px;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.post-card__excerpt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.post-card--large .post-card__excerpt {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.post-card__foot {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .post-card .card-title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -397,6 +586,46 @@
   transition: color 180ms ease;
 }
 .post-card:hover .card-title { color: var(--color-primary); }
+
+/* Wide track → cover BESIDE the text instead of above it. 34rem is the width
+   at which a stacked card's 16/9 cover starts to dominate the cell and the
+   excerpt is left hanging under a very wide image.
+   Note the unit: @container sizes measure THIS CARD, so the same rule fires
+   for a full-width lead at 1280px and for a 2-column cell at 2560px — which
+   is exactly the point, and is not something a media query can express. */
+@container (min-width: 34rem) {
+  .post-card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .post-card__cover {
+    flex: 0 0 42%;
+    aspect-ratio: auto;
+  }
+  .post-card__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    padding: 22px 24px;
+  }
+  .post-card__excerpt {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+  .post-card .card-title { font-size: 1.75rem; }
+}
+
+/* An item that spans every track of an intrinsic grid, whatever the column
+   count resolved to. `sm:col-span-2 lg:col-span-3` cannot do this: auto-fill
+   has no fixed count to count against. At one column it is a no-op. */
+.grid-span-all { grid-column: 1 / -1; }
+
+/* Roomier variant of the intrinsic grid for short, text-only cards (topics,
+   reader programs, "for you"). They carry a heading plus one line, so the
+   16rem post-card floor would slice them into six thin columns at 1920px;
+   22rem lands on four. Set the token, never a column count — that is what
+   keeps the grid responsive to the space it actually gets. */
+.tds-grid-roomy { --tds-grid-min: 22rem; }
 
 /* ---- Flat editorial rows (pagination + tag lists) ---- */
 .post-row {
@@ -412,7 +641,14 @@
   transition: background-color 180ms ease;
 }
 @media (min-width: 640px) {
-  .post-row { grid-template-columns: 150px 1fr auto; gap: 1.75rem; }
+  /* The date column was a hardcoded 150px that never grew, so on a wide
+     screen the row read as a narrow date against a very long title. It is a
+     range now: it tracks the row's own width and stops at 14rem, which is
+     comfortably past the longest German long-form date. */
+  .post-row {
+    grid-template-columns: clamp(8rem, 12vw, 14rem) minmax(0, 1fr) auto;
+    gap: 1.75rem;
+  }
 }
 .post-row:hover { background: var(--tds-flat-hover); }
 .post-row .row-title {
@@ -642,40 +878,63 @@ a.topic-card:focus-visible {
    window-centred (see below) regardless of the sidebar's state; the fixed TOC
    and sidebar overlay the side whitespace. */
 .article-shell {
-  max-width: 82rem;
+  max-width: var(--tds-shell-article);
   margin-inline: auto;
 }
 .article-col {
-  max-width: 48rem;
+  max-width: var(--tds-shell-prose);
   margin-inline: auto;
 }
+
+/* .tds-prose caps itself at --tds-measure (65ch) but ships no margin-inline,
+   so once the measure is NARROWER than the column the paragraphs would sit
+   left while the heading, lede, author box and prev/next still span the full
+   width — a ragged right edge aligned to nothing.
+   Measured, that is not the case today: 65ch resolves to ~809px in Plus
+   Jakarta Sans at 17px (a `ch` here is ~12.4px, not the ~8.5px a Lato-based
+   estimate suggests), so the measure sits just outside the 48rem column and
+   never binds. This rule is therefore currently a no-op — kept because it
+   stops being one the moment the column or the measure moves, and because the
+   failure it prevents is a silent one. */
+.article-col .tds-prose {
+  margin-inline: auto;
+}
+
 @media (min-width: 1024px) {
-  /* The reading column is centred inside a shell that the sidebar offsets to
-     the right; nudge it back left by half the sidebar width so it lands on the
-     true viewport centre ("Mitte der Seite"). --nav-w flips with the sidebar,
-     so the two shifts cancel and toggling the sidebar never moves the article.
-     Uses position/left (not transform) so the fixed TOC keeps its viewport
-     anchor. */
-  .with-sidebar .article-col {
-    position: relative;
-    /* CLAMPED, and the clamp is the whole point.
-       The first term is the intent above: pull the column back by half the
-       sidebar so it lands on the true viewport centre. That is only safe while
-       the centred column still clears the FIXED sidebar, i.e. while
-       `(100vw − 48rem) / 2 ≥ --nav-w`, which needs ~1296px. At 1280 — the most
-       common desktop width there is — it slid 8px UNDER the sidebar and every
-       line of the article lost its first characters: the eyebrow read "ESIGN",
-       the lede "arben, Typografie…". Nothing overflowed and nothing errored;
-       the text was simply painted behind an opaque panel.
-       The second term is the largest shift that still leaves a 0.75rem gutter
-       beside the sidebar, derived from the same geometry. `max()` picks the
-       SMALLER leftward pull (both are negative), so wide viewports keep the
-       full recentring and narrow ones stop exactly at the sidebar edge. */
-    left: max(
-      calc(var(--nav-w, 264px) / -2),
-      calc((var(--nav-w, 264px) + 48rem - 100vw) / 2 + 0.75rem)
-    );
-    transition: left 320ms ease;
+  /* Reserve the right edge for the FIXED TOC rail, and let the column simply
+     centre in what is left.
+
+     What used to be here was `position/left` + a clamped `max()` on
+     `.article-col`, pulling it back over the sidebar's whitespace to sit on
+     the true viewport centre. Three things were wrong with it:
+       · it measured with `100vw`, which counts the scrollbar (~10px with the
+         brand thin scrollbar), eating most of the 0.75rem safety gutter it
+         was itself computing;
+       · focus mode resets margin/padding on `.article-shell` but could not
+         reset a `left` on the COLUMN — the sidebar is only `display:none`
+         there, so `--nav-w` stayed 264px and the column sat a permanent 132px
+         left of centre, on every article, in the mode meant for reading;
+       · it only ever considered the LEFT rail. The shell reserved nothing on
+         either side, on the theory that both rails "float in the side
+         margins" — true only while the viewport is wide enough to have side
+         margins. At 1280px the text ran under the sidebar (the documented
+         "ESIGN" bug); at 1024px the same formula pushed it 16px the other way,
+         under the TOC. Neither overflows, so neither was ever reported.
+
+     `.with-sidebar` already carries `margin-left: var(--nav-w)`, so the left
+     rail needs no reservation at all — that was the whole reason the old rule
+     had to fight its way back left. Reserving only the right, and letting
+     `margin-inline: auto` do the rest, keeps the column clear of both rails at
+     every width and lands it within 2px of the optical centre of the free band
+     on a wide screen. */
+  .article-shell.has-toc {
+    padding-right: max(var(--tds-gutter), calc(var(--toc-w) + 1.75rem));
+  }
+  /* Collapsed the rail is a narrow dot strip (`width: auto`); its labels only
+     appear on hover, and hovering them over the text is fine — that is an
+     overlay, not a layout. */
+  .article-shell.has-toc.toc-collapsed {
+    padding-right: max(var(--tds-gutter), 4.5rem);
   }
 }
 
@@ -1123,7 +1382,12 @@ body.drawer-open {
 }
 @media (min-width: 768px) {
   .hero-stage {
-    height: clamp(360px, 44vh, 430px);
+    /* The cap used to be 430px, which a 1080p screen already reached — so the
+       hero stayed exactly as tall at 2560px as at 1280px while the shell grew
+       to 1920px, and the band flattened into a letterbox. Growing the cap with
+       the WIDTH (not only the height) keeps the lead image in proportion to
+       the column it sits beside. */
+    height: clamp(360px, 34vh + 6vw, 560px);
   }
   .hero-stage .hero-track,
   .hero-stage .hero-track > .hero-slide {

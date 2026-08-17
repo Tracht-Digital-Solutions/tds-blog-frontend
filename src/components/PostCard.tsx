@@ -112,9 +112,17 @@ export default function PostCard({
   lang: "de" | "en";
   large?: boolean;
 }) {
+  // Every part of the card is class-driven rather than inline-styled, and that
+  // is a hard requirement now, not a tidy-up: .post-card is a container-query
+  // container, and an @container rule cannot override an inline style. With
+  // the old inline `flexDirection`/`padding`/`aspectRatio` the card could not
+  // change shape for a wide track no matter what CSS was written.
   return (
-    <a className="post-card" href={`${lang === "en" ? "/en" : ""}/${post.slug}`}>
-      <div style={{ aspectRatio: large ? "16 / 8.2" : "16 / 9", position: "relative" }}>
+    <a
+      className={`post-card${large ? " post-card--large" : ""}`}
+      href={`${lang === "en" ? "/en" : ""}/${post.slug}`}
+    >
+      <div className="post-card__cover">
         <PostCover
           slug={post.slug}
           coverHint={post.coverHint}
@@ -122,63 +130,20 @@ export default function PostCard({
           style={{ position: "absolute", inset: 0, height: "100%" }}
         />
       </div>
-      <div
-        style={{
-          padding: large ? "22px 22px 18px" : "16px 18px 14px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          flex: 1,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
+      <div className="post-card__body">
+        <div className="post-card__meta">
           <span className="eyebrow" style={{ color: "var(--color-accent)" }}>
             {post.category}
           </span>
           {post.publishedAt && (
-            <time
-              dateTime={post.publishedAt}
-              className="tabular"
-              style={{ fontSize: 12, color: "var(--color-muted)", whiteSpace: "nowrap" }}
-            >
+            <time dateTime={post.publishedAt} className="tabular post-card__date">
               {formatPostDate(post.publishedAt, lang)}
             </time>
           )}
         </div>
-        <h3 className="card-title" style={large ? { fontSize: "1.75rem" } : undefined}>
-          {post.title}
-        </h3>
-        <p
-          style={{
-            fontSize: 14,
-            lineHeight: 1.6,
-            color: "var(--color-muted)",
-            margin: 0,
-            display: "-webkit-box",
-            WebkitLineClamp: large ? 3 : 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
-          {post.excerpt}
-        </p>
-        <div
-          style={{
-            marginTop: "auto",
-            paddingTop: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
+        <h3 className="card-title">{post.title}</h3>
+        <p className="post-card__excerpt">{post.excerpt}</p>
+        <div className="post-card__foot">
           <AuthorChip
             name={post.author?.name ?? fallbackAuthorName(lang)}
             avatarUrl={post.author?.avatarUrl}
