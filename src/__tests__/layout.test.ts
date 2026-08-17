@@ -45,6 +45,25 @@ const stripComments = (src: string) =>
 const cssCode = stripComments(css);
 const codeOf = (file: string) => stripComments(readFileSync(file, "utf8"));
 
+/**
+ * The blog's own stylesheet PLUS the shared layers it imports. Most of the
+ * layout scale lives in tds-shared now (base.css / primitives.css), and this
+ * repo only overrides what it genuinely sets differently — so an assertion
+ * that reads global.css alone would pass or fail for the wrong reason.
+ * What matters is the CSS the page actually gets.
+ */
+const SHARED = join(
+  process.cwd(),
+  "node_modules",
+  "@tracht-digital-solutions",
+  "tds-shared",
+  "styles",
+);
+const effectiveCss = [
+  cssCode,
+  ...["base.css", "primitives.css", "prose.css"].map((f) => codeOf(join(SHARED, f))),
+].join("\n");
+
 describe("page shell", () => {
   it("routes every page container through .tds-shell, not a copied max-w utility", () => {
     // The 64rem ceiling used to be `max-w-5xl mx-auto px-6` duplicated across
@@ -64,8 +83,12 @@ describe("page shell", () => {
       "--tds-gutter",
       "--tds-rail",
     ]) {
-      expect(cssCode).toContain(`${token}:`);
+      expect(effectiveCss, `${token} resolves to nothing`).toContain(`${token}:`);
     }
+    // The two the blog genuinely overrides must be set HERE, or the site
+    // silently renders at tds-shared's 90rem default.
+    expect(cssCode).toMatch(/--tds-shell-max:\s*120rem/);
+    expect(cssCode).toContain("--tds-rail:");
   });
 
   it("keeps every layout token name free of digits", () => {
@@ -100,7 +123,7 @@ describe("page shell", () => {
 
 describe("intrinsic grid", () => {
   it("derives the column count from available space, with an overflow guard", () => {
-    const rule = cssCode.match(/\.tds-grid-auto\s*\{[^}]*\}/)?.[0] ?? "";
+    const rule = effectiveCss.match(/\.tds-grid-auto\s*\{[^}]*\}/)?.[0] ?? "";
     expect(rule).toContain("auto-fill");
     // `min(100%, …)` is what stops a 16rem track floor from overflowing a
     // viewport narrower than 16rem. body{overflow-x:hidden} would CLIP that

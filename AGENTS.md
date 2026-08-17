@@ -179,11 +179,15 @@ not occur once, and the card grid stopped at two columns on every screen up to
 * **`src/__tests__/layout.test.ts` pins all of the above.** It exists because
   every failure listed here is invisible: no error, no overflow, a green build,
   and a page that is simply wrong at a width nobody opened.
-* **Token duplication is temporary.** The tokens and `.tds-shell` /
-  `.tds-grid-auto` also ship in tds-shared (base.css / primitives.css), but
-  this repo pins `^0.24.0` and a 0.x caret is minor-locked. The local copies in
-  `global.css` are load-bearing until the pin moves to `^0.25.0`; after that,
-  keep only what the blog genuinely overrides (`--tds-shell-max`, `--tds-rail`).
+* **The scale itself lives in tds-shared (0.24.4).** `.tds-shell`,
+  `.tds-grid-auto` and the `--tds-shell-*` / `--tds-measure` / `--tds-grid-min`
+  / `--tds-gutter` tokens are in the shared `base.css` / `primitives.css`.
+  `global.css` keeps only what this site genuinely sets differently:
+  `--tds-shell-max: 120rem` (the shared default is 90rem), `--tds-shell-wide`,
+  and `--tds-rail`, which is blog-only because nothing shared has a rail.
+  They are **not** in `surfaces/blog.css`: `tds-tools-frontend` renders the
+  same blog surface, so a shell width there would silently widen the public
+  tools site too.
 
 ## How rebuilds get triggered
 
