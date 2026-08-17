@@ -43,7 +43,11 @@ const labels = entdeckenLabels(lang);
 const { categories, topTags } = await getTaxonomy(lang);
 const entdeckenActive = isEntdeckenActive(path);
 const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
-const cta = lang === "de" ? "Termin vereinbaren" : "Book a meeting";
+// The canonical call, shared with the landingpage and the tools site
+// (tds-shared translations: hero.cta1 / footer.primaryCta). "Termin
+// vereinbaren" promised a scheduled appointment nobody offers — the
+// website deliberately makes no consultation promise at all.
+const cta = lang === "de" ? "Unverbindlich anfragen" : "Get in touch";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
 const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
 ---
