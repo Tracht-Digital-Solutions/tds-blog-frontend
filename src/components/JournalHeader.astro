@@ -8,10 +8,12 @@
  * disclosure panel grouping the corpus into Kategorien · Beliebte Tags ·
  * Aktuelle Themen (all built from `getTaxonomy()` at build time).
  *
- * Below `md` the bar carries just the logo + a hamburger; the hamburger
- * opens a flat **full-screen overlay menu** (large editorial links, the
- * Entdecken group expanded inline) and locks body scroll. Search is a
- * desktop-only affordance. Desktop (≥md) is unchanged.
+ * Below `lg` the bar carries just the logo + a hamburger, which opens the
+ * shared `.tds-mobile-menu` sheet docked under the bar (large editorial
+ * links, the Entdecken group expanded inline). The mechanics come from
+ * `tds-shared/nav`; the sheet replaced a bespoke full-screen overlay and
+ * the breakpoint moved from `md` to `lg`, so all three public sites now
+ * hide their desktop nav at the same width. Search stays desktop-only.
  *
  * The desktop search field drives the BlogIndex island when one is on the
  * page (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search`
@@ -49,7 +51,6 @@ const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 // website deliberately makes no consultation promise at all.
 const cta = lang === "de" ? "Unverbindlich anfragen" : "Get in touch";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
-const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
 ---
 
 <header class:list={["brand-header", className]}>
@@ -64,7 +65,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
     </a>
     <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
 
-    <nav class="hidden md:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
+    <nav class="hidden lg:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
       {nav.map((node) =>
         node.kind === "link" ? (
           <a
@@ -129,7 +130,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
       )}
     </nav>
 
-    <div class="nav-search hidden md:flex">
+    <div class="nav-search hidden lg:flex">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
         <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
@@ -145,13 +146,13 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
     </div>
 
     {/* Push the mobile controls to the right (the desktop nav already takes
-        the flex space from md up). */}
-    <div class="flex-1 md:hidden"></div>
+        the flex space from lg up). */}
+    <div class="flex-1 lg:hidden"></div>
 
-    {/* Right-hand controls. Language, theme and the CTA only show from md
-        up; on mobile just the hamburger remains. */}
+    {/* Right-hand controls. Language, theme and the CTA only show from lg
+        up; below that they live in the panel and just the hamburger remains. */}
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <div class="hidden md:flex items-center gap-2">
+      <div class="hidden lg:flex items-center gap-2">
         <div class="lang-toggle" role="group" aria-label="Sprache / Language">
           <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
           <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
@@ -171,7 +172,7 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
       <button
         id="jnl-menu-toggle"
         type="button"
-        class="jnl-menu-toggle md:hidden relative inline-flex items-center justify-center w-11 h-11 text-[var(--color-primary)] hover:bg-[var(--color-soft)] transition-colors cursor-pointer"
+        class="btn btn-ghost tds-menu-toggle"
         aria-controls="jnl-mobile-menu"
         aria-expanded="false"
         aria-label={menuLabel}
@@ -183,33 +184,28 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
     </div>
   </div>
 
-  {/* Full-screen overlay menu — a flat surface (no glass) carrying the large
-      editorial nav, the Entdecken group expanded inline, plus the language /
-      theme controls and the CTA kept off the bar below md. */}
+  {/* The docked sheet is `.tds-mobile-menu` (tds-shared) — the same panel the
+      landingpage and the tools site open, so the sheet, its motion, its scroll
+      containment and the breakpoint are all shared. It used to be a bespoke
+      full-screen overlay at `md`, which is the divergence this replaces.
+
+      Only the docking offset stays here, matched to the header's `min-h-15`
+      (3.75rem) and published as `--tds-mobile-menu-inset` so the panel's
+      max-height stops at the viewport edge. The journal's own editorial link
+      optics (`.jnl-fullmenu-*`) stay too — the surface keeps its voice, only
+      the mechanics converge.
+
+      The overlay's own head is gone: it carried a wordmark already visible in
+      the sticky bar above the sheet, and a close button the hamburger — now an
+      × — already is. */}
   <div
     id="jnl-mobile-menu"
-    class="jnl-fullmenu md:hidden"
+    class="tds-mobile-menu inset-x-0 top-[3.75rem]"
+    style="--tds-mobile-menu-inset: 3.75rem"
     data-open="false"
     aria-hidden="true"
     aria-label={menuLabel}
   >
-    <div class="jnl-fullmenu-head mx-auto w-full">
-      <span class="brand-wordmark inline-flex items-center gap-2 text-[1.0625rem] tracking-tight">
-        <span class="brand-logo" aria-hidden="true"></span>
-        <span class="accent-italic">Journal</span>
-      </span>
-      <button
-        id="jnl-menu-close"
-        type="button"
-        class="jnl-fullmenu-close"
-        aria-label={closeLabel}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18"></path>
-        </svg>
-      </button>
-    </div>
-
     <nav class="jnl-fullmenu-nav mx-auto w-full" aria-label="Navigation">
       {nav.map((node) =>
         node.kind === "link" ? (
@@ -303,56 +299,12 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
      `[data-surface="blog"]` sets `--tds-radius-bar: 0`, which is the one
      thing that actually differed. */
 
-  /* Full-screen overlay menu — flat (no glass), solid paper surface so it
-     holds in both themes. Fades + lifts in; covers the whole viewport. */
-  .jnl-fullmenu {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem 1.25rem 1.5rem;
-    background: var(--color-paper);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px);
-    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
-  }
-  .jnl-fullmenu[data-open="true"] {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
-  }
-
-  .jnl-fullmenu-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 3.25rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-  .jnl-fullmenu-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-right: -0.5rem;
-    color: var(--color-primary);
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    transition: background-color 160ms ease;
-  }
-  .jnl-fullmenu-close:hover {
-    background: var(--color-soft);
-  }
+  /* The panel container is `.tds-mobile-menu` (tds-shared 0.25.0). What used
+     to be here — a `position: fixed; inset: 0` full-screen sheet with its own
+     fade, its own `overscroll-behavior` and its own reduced-motion rule — was
+     the blog's private answer to a problem three sites have. The rules below
+     are what stayed: the journal's editorial link optics, which ARE surface
+     voice and deliberately did not converge. */
 
   .jnl-fullmenu-nav {
     display: flex;
@@ -416,7 +368,6 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
   }
 
   .jnl-fullmenu-foot {
-    margin-top: auto;
     padding-top: 1.25rem;
     display: flex;
     flex-wrap: wrap;
@@ -430,13 +381,17 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .jnl-fullmenu {
+    .jnl-fullmenu-link {
       transition-duration: 0.01ms;
     }
   }
 </style>
 
 <script>
+  // NOT `is:inline` — an inline script is not bundled, so this import would
+  // reach the browser as a bare specifier.
+  import { mountMobileNav } from "@tracht-digital-solutions/tds-shared/nav";
+
   // Live search — bind the desktop search field (mobile has none).
   const inputs = document.querySelectorAll<HTMLInputElement>(".js-blog-search");
   const initialQ = new URLSearchParams(location.search).get("q");
@@ -482,44 +437,15 @@ const closeLabel = lang === "en" ? "Close menu" : "Menü schließen";
     });
   }
 
-  // Mobile chrome — the full-screen overlay menu. Open locks body scroll.
+  // Mobile chrome. The mechanics are shared (tds-shared 0.25.0): this file
+  // used to carry its own scroll lock (`body.drawer-open`), its own Escape
+  // handler and its own `768px` matchMedia — three details that had to agree
+  // with the landingpage's and did not. It gains an outside-click close and a
+  // Tab trap it never had; it keeps the focus handling it already did well,
+  // because the shared version was built from it.
   const menuToggle = document.getElementById("jnl-menu-toggle");
   const menu = document.getElementById("jnl-mobile-menu");
-  const menuClose = document.getElementById("jnl-menu-close");
-
   if (menuToggle && menu) {
-    const setMenu = (open: boolean) => {
-      menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
-      menu.dataset.open = open ? "true" : "false";
-      menu.setAttribute("aria-hidden", open ? "false" : "true");
-      document.body.classList.toggle("drawer-open", open);
-      if (open) requestAnimationFrame(() => menuClose?.focus()); // wait for visibility flip
-    };
-
-    menuToggle.addEventListener("click", () => {
-      const open = menuToggle.getAttribute("aria-expanded") !== "true";
-      setMenu(open);
-      if (!open) menuToggle.focus();
-    });
-    menuClose?.addEventListener("click", () => {
-      setMenu(false);
-      menuToggle.focus();
-    });
-    menu.querySelectorAll<HTMLAnchorElement>("[data-menu-link]").forEach((link) => {
-      link.addEventListener("click", () => setMenu(false));
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && menu.dataset.open === "true") {
-        setMenu(false);
-        menuToggle.focus();
-      }
-    });
-
-    // Close when crossing into the desktop (md / 768px) nav.
-    const mq = window.matchMedia("(min-width: 768px)");
-    mq.addEventListener("change", (e) => {
-      if (e.matches) setMenu(false);
-    });
+    mountMobileNav({ toggle: menuToggle, panel: menu });
   }
 </script>

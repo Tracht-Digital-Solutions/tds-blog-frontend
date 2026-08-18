@@ -124,6 +124,37 @@ handshake.
   past it. No-ops on single-post layouts (most blog pages today)
   — kept for parity with the other frontends.
 
+## Mobile navigation (2026-08-18, tds-shared 0.25.0)
+
+The hamburger opens the **shared** `.tds-mobile-menu` sheet, docked under the
+sticky bar, and every mechanic comes from `mountMobileNav`
+(`@tracht-digital-solutions/tds-shared/nav`). What this repo used to own — a
+`position: fixed; inset: 0` full-screen overlay, `body.drawer-open` as a scroll
+lock, its own Escape handler and its own `matchMedia("(min-width: 768px)")` — is
+gone. `src/__tests__/header.test.ts` fails if any of it comes back.
+
+Three things about this that are easy to get wrong again:
+
+* **The breakpoint moved from `md` to `lg`.** All three public sites hide their
+  desktop nav at 1024px now, and `.tds-mobile-menu` bakes that width in. If the
+  bar went back to `md:` the two would disagree across 256px of viewport — with
+  neither the desktop nav nor a hamburger on screen, and nothing to report it.
+* **Never hide the toggle or the panel with `lg:hidden`.** tds-shared is
+  unlayered CSS and Tailwind's utilities sit in `@layer utilities`, so `hidden`
+  on an element wearing `.btn` loses outright. The breakpoint belongs to the
+  shared classes; a utility here is a silent no-op.
+* **`--tds-mobile-menu-inset` must match the panel's `top-[…]`.** It is what the
+  shared `max-height` subtracts, and this menu is the long one — nav plus the
+  full Entdecken taxonomy plus the language and theme controls plus the CTA. Get
+  them out of step and the sheet runs past the bottom of the viewport: a fixed
+  element shows no scrollbar and throws no error, so the tail is simply
+  unreachable.
+
+The journal's editorial link optics (`.jnl-fullmenu-*`) deliberately stayed
+local — the surface keeps its voice, only the mechanics converged. The desktop
+"Entdecken" disclosure is a separate control and keeps its own state and its own
+Escape handler.
+
 ## Fluid layout (2026-08-18)
 
 The site used to be frozen at 1024px: `max-w-5xl mx-auto px-6` was copied into
