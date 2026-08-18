@@ -188,40 +188,10 @@
 }
 .nav-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-.lang-toggle {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px;
-  background: var(--color-soft);
-}
-.lang-toggle a {
-  display: inline-flex;
-  align-items: center;
-  height: 1.625rem;
-  padding: 0 0.625rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
-  text-decoration: none;
-  transition: background-color 180ms ease, color 180ms ease;
-}
-.lang-toggle a:hover { color: var(--color-ink); }
-.lang-toggle a.on {
-  background: var(--color-surface-navy);
-  color: #fff;
-}
-/* Phones (<sm): trim the segmented DE|EN toggle so the top bar
-   (wordmark + lang + theme + hamburger) fits without horizontal overflow
-   on narrow screens. Scoped to <640px, so the desktop bar and the lg
-   blog-sidebar variant (which sets the toggle full-width) are untouched. */
-@media (max-width: 639px) {
-  .lang-toggle a {
-    height: 1.5rem;
-    padding: 0 0.5rem;
-    font-size: 0.625rem;
-  }
-}
+/* The DE|EN switch lives in tds-shared (`.tds-lang-toggle`, 0.25.3). It used
+   to be defined here and nowhere else, so the tools site — the blog's sibling
+   public property — shipped a plain text link instead of a switch. Only the
+   sidebar's full-width variant stays local, below. */
 
 /* ---- Angular buttons / chips ---- */
 .btn-flat {
@@ -1138,8 +1108,8 @@ a.topic-card:focus-visible {
   font-weight: 600;
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
-.blog-sidebar .lang-toggle { display: flex; width: 100%; background: var(--color-paper); }
-.blog-sidebar .lang-toggle a { flex: 1; justify-content: center; height: 1.875rem; }
+.blog-sidebar .tds-lang-toggle { display: flex; width: 100%; background: var(--color-paper); }
+.blog-sidebar .tds-lang-toggle a { flex: 1; justify-content: center; height: 1.875rem; }
 .blog-sidebar .btn-flat { width: 100%; justify-content: center; }
 
 /* ---- Newsletter ---- */
@@ -1664,4 +1634,72 @@ html.focus-mode .article-col {
 }
 html.focus-mode #focus-toggle {
   color: var(--color-accent);
+}
+
+/* ---- Tools promo (blog index) ---- */
+/* Points at the sibling tools site and names what you unlock there. A plain
+   block on the page's own ground, not a card: this is an editorial index, and a
+   boxed advert under the article grid reads as bait. Separation comes from the
+   2px accent bar and the rhythm, the same device the rest of the flat kit uses.
+   Nothing here introduces a second accent colour or a second CTA. */
+.tools-promo {
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-line);
+}
+.tools-promo__eyebrow {
+  margin: 0 0 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.tools-promo__heading {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: var(--tds-weight-display);
+  letter-spacing: var(--tds-tracking-display);
+  font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+  line-height: 1.15;
+  color: var(--color-black);
+}
+/* 68ch keeps the paragraph readable; the index is far wider than a measure. */
+.tools-promo__body {
+  max-width: 68ch;
+  margin: 0;
+  line-height: 1.7;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+.tools-promo__lead {
+  margin: 1.25rem 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+.tools-promo__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tools-promo__all {
+  margin: 1.25rem 0 0;
+}
+/* Colour is declared here rather than as a utility on the element: tds-shared's
+   stylesheets are unlayered and beat anything Tailwind emits in
+   `@layer utilities`, so a `text-[color:…]` on a shared link class does nothing.
+   `:focus-visible` rides along with `:hover` — the library's focus ring still
+   does the real work, and `outline: none` is never written. */
+.tools-promo__link {
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.tools-promo__link:hover,
+.tools-promo__link:focus-visible {
+  text-decoration: underline;
 }

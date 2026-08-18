@@ -2,6 +2,7 @@
 import Layout from "~/layouts/Layout.astro";
 import BlogIndex from "~/components/islands/BlogIndex.tsx";
 import ForYou from "~/components/islands/ForYou.tsx";
+import ToolsPromo from "~/components/ToolsPromo.astro";
 import { listAllPosts, listPopular } from "~/lib/content-api";
 import { PAGE_SIZE } from "~/lib/pagination";
 import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
@@ -26,6 +27,10 @@ try {
         design-system blog index. Posts are baked in at build time;
         the island only filters client-side. */}
     <BlogIndex posts={allPosts} popular={popular} lang="de" pageSize={PAGE_SIZE} client:load />
+
+    <div class="tds-shell">
+      <ToolsPromo lang="de" />
+    </div>
 
     <div class="tds-shell pb-14">
       <ForYou lang="de" client:idle />
