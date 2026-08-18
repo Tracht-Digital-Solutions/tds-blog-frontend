@@ -155,6 +155,41 @@ local — the surface keeps its voice, only the mechanics converged. The desktop
 "Entdecken" disclosure is a separate control and keeps its own state and its own
 Escape handler.
 
+## The language switch moved into tds-shared (2026-08-18, 0.25.3)
+
+`.lang-toggle` was defined here and nowhere else, so the tools site — this
+blog's sibling public property, which links here from its nav, hero and footer —
+shipped a plain text link instead of a switch. The class is now
+**`.tds-lang-toggle`** in tds-shared and this repo consumes it; the local block
+in `global.css` is gone.
+
+- **Markup changed in three places** (`JournalHeader` desktop + drawer,
+  `ArticleSidebar`); only the class name. The full-width sidebar variant stays
+  local, since it is this repo's layout and not the control.
+- What the library version changes: transitions run on `--tds-dur-base` /
+  `--tds-ease-out` instead of a hard-coded `180ms`, geometry follows
+  `--tds-radius-chip` (still square here, a pill on marketing), and reduced
+  motion resets the end state rather than only shortening it.
+- **This repo points both halves at the two home pages; the tools site points at
+  the equivalent page.** That difference is intentional, not drift — see
+  tds-shared's AGENTS.md.
+
+## The tools promo on the index (2026-08-18)
+
+`ToolsPromo.astro` sits between the post grid and `ForYou` on both index pages.
+The blog already linked to `tools.tracht-digital.de` from the nav and footer, but
+only as a bare destination: a reader had no idea the site does PDFs, labels,
+timesheets or OCR, and nothing said the paid tools are a one-off rather than a
+subscription.
+
+- It is a plain block on the page's own ground, not a card. This is an editorial
+  index, and a boxed advert under the article grid reads as bait.
+- The origin comes from `TOOLS_URL` (`lib/nav.ts`) and is never retyped; the
+  English tree is the same slugs under `/en`, so only the base changes.
+- The footer label was **"Kostenlose Tools" / "Free tools"** and is now
+  "Werkzeuge" / "Tools": 8 of the 14 tools over there are premium, so the old
+  label had quietly become a false claim.
+
 ## Fluid layout (2026-08-18)
 
 The site used to be frozen at 1024px: `max-w-5xl mx-auto px-6` was copied into

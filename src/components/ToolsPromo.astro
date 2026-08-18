@@ -1,0 +1,80 @@
+---
+/**
+ * A short promotion of the sibling tools site, and specifically of the tools you
+ * unlock there.
+ *
+ * Why it exists: the blog already linked to `tools.tracht-digital.de` from the
+ * nav and the footer, but only as a bare destination — a reader had no idea the
+ * site does PDFs, labels, timesheets or OCR, and nothing said the paid tier is a
+ * one-off rather than a subscription. The two properties are the pair of public
+ * surfaces that link to each other, so this is also the internal linking that
+ * gives those tool pages a route in from the only corpus that gets crawled.
+ *
+ * Deliberately restrained, for the same reason the tools site keeps its own
+ * marketing to one line: this is an editorial page, and a boxed advert after
+ * every article reads as bait. It is a plain block on the page's own ground with
+ * named links — no second accent colour and nothing that competes with the
+ * header CTA.
+ *
+ * `TOOLS_URL` is the single source for the origin (`lib/nav.ts`), so the domain
+ * is never retyped here.
+ */
+import { TOOLS_URL } from "~/lib/nav";
+
+interface Props {
+  lang?: "de" | "en";
+}
+
+const { lang = "de" } = Astro.props;
+
+/** The tools site mirrors its German tree under `/en` with the same slugs. */
+const base = lang === "de" ? TOOLS_URL : `${TOOLS_URL}/en`;
+
+const copy = {
+  de: {
+    eyebrow: "TD Tools",
+    heading: "Werkzeuge, die die Kleinarbeit erledigen",
+    body: "Auf unserer Werkzeugseite läuft alles direkt im Browser — nichts wird hochgeladen, nichts installiert. Die meisten Werkzeuge sind frei nutzbar; ein paar aufwendigere schaltet man einmalig frei, ohne Abo.",
+    lead: "Zum Beispiel:",
+    all: "Alle Werkzeuge ansehen",
+  },
+  en: {
+    eyebrow: "TD Tools",
+    heading: "Tools that handle the small jobs",
+    body: "Everything on our tools site runs straight in the browser — nothing is uploaded and nothing is installed. Most tools are free to use; a few of the heavier ones are unlocked once, with no subscription.",
+    lead: "For example:",
+    all: "See every tool",
+  },
+}[lang];
+
+/**
+ * Slugs are identical in both language trees, so only the base changes. Kept to
+ * five: this is a pointer, not a second catalog.
+ */
+const picks = [
+  { slug: "pdf-komprimieren", de: "PDF komprimieren", en: "Compress PDF" },
+  { slug: "texterkennung", de: "Texterkennung (OCR)", en: "Text recognition (OCR)" },
+  { slug: "etiketten-drucken", de: "Etiketten drucken", en: "Print labels" },
+  { slug: "stundenzettel", de: "Stundenzettel", en: "Timesheet" },
+  { slug: "qr-code-generator", de: "QR-Code-Generator", en: "QR code generator" },
+];
+---
+
+<aside class="tools-promo" aria-labelledby="tools-promo-heading">
+  <p class="tools-promo__eyebrow">{copy.eyebrow}</p>
+  <h2 id="tools-promo-heading" class="tools-promo__heading">{copy.heading}</h2>
+  <p class="tools-promo__body">{copy.body}</p>
+  <p class="tools-promo__lead">{copy.lead}</p>
+  <ul class="tools-promo__list">
+    {picks.map((p) => (
+      <li>
+        <a href={`${base}/tools/${p.slug}`} class="tools-promo__link">
+          {lang === "de" ? p.de : p.en}
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="tools-promo__all">
+    <a href={base} class="tools-promo__link">{copy.all}</a>
+  </p>
+</aside>
