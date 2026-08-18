@@ -1188,10 +1188,6 @@ a.topic-card:focus-visible {
    expressed through accent bars/underlines, colour shifts and small
    translates only. Everything here collapses under reduced-motion. */
 
-/* Body scroll-lock while the mobile drawer is open. */
-body.drawer-open {
-  overflow: hidden;
-}
 
 /* Flat hover lift for post cards — a growing accent left-bar plus a
    1px rise. No shadow; the bar is the affordance. */
