@@ -154,9 +154,18 @@
   }
 }
 
+/* No `display` here, deliberately — the header supplies it with
+   `hidden lg:flex`. This file is unlayered while Tailwind's utilities live in
+   `@layer utilities`, so an own `display: flex` beats `.hidden` outright and
+   the search field rendered at EVERY width. It cost 168px in a 375px bar,
+   which is what finally pushed the hamburger off the right edge once the
+   account menu joined the row; before that it merely sat there, wrong and
+   unnoticed, because nothing overflowed and `body { overflow-x: hidden }`
+   would have clipped it if it had. Same rule as `.panel-topbar` in tds-shared:
+   a class that a utility must be able to hide does not declare its own
+   display. */
 .nav-search {
   position: relative;
-  display: flex;
   align-items: center;
   color: var(--color-muted);
 }

@@ -174,6 +174,50 @@ in `global.css` is gone.
   the equivalent page.** That difference is intentional, not drift — see
   tds-shared's AGENTS.md.
 
+## The account menu (2026-08-22, tds-shared 0.25.6)
+
+The header carries `AccountMenu` from
+`@tracht-digital-solutions/tds-shared/components` — avatar, name, dropdown, top
+right, the same control the panel has. The session cookie is
+`Domain=.tracht-digital.de`, so a login at `auth.tracht-digital.de` was always
+valid here; this blog simply showed a signed-in customer what it shows a
+stranger, and had no auth code at all.
+
+- **Signed out it renders NOTHING**, so an anonymous reader's header is
+  byte-identical to what it was. That is `loggedOut`'s default and it is not an
+  oversight: this bar already carries a contact CTA, and a sign-in link beside
+  it would be noise on a public article. The tools site passes
+  `loggedOut="login"` because there a session unlocks something.
+- **It is mounted OUTSIDE the `hidden lg:flex` cluster**, next to the hamburger.
+  Who you are is not desktop chrome, and below `lg` this is the only control in
+  the bar besides the toggle — inside that cluster it would be absent, not
+  merely smaller. Pinned by `header.test.ts`.
+- **Utilities go on the wrapper `<div>`, never on `<AccountMenu>`.** tds-shared's
+  CSS is unlayered and Tailwind's utilities are in `@layer utilities`, so a
+  `hidden` on `.tds-dropdown` would lose and look like the island chose to
+  render.
+- **Signing out reloads this page**; it does not bounce to the login form. The
+  panel redirects because it has nothing to show a signed-out visitor. Here the
+  reader came for an article.
+- **`ArticleSidebar` deliberately does not get one.** The sticky header is on
+  article pages too, and two identity controls on one screen are two answers to
+  one question.
+- `install/profiles/blog.php` in tds-shared gained `GET /auth/me` and
+  `loginUrl`; both reach this host through this repo's `prebuild`, which copies
+  the wizard into `public/_setup/`. Without a wizard run the sign-in link falls
+  back to `https://auth.tracht-digital.de`, which is the right value anyway.
+
+### What it exposed: `.nav-search` was never hidden
+
+The account menu did not fit, and the reason was 168px of search field that had
+been rendering at phone widths all along. `.nav-search` declared its own
+`display: flex` in this repo's unlayered `global.css`, which beats `.hidden`
+from `@layer utilities` — the same trap the CTA and the hamburger already carry
+comments about. Nothing overflowed before, so nothing showed it, and
+`body { overflow-x: hidden }` would have clipped it if it had. The rule no
+longer declares `display`; the `hidden lg:flex` on the element supplies it, as
+with `.panel-topbar` in tds-shared. `header.test.ts` pins both halves.
+
 ## The tools promo on the index (2026-08-18)
 
 `ToolsPromo.astro` sits between the post grid and `ForYou` on both index pages.

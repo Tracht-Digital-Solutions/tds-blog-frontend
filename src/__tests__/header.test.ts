@@ -114,3 +114,88 @@ describe("mobile navigation", () => {
     expect(raw).not.toMatch(/<script[^>]*\bis:inline\b/);
   });
 });
+
+describe("the desktop search field", () => {
+  it("leaves its own display to the `hidden lg:flex` on the element", () => {
+    // This file is unlayered and Tailwind's utilities live in
+    // `@layer utilities`, so a `display: flex` in the rule beats `.hidden`
+    // outright — the search field rendered at EVERY width and nobody noticed,
+    // because nothing overflowed and `body { overflow-x: hidden }` would have
+    // clipped it if it had. It cost 168px in a 375px bar, and the hamburger
+    // went off the right edge the moment the account menu joined the row.
+    const rule = css.match(/\.nav-search \{([^}]*)\}/)?.[1] ?? "";
+    expect(rule).not.toBe("");
+    expect(rule).not.toMatch(/^\s*display:/m);
+    expect(source).toContain('class="nav-search hidden lg:flex"');
+  });
+});
+
+describe("the account menu", () => {
+  /**
+   * The shared session, visible in the header. The blog had no auth code at
+   * all before this, so every assertion here is about a thing that fails
+   * quietly: a mount inside the desktop-only cluster is invisible on a phone,
+   * a utility on the island itself does nothing, and a caret pin that never
+   * resolved the new version type-checks perfectly against the OLD one.
+   */
+
+  it("comes from tds-shared, not from a local copy", () => {
+    expect(source).toMatch(
+      /import \{[^}]*\bAccountMenu\b[^}]*\} from "@tracht-digital-solutions\/tds-shared\/components"/,
+    );
+  });
+
+  it("is mounted with the page language", () => {
+    expect(source).toMatch(/<AccountMenu\s+client:idle\s+lang=\{lang\}\s*\/>/);
+  });
+
+  it("says nothing to a signed-out reader", () => {
+    // The blog is public and its header already carries a contact CTA; a
+    // sign-in link beside it would be noise. `loggedOut` stays at its default.
+    expect(source).not.toMatch(/<AccountMenu[^>]*loggedOut=/);
+  });
+
+  it("sits OUTSIDE the desktop-only cluster and before the hamburger", () => {
+    // Inside `hidden lg:flex` it would vanish on a phone — where it is the
+    // only control beside the hamburger, so its absence is total rather than
+    // partial.
+    const desktopCluster = source.indexOf('class="hidden lg:flex items-center gap-2"');
+    // The cluster's own closing tag: the first `</div>` after the CTA anchor
+    // that lives inside it. `lastIndexOf("btn-flat")` would find the mobile
+    // sheet's copy of the same CTA, further down the file.
+    const clusterEnd = source.indexOf("</div>", source.indexOf("btn-flat", desktopCluster));
+    const mount = source.indexOf("<AccountMenu");
+    const toggle = source.indexOf('id="jnl-menu-toggle"');
+
+    expect(desktopCluster).toBeGreaterThan(-1);
+    expect(mount).toBeGreaterThan(clusterEnd);
+    expect(mount).toBeLessThan(toggle);
+  });
+
+  it("carries no visibility utility of its own", () => {
+    // tds-shared's CSS is unlayered and Tailwind's utilities are layered, so
+    // `hidden` on `.tds-dropdown` loses outright — it would look like the
+    // island simply chose to render.
+    const tag = source.slice(source.indexOf("<AccountMenu"));
+    const opening = tag.slice(0, tag.indexOf(">") + 1);
+    expect(opening).not.toMatch(/\bhidden\b/);
+    expect(opening).not.toMatch(/\blg:hidden\b/);
+  });
+
+  it("resolves in the INSTALLED tds-shared, not just in this repo's source", () => {
+    // A 0.x caret is minor-locked and `npm install --no-package-lock`
+    // re-resolves every range on each build. A pin that cannot reach the
+    // version carrying this export produces a build error at deploy time and
+    // nothing at all before it.
+    const dts = join(
+      process.cwd(),
+      "node_modules",
+      "@tracht-digital-solutions",
+      "tds-shared",
+      "dist",
+      "components",
+      "index.d.ts",
+    );
+    expect(readFileSync(dts, "utf8")).toMatch(/declare const AccountMenu|AccountMenu\b/);
+  });
+});
