@@ -127,11 +127,17 @@ Until then, push a trivial commit to this repo's main, or hit "Run
 workflow" in the Actions tab.
 
 
-## Setup auf dem Host: `/_setup/install.php`
+## Setup auf dem Host: `/install`
 
 Jeder Produktions-Build enthält einen Setup-Assistenten unter
-`https://<domain>/_setup/install.php`. Er verbindet die ausgelieferte Site mit
+`https://<domain>/install`. Er verbindet die ausgelieferte Site mit
 der API — **ohne Rebuild**.
+
+> **Falls `/install` nicht antwortet:** `https://<domain>/install/index.php`
+> funktioniert immer. Die kurze Form braucht Apaches `DirectoryIndex` aus der
+> mitgelieferten `install/.htaccess`; ein Vhost, der `.htaccess` gar nicht
+> auswertet (reines nginx), ignoriert sie. Von innen ist dieser Unterschied
+> nicht erkennbar, deshalb steht der lange Pfad hier daneben.
 
 **Warum es ihn gibt.** Diese Site ist statisch: Vite backt jede `PUBLIC_*`-URL
 zur Buildzeit ein. Eine deployte `dist/` lässt sich deshalb nicht umkonfigurieren,
@@ -144,7 +150,7 @@ dem eingebackenen Wert vor.
 
 **Ablauf.**
 
-1. `https://<domain>/_setup/install.php` aufrufen.
+1. `https://<domain>/install` aufrufen.
 2. **Anmeldung** als Plattform-Administrator (dieselben Zugangsdaten wie
    `auth.tracht-digital.de`). Der Assistent liegt auf einer öffentlich
    erreichbaren Domain und kommt mit jedem Deploy zurück — ein reines Lockfile
@@ -172,13 +178,13 @@ getrennt konfiguriert und müssen zusammenpassen; der Assistent prüft beides,
 konfiguriert aber nur die Laufzeit.
 
 **Sperre und erneutes Ausführen.** Nach einem erfolgreichen Lauf setzt der
-Assistent `_setup/.tds-site-installed` und läuft ab dann nur noch im
+Assistent `install/.tds-site-installed` und läuft ab dann nur noch im
 Diagnosemodus (er zeigt den aktuellen Stand, bietet aber kein Formular). Zum
 Neu-Verbinden diese Datei löschen. Es gibt bewusst keinen Selbstlöschen-Knopf:
-`_setup/` ist Teil von `dist/`, das nächste Release brächte die Datei ohnehin
+`install/` ist Teil von `dist/`, das nächste Release brächte die Datei ohnehin
 zurück.
 
-**Erzeugte Dateien.** `_setup/` wird vom `prebuild`-Schritt
+**Erzeugte Dateien.** `install/` wird vom `prebuild`-Schritt
 (`scripts/sync-installer.mjs`) aus `@tracht-digital-solutions/tds-shared/install`
 kopiert und ist deshalb nicht eingecheckt. `tds-runtime.json`, `api/` und die
 Geheimnis-Datei entstehen erst auf dem Host und liegen nicht in `dist/` — ein

@@ -12,7 +12,7 @@ import { runtimeSetting } from "@tracht-digital-solutions/tds-shared/api";
 
 /**
  * Fallback endpoint, baked in by Vite at build time. A host configured with
- * `/_setup/install.php` overrides it through `tds-runtime.json` — see the
+ * `/install/` overrides it through `tds-runtime.json` — see the
  * matching note in the landingpage's ContactForm.
  */
 const CONTACT_API_URL =

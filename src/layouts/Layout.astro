@@ -246,7 +246,7 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
         enables the "blog" frontend in the admin.
         No apiBase prop on purpose: the widget then resolves through tds-shared's
         apiFetch, which honours the host's tds-runtime.json — so
-        /_setup/install.php can re-point it (or route it through the same-origin
+        /install/ can re-point it (or route it through the same-origin
         proxy) without a rebuild. A hard-coded origin would silently opt the
         widget out of that. */}
     {!bare && (

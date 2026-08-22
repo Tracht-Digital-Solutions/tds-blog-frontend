@@ -204,7 +204,7 @@ stranger, and had no auth code at all.
   one question.
 - `install/profiles/blog.php` in tds-shared gained `GET /auth/me` and
   `loginUrl`; both reach this host through this repo's `prebuild`, which copies
-  the wizard into `public/_setup/`. Without a wizard run the sign-in link falls
+  the wizard into `public/install/`. Without a wizard run the sign-in link falls
   back to `https://auth.tracht-digital.de`, which is the right value anyway.
 
 ### What it exposed: `.nav-search` was never hidden
