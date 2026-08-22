@@ -19,7 +19,7 @@
  * page (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search`
  * on <html>); everywhere else Enter navigates to the index with `?q=`.
  */
-import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
+import { AccountMenu, ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
 import {
   primaryNav,
   isActiveNav,
@@ -167,6 +167,19 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
         <a href="https://tracht-digital.de/#contact" class="btn-flat" style="height: 2.25rem;">
           {cta}
         </a>
+      </div>
+
+      {/* Outside the `hidden lg:flex` block on purpose: who you are is not
+          desktop chrome, and below `lg` this is the only thing beside the
+          hamburger. It renders NOTHING for a signed-out reader — the blog is
+          public and a login CTA next to the contact button would be noise —
+          so an anonymous visitor sees the header exactly as before.
+
+          Utilities ride on this wrapper, never on the island: tds-shared's CSS
+          is unlayered while Tailwind's utilities sit in `@layer utilities`, so
+          a class on `.tds-dropdown` itself would lose. */}
+      <div class="flex items-center">
+        <AccountMenu client:idle lang={lang} />
       </div>
 
       <button
