@@ -6,53 +6,53 @@
 
 User-agent: *
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 # AI search crawlers are welcome — articles are meant to be cited.
 User-agent: GPTBot
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: OAI-SearchBot
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: ChatGPT-User
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: PerplexityBot
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: ClaudeBot
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: Claude-Web
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: Google-Extended
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: anthropic-ai
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 User-agent: Applebot-Extended
 Allow: /
-Disallow: /_setup/
+Disallow: /install/
 Disallow: /og/
 
 Sitemap: https://blog.tracht-digital.de/sitemap-index.xml
