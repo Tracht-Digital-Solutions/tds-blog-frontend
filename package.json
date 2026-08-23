@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/sync-installer.mjs blog",
     "build": "astro build",
     "preview": "astro preview",
     "type-check": "astro check",
@@ -23,7 +22,7 @@
     "@fontsource/lato": "^5.2.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "~4.3.3",
-    "@tracht-digital-solutions/tds-shared": "^0.26.0",
+    "@tracht-digital-solutions/tds-shared": "^0.27.0",
     "astro": "^7.1.6",
     "marked": "^18.0.0",
     "react": "^19.0.0",
