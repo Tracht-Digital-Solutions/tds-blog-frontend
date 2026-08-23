@@ -754,3 +754,40 @@ stays consistent across both domains.
 - Don't import `marked` in a React island — it's heavy. Render to
   HTML at build time and pass the resulting string to islands if
   they need it.
+
+## Site key (`TDS_SITE_KEY`)
+
+The credential this site presents to the composed API for its **build-time**
+content reads. Issued in the admin portal under *Einstellungen →
+Site-Verbindungen*; `src/lib/siteKey.ts` reads it and every fetch in
+`src/lib/` carries it.
+
+Optional: unset, the build behaves exactly as before, and the public read routes
+stay open unless an admin switched enforcement on.
+
+Four things here were each learned by breaking:
+
+- **`process.env`, never `import.meta.env`.** Astro/Vite inline only `PUBLIC_`
+  names there, and this repo declares no `envField` schema, so
+  `import.meta.env.TDS_SITE_KEY` would be `undefined` in every build with
+  nothing to say so. That is exactly how `TOOLS_REGISTRY_TOKEN` spent its whole
+  life. And the obvious "fix" — a `PUBLIC_` prefix — is worse: it inlines the
+  credential into the shipped bundle.
+- **A `throw` from the fetch helper does NOT fail the build.** Every content
+  fetch is wrapped in a fail-soft `try/catch` that warns and returns the baked
+  fallback. The first version threw from `assertKeyAccepted`; a real build
+  against a 401 stub printed "the build stops here" five times and then
+  completed **green**. No source-scanning test could see it.
+- **So the guarantee is the `siteKeyGuard()` integration** in
+  `astro.config.mjs`, which throws in `astro:build:done` — outside every
+  `try/catch`, including one somebody adds later.
+- **The rejection list hangs off `globalThis`.** `astro.config.mjs` and the page
+  modules are two separate module graphs, so a module-scoped array gives the
+  integration its own empty one: the guard reads zero while the pages record
+  several. That was the second version and it failed identically — green build,
+  message printed, nothing stopped.
+
+Verified as a matrix, because three of the four cells must NOT fail: rejected
+key → exit 1; no key against a 401 → exit 0; key set but API unreachable →
+exit 0 (an API hiccup must never fail a deploy). `src/lib/siteKey.test.ts` pins
+the structural half.
