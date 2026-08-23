@@ -331,6 +331,25 @@ in this repo only.
   past first/last on drag) and a real drag swallows the trailing click
   (`suppressClick`). Off-screen slides carry `inert`+`aria-hidden` so their
   links aren't tabbable/clickable. Tabs/arrows/dots wrap via `step`.
+  **Every slide LINKS — headline, cover and "Artikel lesen" to the lead
+  article, the two secondary titles to their own — and keeping that true is
+  the delicate part of the drag gesture. Two rules, both browser-only:**
+  - **Never `setPointerCapture` on `pointerdown`.** While an element holds
+    pointer capture the browser retargets the compatibility mouse events —
+    `click` included — at the capture element, so every `<a>` inside the stage
+    stops navigating: the click fires on `.hero-stage` and the link never sees
+    it. The hero shipped that way and led nowhere; nothing errored, the cursor
+    still said `grab`, and the carousel itself worked. Capture is taken in
+    `onPointerMove` instead, once the gesture passes the 6px threshold — a
+    plain click never gets that far, and by then `suppressClick` owns the
+    trailing click anyway.
+  - **The stage must `preventDefault()` on `dragstart`.** Capture on
+    pointerdown had been suppressing the browser's *native* drag-and-drop for
+    free. Without it, a horizontal press-and-move on the slide's links or
+    cover image starts a link drag and Chrome fires `pointercancel` on the
+    first move — the track never moves at all, while the arrows and tabs keep
+    working. jsdom fires no `pointercancel`, so `HeroSlider.test.tsx` guards
+    both rules by reading the source; judge a change here in a browser.
   **It does not auto-rotate** — the set only changes when the reader changes
   it. `prefers-reduced-motion` drops the
   track transition (instant jump) — resolved after hydration into `reducedMotion`
@@ -339,7 +358,12 @@ in this repo only.
 - `src/components/PostCard.tsx` + `Covers.tsx` — flat card + the six
   abstract brand-geometry covers (slug-hashed variant; photo cover
   when `coverHint` is an http URL). Also rendered statically (no
-  hydration) inside `RelatedArticles.astro`. **Cover URLs are made
+  hydration) inside `RelatedArticles.astro`. **The covers themselves now
+  live in `tds-shared` (0.29.0) and `Covers.tsx` is a re-export**, because
+  the landingpage's Journal row draws the same artwork — and the variant is
+  a hash of the slug, so a second copy would silently give the same article
+  two different pictures on the two public properties. Change the drawings
+  there, not here. **Cover URLs are made
   absolute at the data layer** (`content-api.ts` `resolveCoverHint`):
   the content-API persists an uploaded `coverHint` as a storage-relative
   `/uploads/...` path, so `listAllPosts`/`listPopular`/`getPost` prefix

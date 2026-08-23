@@ -15,8 +15,15 @@ import { PostCover } from "../Covers";
  *     build time; views are tallied by the article-page beacon).
  *
  * Everything is build-time data except the recommendation scoring,
- * which stays in the browser — no runtime content-api call. Auto-
- * rotation pauses on hover/focus and honours prefers-reduced-motion.
+ * which stays in the browser — no runtime content-api call. Nothing
+ * rotates on its own; the tabs, the arrows and a horizontal drag are
+ * the only things that change the set (see the note near `endDrag`).
+ *
+ * Every slide LINKS: the headline, the cover and the "Artikel lesen"
+ * button all go to the lead article, and the two secondary titles to
+ * their own. That was broken from the moment the drag gesture landed —
+ * see `onPointerDown` for why, and read that note before touching the
+ * pointer handlers.
  */
 
 export type SliderPost = CardPost & { tags?: string | null };
@@ -144,9 +151,19 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
         </a>
       </div>
       <div className="hidden sm:flex" style={{ flexDirection: "column", justifyContent: "center", gap: 16, minHeight: 0 }}>
-        <div className="hero-cover" style={{ overflow: "hidden", position: "relative" }}>
+        {/* The cover is the biggest thing on the slide, so it has to BE the
+            link — a reader who clicks the picture expects the article. Hidden
+            from the accessibility tree and out of the tab order because the
+            headline above already links to the same URL. */}
+        <a
+          href={hrefFor(lang, lead.slug)}
+          className="hero-cover"
+          aria-hidden="true"
+          tabIndex={-1}
+          style={{ overflow: "hidden", position: "relative", display: "block" }}
+        >
           <PostCover slug={lead.slug} coverHint={lead.coverHint} title={lead.title} style={{ position: "absolute", inset: 0 }} />
-        </div>
+        </a>
         {secondary.length > 0 && (
           <ul className="list-none p-0 m-0" style={{ display: "grid", gap: 8 }}>
             {secondary.map((p) => (
@@ -248,6 +265,9 @@ export default function HeroSlider({
   // DRAG_THRESHOLD advances, otherwise it springs back. A real drag swallows
   // the trailing click so dragging off a link doesn't navigate.
   const drag = useRef({ startX: 0, dx: 0, active: false, moved: false });
+  // Whether the stage currently holds the pointer. See onPointerDown for why
+  // that is NOT taken up front.
+  const captured = useRef(false);
   const [dragDX, setDragDX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const suppressClick = useRef(false);
@@ -257,8 +277,17 @@ export default function HeroSlider({
       if (order.length < 2) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       drag.current = { startX: e.clientX, dx: 0, active: true, moved: false };
+      captured.current = false;
       setDragging(true);
-      e.currentTarget.setPointerCapture?.(e.pointerId);
+      // NO setPointerCapture here, and that is the whole bug this fixes: while
+      // an element holds pointer capture the browser retargets the
+      // compatibility mouse events — CLICK included — at the capture element.
+      // So every link inside the stage (headline, cover, "Artikel lesen", the
+      // two secondary titles) was dead: the click fired on this div and the
+      // <a> never saw it. Nothing errors, the cursor still says grab, and the
+      // slider itself works — the hero simply stopped leading anywhere.
+      // Capture is taken in onPointerMove instead, once the gesture is a real
+      // drag; a plain click never gets that far.
     },
     [order.length],
   );
@@ -275,7 +304,14 @@ export default function HeroSlider({
       const atEnd = activeIndex === order.length - 1 && dx < 0;
       if (atStart || atEnd) dx /= 3;
       s.dx = dx;
-      if (Math.abs(e.clientX - s.startX) > 6) s.moved = true;
+      if (!s.moved && Math.abs(e.clientX - s.startX) > 6) {
+        s.moved = true;
+        // Now it is a drag, not a click: take the pointer so a release outside
+        // the stage still lands in endDrag. Retargeting the trailing click is
+        // harmless here — onClickCapture suppresses it anyway.
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        captured.current = true;
+      }
       setDragDX(dx);
     },
     [activeIndex, order.length],
@@ -296,6 +332,7 @@ export default function HeroSlider({
       }
     }
     if (s.moved) suppressClick.current = true;
+    captured.current = false;
     setDragDX(0);
     setDragging(false);
   }, [order, activeIndex]);
@@ -390,6 +427,21 @@ export default function HeroSlider({
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
+          // The slide is made of links and an image, so a horizontal press-and-
+          // move starts the browser's native drag-and-drop — which fires
+          // `pointercancel` on the first move and kills the gesture outright.
+          // Taking the pointer on pointerdown used to mask that; it can't any
+          // more (see onPointerDown), so refuse the native drag instead. Only a
+          // browser shows this: the track simply never moves, no error, and the
+          // arrows and tabs keep working.
+          onDragStart={(e) => e.preventDefault()}
+          // Without capture a pointer released outside the stage never fires
+          // pointerup here, so a press that left the band would keep the track
+          // stuck to the cursor. Only relevant below the 6px threshold — past
+          // it the stage holds the pointer and pointerleave does not fire.
+          onPointerLeave={() => {
+            if (!captured.current) endDrag();
+          }}
           onClickCapture={(e) => {
             if (suppressClick.current) {
               e.preventDefault();
