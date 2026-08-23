@@ -17,6 +17,9 @@ export default defineConfig({
       // tag sets and page counts), so prefix-derived alternates would point
       // at 404s. Post-level hreflang lives in the Layout <head> instead.
       filter: (page) =>
+        // `/install` is a noindex operator page. It was invisible to the
+        // sitemap while it lived in public/; as a page it is not.
+        !page.includes("/install") &&
         !page.includes("/og/") &&
         !page.endsWith(".png") &&
         !page.includes("interests-index.json") &&

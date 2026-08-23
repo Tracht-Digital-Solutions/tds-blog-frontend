@@ -130,65 +130,50 @@ workflow" in the Actions tab.
 ## Setup auf dem Host: `/install`
 
 Jeder Produktions-Build enthält einen Setup-Assistenten unter
-`https://<domain>/install`. Er verbindet die ausgelieferte Site mit
-der API — **ohne Rebuild**.
-
-> **Falls `/install` nicht antwortet:** `https://<domain>/install/index.php`
-> funktioniert immer. Die kurze Form braucht Apaches `DirectoryIndex` aus der
-> mitgelieferten `install/.htaccess`; ein Vhost, der `.htaccess` gar nicht
-> auswertet (reines nginx), ignoriert sie. Von innen ist dieser Unterschied
-> nicht erkennbar, deshalb steht der lange Pfad hier daneben.
+`https://<domain>/install`. Er verbindet die ausgelieferte Site mit der API —
+**ohne Rebuild**. Er ist eine ganz normale Seite der Site: auf den
+Frontend-Domains ist PHP abgeschaltet (`tds-gateway-api/DEPLOY-PLESK.md`), also
+muss alles, was hier liegt, statisch funktionieren.
 
 **Warum es ihn gibt.** Diese Site ist statisch: Vite backt jede `PUBLIC_*`-URL
-zur Buildzeit ein. Eine deployte `dist/` lässt sich deshalb nicht umkonfigurieren,
-und — schlimmer — eine Site, die die API gar nicht erreicht, fällt still auf ihre
-statischen Platzhalter zurück: kein Fehler, kein Log, nichts wird rot. Der
-Assistent prüft die Verbindung mit echten Aussagen („12 Blöcke", nicht „HTTP
-200"), fährt pro Origin einen CORS-Preflight und schreibt `tds-runtime.json`
-neben die `index.html`. Die Site liest diese Datei zur Laufzeit und zieht sie
-dem eingebackenen Wert vor.
+zur Buildzeit ein. Eine deployte `dist/` lässt sich deshalb nicht
+umkonfigurieren, und — schlimmer — eine Site, die die API gar nicht erreicht,
+fällt still auf ihre statischen Platzhalter zurück: kein Fehler, kein Log,
+nichts wird rot.
+
+**Er installiert nichts.** Ein Browser kann keine Datei auf dem Host anlegen.
+Der Assistent *prüft*, *erzeugt* die `tds-runtime.json` zum Herunterladen und
+*bestätigt* danach, dass die abgelegte Datei wirklich ausgeliefert wird.
 
 **Ablauf.**
 
-1. `https://<domain>/install` aufrufen.
-2. **Anmeldung** als Plattform-Administrator (dieselben Zugangsdaten wie
-   `auth.tracht-digital.de`). Der Assistent liegt auf einer öffentlich
-   erreichbaren Domain und kommt mit jedem Deploy zurück — ein reines Lockfile
-   wie beim Gateway-Installer würde jedes Deploy-Fenster offen lassen.
-3. **Konfiguration**: API-Basis-URL, Auth-URL, Login-Seite und der
-   Verbindungsmodus.
-4. **Verbinden**: erst prüfen, dann schreiben. Fehlschläge in den Prüfschritten
-   brechen den Lauf nicht ab, sie werden gemeldet.
+1. `https://<domain>/install` aufrufen. Keine Anmeldung — die Seite schreibt
+   nichts, und ein Passwortformular auf einer öffentlichen Domain wäre eine
+   Angriffsfläche ohne Gegenwert.
+2. **Endpunkte** eintragen (vorbelegt mit dem, was die Site gerade benutzt).
+3. **Prüfen.** Die Aufrufe laufen in Ihrem Browser und damit auf genau dem Weg,
+   den die Site selbst nimmt — ein grüner Haken beweist die CORS-Freigabe für
+   *dieses* Origin.
+4. **Erzeugen** und die Datei als `tds-runtime.json` in den Docroot legen, neben
+   die `index.html` (Plesk-Dateimanager, FTP oder SSH). Ein erneuter Deploy
+   überschreibt sie nicht.
+5. **Bestätigen.** Ohne diesen Schritt bleibt eine fehlende oder veraltete
+   Konfiguration unsichtbar.
 
-**Zwei Verbindungsmodi.**
+**Fehlermeldungen sind absichtlich unbestimmt.** Scheitert ein Aufruf, nennt der
+Browser den Grund nicht: DNS, TLS, toter Host und CORS-Ablehnung sehen identisch
+aus. Der Assistent behauptet deshalb keine Ursache, grenzt sie aber ein, so weit
+es geht.
 
-- **Same-Origin-Proxy** (Standard, wenn Rewrites verfügbar sind) — die Site ruft
-  `/api/…` auf dem eigenen Host auf; `api/index.php` reicht ausschließlich die
-  in ihrer Allowlist stehenden Routen an die API weiter. Kein CORS, und ein
-  Site-Token verlässt den Server nie. Die Allowlist ist die Sicherheitsgrenze:
-  `[Methode, Muster]`-Paare, beidseitig verankert, nie ein Präfix-Vergleich.
-- **Direkt** — der Browser ruft die API-Domain direkt. Setzt voraus, dass die
-  Origins dieser Site in `CORS_ALLOWED_ORIGINS` stehen; der Assistent sagt
-  genau, welche fehlen.
+**Nur ein Origin pro Aufruf.** Eine Seite kann ihren `Origin`-Header
+nicht setzen, also lässt sich immer nur das Origin prüfen, auf dem der Assistent
+geladen ist.
 
 **Was der Assistent nicht ablöst.** Die Inhalte, die beim `astro build` geholt
 werden, kommen weiterhin aus den Umgebungsvariablen der GitHub Action — dort
 gibt es keinen Host und keine `tds-runtime.json`. Laufzeit und Buildzeit sind
 getrennt konfiguriert und müssen zusammenpassen; der Assistent prüft beides,
 konfiguriert aber nur die Laufzeit.
-
-**Sperre und erneutes Ausführen.** Nach einem erfolgreichen Lauf setzt der
-Assistent `install/.tds-site-installed` und läuft ab dann nur noch im
-Diagnosemodus (er zeigt den aktuellen Stand, bietet aber kein Formular). Zum
-Neu-Verbinden diese Datei löschen. Es gibt bewusst keinen Selbstlöschen-Knopf:
-`install/` ist Teil von `dist/`, das nächste Release brächte die Datei ohnehin
-zurück.
-
-**Erzeugte Dateien.** `install/` wird vom `prebuild`-Schritt
-(`scripts/sync-installer.mjs`) aus `@tracht-digital-solutions/tds-shared/install`
-kopiert und ist deshalb nicht eingecheckt. `tds-runtime.json`, `api/` und die
-Geheimnis-Datei entstehen erst auf dem Host und liegen nicht in `dist/` — ein
-erneuter Deploy überschreibt sie nicht.
 
 ## Related repos
 

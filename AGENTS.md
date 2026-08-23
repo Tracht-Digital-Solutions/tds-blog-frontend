@@ -202,10 +202,10 @@ stranger, and had no auth code at all.
 - **`ArticleSidebar` deliberately does not get one.** The sticky header is on
   article pages too, and two identity controls on one screen are two answers to
   one question.
-- `install/profiles/blog.php` in tds-shared gained `GET /auth/me` and
-  `loginUrl`; both reach this host through this repo's `prebuild`, which copies
-  the wizard into `public/install/`. Without a wizard run the sign-in link falls
-  back to `https://auth.tracht-digital.de`, which is the right value anyway.
+- The `blog` profile in `tds-shared/src/install/profiles.ts` publishes
+  `loginUrl`, which the operator sets at `/install`. Without a wizard run the
+  sign-in link falls back to `https://auth.tracht-digital.de`, which is the right
+  value anyway.
 
 ### What it exposed: `.nav-search` was never hidden
 

@@ -1,0 +1,26 @@
+---
+/**
+ * `/install` — the host-side setup wizard.
+ *
+ * Connects this deployed site to the API without a rebuild. It is a normal page
+ * of the site: every frontend subdomain runs with PHP disabled
+ * (`tds-gateway-api/DEPLOY-PLESK.md`), so anything shipped here has to work as
+ * a static file.
+ *
+ * `noindex` AND excluded from the sitemap in `astro.config.mjs` — the meta tag
+ * alone would leave an operator page listed in `sitemap-index.xml`.
+ */
+import { InstallWizard, blog } from "@tracht-digital-solutions/tds-shared/install";
+import Layout from "~/layouts/Layout.astro";
+---
+
+<Layout
+  title="Einrichtung — Blog"
+  description="Verbindet diese Site mit der API. Interne Seite, nicht für Besucher."
+  lang="de"
+  noindex
+>
+  <main class="tds-shell">
+    <InstallWizard client:load profile={blog} />
+  </main>
+</Layout>
