@@ -71,6 +71,13 @@ jobs:
         run: echo "PUBLIC_DEMO_MODE=${{ inputs.demo_mode }}" >> "$GITHUB_ENV"
 
       - name: Build
+        env:
+          # The credential this site presents to the API for its build-time
+          # content reads. Optional: unset, the build behaves exactly as before
+          # and the public read routes stay open unless an admin switched
+          # enforcement on. Deliberately NOT PUBLIC_-prefixed — that would
+          # inline it into the shipped bundle, i.e. publish the credential.
+          TDS_SITE_KEY: ${{ secrets.TDS_SITE_KEY }}
         run: npm run build
         env:
           # Build-time fallback translation for posts that still lack a

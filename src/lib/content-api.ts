@@ -9,6 +9,7 @@
 
 import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
+import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
 
 export type { TopicItem, TopicsBlock } from "./demoContent";
 
@@ -77,7 +78,8 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
       if (lang) url.searchParams.set("lang", lang);
       if (cursor !== null) url.searchParams.set("cursor", String(cursor));
 
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: siteKeyHeaders() });
+      assertKeyAccepted(res, url);
       if (!res.ok) {
         throw new Error(`content-api ${url.pathname} → ${res.status}`);
       }
@@ -111,7 +113,8 @@ export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListRes
   url.searchParams.set("limit", String(limit));
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (!res.ok) {
       throw new Error(`content-api ${url.pathname} → ${res.status}`);
     }
@@ -138,7 +141,8 @@ export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null>
   url.searchParams.set("lang", lang);
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (!res.ok) return null; // reachable but 404/5xx → no curated topics
     const data = (await res.json()) as { lang: string; topics: TopicsBlock | null };
     return data.topics ?? null;
@@ -164,7 +168,8 @@ export async function cookieBannerEnabled(): Promise<boolean> {
   url.searchParams.set("lang", "de");
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (!res.ok) return false;
     const data = (await res.json()) as {
       blocks?: Record<string, { enabled?: unknown } | undefined>;
@@ -214,7 +219,8 @@ async function loadAdsConfig(): Promise<AdsConfig> {
   url.searchParams.set("lang", "de");
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (!res.ok) return ADS_OFF;
     const data = (await res.json()) as {
       blocks?: Record<string, Record<string, unknown> | undefined>;
@@ -270,7 +276,8 @@ export function blogSnippets(): Promise<BlogSnippet[]> {
 async function loadSnippets(): Promise<BlogSnippet[]> {
   if (DEMO_MODE) return [];
   try {
-    const res = await fetch(new URL(`${BASE_URL}/snippets`));
+    const res = await fetch(new URL(`${BASE_URL}/snippets`), { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, new URL(`${BASE_URL}/snippets`));
     if (!res.ok) return [];
     const data = (await res.json()) as { snippets?: BlogSnippet[] };
     return data.snippets ?? [];
@@ -287,7 +294,8 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost
   url.searchParams.set("lang", lang);
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (res.status === 404) return null;
     if (!res.ok) {
       throw new Error(`content-api ${url.pathname} → ${res.status}`);

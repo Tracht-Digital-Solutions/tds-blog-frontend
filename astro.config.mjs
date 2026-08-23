@@ -4,12 +4,19 @@ import sitemap from "@astrojs/sitemap";
 // Shared CSS minify settings (incl. the cssTarget that keeps lightningcss
 // from dropping the .brand-header backdrop-filter prefix). See tds-shared#10.
 import { tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
+import { siteKeyGuard } from "./src/lib/siteKey";
 
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
   output: "static",
   integrations: [
     react(),
+    // Fails the build when TDS_SITE_KEY was rejected. It has to live here,
+    // not in the fetch helpers: every content fetch is wrapped in a
+    // fail-soft try/catch, and a throw from inside one is swallowed — a
+    // real build against a 401 stub printed the abort message five times
+    // and then completed green. astro:build:done runs outside all of them.
+    siteKeyGuard(),
     sitemap({
       // Content pages only: drop the generated OG PNGs, JSON endpoints and
       // error pages. NO `i18n` option here (unlike the landingpage) — blog
