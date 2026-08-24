@@ -26,9 +26,6 @@ coverage/
 .eslintcache
 *.tsbuildinfo
 
-# Host-side setup wizard, copied out of tds-shared by the prebuild step.
-# Generated, never edited here — see scripts/sync-installer.mjs.
-
 # The deployable tree scripts/pack-release.mjs assembles from dist/.
 # CI publishes it to the dev/release branch; it is never committed here.
 release/

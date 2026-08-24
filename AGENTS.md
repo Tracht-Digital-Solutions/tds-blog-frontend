@@ -74,11 +74,14 @@ theme-free with hard-coded neutrals so it never inverts) and focus mode.
 ## Build pipeline
 
 Tailwind runs through `@tailwindcss/postcss` (configured in
-`postcss.config.mjs`), **not** the `@tailwindcss/vite` plugin —
-Astro 6 ships Vite 7 with rolldown and the Vite plugin's build
-hook calls `BindingViteResolvePluginConfig` with a shape missing
-`tsconfigPaths` (withastro/astro#16542). Don't add `@tailwindcss/vite`
-back. CSS minification routes through lightningcss, configured via the
+`postcss.config.mjs`), **not** the `@tailwindcss/vite` plugin. The original
+reason is gone — that plugin broke under Astro 6's Vite 7 + rolldown
+(withastro/astro#16542) and builds fine under Vite 8 — so do not reintroduce it
+as a *fix*: nothing here is broken. It stays a deliberate convention, one
+PostCSS setup across all six Astro apps, and `tds-auth-frontend`'s
+`static-posture.test.ts` asserts it for the workspace. Changing it is a
+six-app decision, not a per-repo one.
+CSS minification routes through lightningcss, configured via the
 shared `tdsViteBuild` preset spread into `vite.build` (from
 `@tracht-digital-solutions/tds-shared/astro`, tds-shared-pkg 0.4.0). Don't
 hand-author the `cssTarget` — the preset pins the Safari floor that keeps
@@ -91,6 +94,34 @@ emit WebP/AVIF — see `IMAGES.md` for the per-asset swap pattern and
 favicon bundle. `<head>` preconnects to `api.tracht-digital.de` and
 `tracht-digital.de` so cross-origin fetches don't pay the full TLS
 handshake.
+
+### Toolchain (2026-08-24)
+
+The site runs the platform's current line: **TypeScript 6, vitest 4, jsdom 30,
+Astro 7.2.5, shiki 4, satori 0.33** — the same set `tds-tools-frontend` moved
+to, so the three public sites stay one toolchain.
+
+- **TypeScript 7 is not a deferred decision, it is unavailable.**
+  `@astrojs/check` declares `peerDependencies: { typescript: "^5.0.0 || ^6.0.0" }`,
+  and `astro check` *is* the correctness gate here. Re-test it when
+  `@astrojs/check` widens that range.
+- **Under TS 6 a side-effect import needs a typed target.** `ts(2882)` —
+  *"Cannot find module or type declarations for side-effect import"* — fired on
+  `import "@fontsource-variable/plus-jakarta-sans"`, because those packages
+  publish no `types` condition, while `@fontsource/lato` does. The fix is to
+  import the CSS entry explicitly (`…/index.css`): the same bytes, and Astro's
+  own `declare module "*.css"` then types it. **Keep the `/index.css` suffix**
+  — dropping it back to the bare specifier reddens the gate, not the build.
+- **`tsconfig.json` excludes `release/` and `var/`.** Neither is committed, but
+  both exist locally and in CI after a build, and nothing stopped `astro check`
+  from type-checking the *minified server and client bundles* in there: 159
+  files instead of 91, four genuine unused-import hints buried under 82 from
+  Rollup output. `tds-tools-frontend` and `tds-landingpage-frontend` carry the
+  same tsconfig without the exclude, and the tools site's `astro check` now
+  runs V8 out of heap locally for exactly this reason.
+- **`@testing-library/jest-dom` is deliberately absent.** Nothing imported it;
+  the one island suite uses `@testing-library/react` and plain vitest matchers.
+  `@testing-library/dom` stays because RTL peer-depends on it.
 
 ## Page chrome
 
@@ -377,6 +408,26 @@ DeepL translations and re-renders one OG card per post.
   rebuild invalidates. `translate.ts` is the documented exception: its key
   contains the source text, so an entry cannot go stale — it only gained a
   size ceiling, which a build never needed.
+- **`listAllPosts` is the OTHER exception, and it must stay unmemoised.** It is
+  the most expensive and most repeated read on the site, so putting it through
+  `contentCache` is the obvious next optimization — and it would break
+  rebuilds silently. tds-shared's control plane resolves a rebuild's page list
+  **before** it invalidates the generation memo (`resolveEvents(…)` then
+  `onInvalidate()`), and resolving a `post` event walks the corpus to find the
+  saved article and derive its category, tag and author pages. Memoised, that
+  lookup would answer from the list read *before* the save: a newly published
+  article would not be found, its taxonomy pages would never be rebuilt, and
+  the rebuild would report success with nothing red anywhere.
+- **The cookie banner and the AdSense config are one fetch, not two.** Both are
+  blocks of `/content/landing?lang=de` and `Layout.astro` reads both on every
+  render; they used to fetch it separately, and only the ads half was memoised,
+  so the banner re-requested it for every page in the generation. They share
+  `landingBlocks()` now, which draws the line the memo needs: a reachable API
+  answering 404/5xx is a *state* and is remembered as `null`, while a transport
+  failure or a rejected site key **throws** — `contentCache` does not remember
+  a rejected load, so one hiccup during a single render cannot pin "off" onto
+  every later page. Both callers still degrade to their own safe default.
+  `content-api.test.ts` pins the call count in all three cases.
 - **Bundle a leaf; ship a tree.** `@astrojs/rss` pulls a small tree of XML
   packages, and bundling it cost one failed build per transitive name. It is a
   public-registry package, so it ships in `tds.release.runtimeDependencies`

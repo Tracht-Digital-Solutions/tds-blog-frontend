@@ -49,7 +49,7 @@ Deploys automatically on every push to `main`; see [Deploy](#deploy).
 
 | Tool | Version | Why |
 |---|---|---|
-| Node.js | 22.12+ | Astro 6 baseline (Node 18/20 unsupported) |
+| Node.js | 22.22+ | Astro 7 needs 22.12; jsdom 30 + vitest 4 raise it to `^22.22.2 || ^24.15.0 || >=26` |
 | npm | 10+ | Bundled with Node 22 |
 
 ### GitHub Packages authentication
