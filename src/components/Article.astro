@@ -28,7 +28,7 @@ interface Props {
 }
 
 const { localized, lang, posts } = Astro.props;
-const { post, bodyHtml, blocks, translated, sourceLang } = localized;
+const { post, bodyHtml, blocks, translated } = localized;
 
 // Two body formats: a block post carries a parsed `blocks` array (rendered by
 // BlockRenderer), a legacy markdown post carries `bodyHtml`.

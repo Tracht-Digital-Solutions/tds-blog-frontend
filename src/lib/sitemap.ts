@@ -19,7 +19,7 @@
  * agree, which is why both are emitted from the same list here.
  */
 
-import { corpus, type Lang, type PostSummary } from "./routes";
+import { corpus, type Lang } from "./routes";
 import { PAGE_SIZE } from "./pagination";
 import { categorySlug } from "./taxonomy";
 import { siteConfig } from "./seo";

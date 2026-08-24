@@ -12,8 +12,8 @@
 
 | Tool | Version | Why |
 |---|---|---|
-| Node.js | 22.12+ | Astro 6 baseline (Node 18/20 unsupported) |
-| npm | 10+ | Bundled with Node 20 |
+| Node.js | 22.22+ | Astro 7 needs 22.12; jsdom 30 + vitest 4 raise it to `^22.22.2 || ^24.15.0 || >=26` |
+| npm | 10+ | Bundled with Node 22 |
 | Git | any | Repo hosting |
 | Classic GitHub PAT | with `read:packages` | Install `@tracht-digital-solutions/tds-shared` |
 

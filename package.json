@@ -1,6 +1,6 @@
 {
   "name": "tds-blog-frontend",
-  "version": "0.28.1",
+  "version": "0.29.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,35 +15,34 @@
     "start": "node app.cjs"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "@astrojs/node": "^11.1.4",
     "@astrojs/react": "^6.0.2",
-    "@astrojs/rss": "^4.0.0",
+    "@astrojs/rss": "^4.0.19",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@fontsource/lato": "^5.2.7",
     "@tailwindcss/postcss": "~4.3.3",
     "@tracht-digital-solutions/tds-shared": "^0.31.0",
-    "astro": "^7.1.6",
+    "astro": "^7.2.5",
     "marked": "^18.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "shiki": "^3.0.0",
+    "shiki": "^4.4.3",
     "tailwindcss": "~4.3.3",
-    "typescript": "^5.6.0"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^22.20.1",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "jsdom": "^25.0.1",
-    "satori": "^0.26.0",
+    "jsdom": "^30.0.1",
+    "satori": "^0.33.4",
     "tsx": "^4.22.3",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.11"
   },
   "tds": {
     "notes": {
@@ -53,11 +52,11 @@
       "name": "tds-blog-release",
       "runtimeDependencies": {
         "@astrojs/node": "^11.1.4",
-        "@astrojs/rss": "^4.0.0",
-        "astro": "^7.1.6",
+        "@astrojs/rss": "^4.0.19",
+        "astro": "^7.2.5",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "sharp": "^0.34.0"
+        "sharp": "^0.35.0"
       }
     }
   }

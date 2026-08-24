@@ -1,10 +1,24 @@
 /**
- * Build-time client for tds-content-api. Astro's `getStaticPaths`
- * and frontmatter call these from the SSG build, so the rendered
- * HTML for each post ships static — no runtime API calls.
+ * This site's client for the composed content API (`/content/*`).
  *
- * Override the base URL with CONTENT_API_URL if you point at a
- * staging/local content-api during dev.
+ * It used to be a BUILD-time client — `getStaticPaths` and page frontmatter
+ * called it during the SSG build, so none of it ran for a reader. Under
+ * `output: "server"` these run per REQUEST, on a page-cache miss, and that
+ * changes what "cache" means here:
+ *
+ *   - anything read repeatedly is memoised through `contentCache`, the
+ *     generation memo a rebuild throws away — never a module-level `let`,
+ *     which under SSR lives as long as the process and would serve whatever
+ *     it read at boot forever;
+ *   - the corpus read ({@link listAllPosts}) is deliberately NOT memoised.
+ *     Its own note says why, and it is not an oversight to tidy up.
+ *
+ * Every fetch stays fail-soft — an unreachable API renders the baked
+ * fallbacks rather than a 500. The one failure that must not be swallowed is
+ * a rejected site key; see ./siteKey.
+ *
+ * Override the base URL with CONTENT_API_URL to point at a staging or local
+ * API during dev.
  */
 
 import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
@@ -65,6 +79,28 @@ function withResolvedCovers<T extends { coverHint?: string | null; author?: Blog
   return posts.map((p) => withResolvedAuthor({ ...p, coverHint: resolveCoverHint(p.coverHint) }));
 }
 
+/**
+ * Every published post, paginated out of the list endpoint until it is
+ * exhausted.
+ *
+ * ### Why this one is NOT memoised through `contentCache`
+ *
+ * It is the obvious candidate — it is the most expensive read on the site and
+ * the most repeated one — and memoising it would be a real bug.
+ *
+ * The cache's control plane resolves a rebuild's page list BEFORE it
+ * invalidates the generation memo (`resolveEvents(...)` then `onInvalidate()`
+ * in tds-shared's `pageCache`). Resolving a `post` event walks the corpus to
+ * find the saved article and derive its category, tag and author pages — so a
+ * memoised corpus would answer that lookup from the list read before the save.
+ * A newly published article would simply not be found, its taxonomy pages
+ * would never be rebuilt, and the rebuild would report success. Nothing would
+ * go red; the category page would just quietly keep the old list.
+ *
+ * The cost is bounded in practice: a page-cache miss reads the corpus once and
+ * the rendered page is then stored, so this runs per rebuilt page, not per
+ * visitor.
+ */
 export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["posts"]> {
   // No-API demo build: serve demo posts instead of fetching.
   if (DEMO_MODE) return demoPostList(lang);
@@ -156,26 +192,53 @@ export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null>
 }
 
 /**
- * Whether the public cookie banner is enabled — the language-agnostic
- * `cookie_banner` landing content block ({ enabled }, stored under `lang=de`),
- * toggled in tds-admin and baked at build time (a toggle fires a blog
- * rebuild). Absent block, demo mode or an unreachable API mean "off" —
- * the safe default.
+ * The blog's slice of the landing content blocks.
+ *
+ * TWO settings on this site live in that one payload — the cookie-banner
+ * switch and the AdSense configuration — and `Layout.astro` reads both on
+ * every page render. They used to fetch `/landing?lang=de` independently, so
+ * an uncached render cost two identical requests, and only one of them was
+ * memoised: the banner re-fetched for every page in the generation.
+ *
+ * One shared, memoised loader instead. It draws the line the memo needs:
+ *
+ *   - a reachable API answering 404/5xx is a STATE (nothing configured yet, or
+ *     the endpoint is not deployed) and is remembered as `null`;
+ *   - a transport failure or a rejected site key THROWS, and `contentCache`
+ *     deliberately does not remember a rejected load — so one hiccup during a
+ *     single render cannot pin "off" onto every later page in the generation.
+ *
+ * Each caller still degrades to its own safe default, so the fail-soft
+ * contract is unchanged: an unreachable API means no banner and no ads.
  */
-export async function cookieBannerEnabled(): Promise<boolean> {
-  if (DEMO_MODE) return false;
+type LandingBlocks = Record<string, Record<string, unknown> | undefined>;
+
+function landingBlocks(): Promise<LandingBlocks | null> {
+  return contentCache.get("landing:blocks", loadLandingBlocks);
+}
+
+async function loadLandingBlocks(): Promise<LandingBlocks | null> {
+  if (DEMO_MODE) return null;
 
   const url = new URL(`${BASE_URL}/landing`);
   url.searchParams.set("lang", "de");
 
+  const res = await fetch(url, { headers: siteKeyHeaders() });
+  assertKeyAccepted(res, url);
+  if (!res.ok) return null; // reachable, but nothing to read
+  const data = (await res.json()) as { blocks?: LandingBlocks };
+  return data.blocks ?? {};
+}
+
+/**
+ * Whether the public cookie banner is enabled — the language-agnostic
+ * `cookie_banner` landing content block ({ enabled }, stored under `lang=de`),
+ * toggled in tds-admin (the toggle fires a rebuild of the entry pages).
+ * Absent block, demo mode or an unreachable API mean "off" — the safe default.
+ */
+export async function cookieBannerEnabled(): Promise<boolean> {
   try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) return false;
-    const data = (await res.json()) as {
-      blocks?: Record<string, { enabled?: unknown } | undefined>;
-    };
-    return data.blocks?.["cookie_banner"]?.enabled === true;
+    return (await landingBlocks())?.["cookie_banner"]?.enabled === true;
   } catch (err) {
     console.warn("[tds-blog] content-api unreachable — cookie banner off:", err);
     return false;
@@ -200,50 +263,35 @@ const ADS_OFF: AdsConfig = {
   slotEndArticle: "",
 };
 
-
-
 /**
  * The global AdSense config. `enabled` is the master switch; without an
  * `enabled` block or a `publisherId` the whole feature is off — the safe
  * default.
  *
- * Memoised through `contentCache` rather than a module-level promise: under
- * SSR a module-level memo lives as long as the server, so switching ads on in
- * the panel would never reach a reader no matter how often the cache was
- * rebuilt. See src/lib/cache.ts.
+ * Read through {@link landingBlocks}, i.e. memoised per GENERATION rather than
+ * for the life of the process: under SSR a module-level memo never expires, so
+ * switching ads on in the panel would never reach a reader no matter how often
+ * the cache was rebuilt. See src/lib/cache.ts.
  */
-export function adsConfig(): Promise<AdsConfig> {
-  return contentCache.get("ads:config", loadAdsConfig);
-}
-
-async function loadAdsConfig(): Promise<AdsConfig> {
-  if (DEMO_MODE) return ADS_OFF;
-
-  const url = new URL(`${BASE_URL}/landing`);
-  url.searchParams.set("lang", "de");
-
+export async function adsConfig(): Promise<AdsConfig> {
+  let block: Record<string, unknown> | undefined;
   try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) return ADS_OFF;
-    const data = (await res.json()) as {
-      blocks?: Record<string, Record<string, unknown> | undefined>;
-    };
-    const b = data.blocks?.["ads"];
-    if (!b || b.enabled !== true) return ADS_OFF;
-    const publisherId = typeof b.publisherId === "string" ? b.publisherId : "";
-    if (!publisherId) return ADS_OFF;
-    return {
-      enabled: true,
-      publisherId,
-      defaultMode: b.defaultMode === "manual" ? "manual" : "auto",
-      slotInArticle: typeof b.slotInArticle === "string" ? b.slotInArticle : "",
-      slotEndArticle: typeof b.slotEndArticle === "string" ? b.slotEndArticle : "",
-    };
+    block = (await landingBlocks())?.["ads"];
   } catch (err) {
     console.warn("[tds-blog] content-api unreachable — ads off:", err);
     return ADS_OFF;
   }
+
+  if (!block || block.enabled !== true) return ADS_OFF;
+  const publisherId = typeof block.publisherId === "string" ? block.publisherId : "";
+  if (!publisherId) return ADS_OFF;
+  return {
+    enabled: true,
+    publisherId,
+    defaultMode: block.defaultMode === "manual" ? "manual" : "auto",
+    slotInArticle: typeof block.slotInArticle === "string" ? block.slotInArticle : "",
+    slotEndArticle: typeof block.slotEndArticle === "string" ? block.slotEndArticle : "",
+  };
 }
 
 /** Resolve a post's effective ad mode against the global config. */
@@ -278,9 +326,10 @@ export function blogSnippets(): Promise<BlogSnippet[]> {
 
 async function loadSnippets(): Promise<BlogSnippet[]> {
   if (DEMO_MODE) return [];
+  const url = new URL(`${BASE_URL}/snippets`);
   try {
-    const res = await fetch(new URL(`${BASE_URL}/snippets`), { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, new URL(`${BASE_URL}/snippets`));
+    const res = await fetch(url, { headers: siteKeyHeaders() });
+    assertKeyAccepted(res, url);
     if (!res.ok) return [];
     const data = (await res.json()) as { snippets?: BlogSnippet[] };
     return data.snippets ?? [];
