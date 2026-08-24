@@ -88,21 +88,29 @@ jobs:
 
       - name: Stamp build
         if: ${{ inputs.publish_branch != '' }}
+        # Inside client/, which is the document root. Anywhere else in the
+        # release tree it would not be fetchable — server/ and the app root are
+        # deliberately not web-reachable.
         run: |
-          mkdir -p dist
+          mkdir -p release/client
           {
             echo "channel=${{ inputs.publish_branch }}"
             echo "commit=${GITHUB_SHA}"
             echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "workflow_run=${GITHUB_RUN_ID}"
-          } > dist/.build-info
+          } > release/client/.build-info
 
-      - name: Publish dist to ${{ inputs.publish_branch }} branch
+      - name: Publish release tree to ${{ inputs.publish_branch }} branch
         if: ${{ inputs.publish_branch != '' }}
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.NPM_TOKEN }}
-          publish_dir: ./dist
+          # `release/`, not `dist/`: this site is server-rendered now, so the
+          # host needs the SSR bundle, the Passenger startup file and a
+          # prebuilt node_modules alongside the document root. The tree is
+          # assembled by scripts/pack-release.mjs, which runs as postbuild and
+          # refuses to produce one that could not start on the host.
+          publish_dir: ./release
           publish_branch: ${{ inputs.publish_branch }}
           commit_message: '${{ inputs.publish_branch }} ${{ github.sha }}'
           force_orphan: true

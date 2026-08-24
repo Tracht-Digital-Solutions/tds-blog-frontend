@@ -21,7 +21,31 @@ const ENDPOINT =
 export const translationConfigured = Boolean(KEY);
 
 type Lang = "de" | "en";
+
+/**
+ * Translation memo — deliberately NOT generation-scoped, unlike every other
+ * memo on this site.
+ *
+ * The key contains the full source text, so an entry is content-addressed: the
+ * same input always has the same translation, and a "stale" entry is a
+ * contradiction in terms. Clearing it on a cache rebuild would only re-buy
+ * translations we already paid DeepL for.
+ *
+ * What it does need is a ceiling, which a build never did: the server runs for
+ * weeks, and an unbounded map of every article body it has ever translated is
+ * a slow leak. Oldest-first eviction is right here because the entries that
+ * matter are the ones being re-rendered now.
+ */
+const CACHE_LIMIT = 500;
 const cache = new Map<string, string | null>();
+
+function remember(key: string, value: string | null): void {
+  if (cache.size >= CACHE_LIMIT) {
+    const oldest = cache.keys().next();
+    if (!oldest.done) cache.delete(oldest.value);
+  }
+  cache.set(key, value);
+}
 
 /** Map our locale to DeepL's target codes (regional EN required by v2). */
 const target = (l: Lang) => (l === "de" ? "DE" : "EN-GB");
@@ -56,16 +80,16 @@ async function call(
     });
     if (!res.ok) {
       console.warn(`[tds-blog] DeepL ${res.status} — falling back to source text`);
-      cache.set(cacheKey, null);
+      remember(cacheKey, null);
       return null;
     }
     const data = (await res.json()) as { translations?: Array<{ text: string }> };
     const out = data.translations?.[0]?.text ?? null;
-    cache.set(cacheKey, out);
+    remember(cacheKey, out);
     return out;
   } catch (err) {
     console.warn("[tds-blog] DeepL request failed — falling back to source:", err);
-    cache.set(cacheKey, null);
+    remember(cacheKey, null);
     return null;
   }
 }

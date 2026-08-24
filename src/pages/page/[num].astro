@@ -2,37 +2,18 @@
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
-import { listAllPosts } from "~/lib/content-api";
+import { archivePage } from "~/lib/routes";
 import { paginate, PAGE_SIZE } from "~/lib/pagination";
 import { archiveDescription } from "~/lib/metaDescription";
 import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
 
-export async function getStaticPaths() {
-  let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
-  try {
-    allPosts = await listAllPosts("de");
-  } catch (err) {
-    console.error("[tds-blog] getStaticPaths fetch failed:", err);
-    return [];
-  }
-
-  const pageCount = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
-  const pages = [];
-  for (let n = 2; n <= pageCount; n++) {
-    pages.push({
-      params: { num: String(n) },
-      props: { allPosts, page: n },
-    });
-  }
-  return pages;
-}
-
-interface PageProps {
-  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
-  page: number;
-}
-
-const { allPosts, page } = Astro.props as PageProps;
+// On demand: `getStaticPaths` is not allowed on a server-rendered route, so
+// the page looks its own subject up and answers 404 itself. A missing one is
+// a 404 rather than an empty listing: an indexable, permanently-200 page for
+// something nobody wrote is worse than nothing.
+const archive = await archivePage("de", String(Astro.params.num ?? ""));
+if (!archive) return new Response("Not found", { status: 404 });
+const { allPosts, page } = archive;
 const t = translations.de;
 const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);
 const olderHref = page + 1 <= pageCount ? `/page/${page + 1}` : null;

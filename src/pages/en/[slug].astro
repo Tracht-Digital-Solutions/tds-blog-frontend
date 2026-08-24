@@ -5,22 +5,12 @@ import { resolveLocalizedPost } from "~/lib/localizedPost";
 
 // English article route. Every distinct slug is reachable here (authored in
 // EN, or machine-translated from DE at build time — see localizedPost.ts).
-export async function getStaticPaths() {
-  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
-  try {
-    posts = await listAllPosts();
-  } catch (err) {
-    console.error("[tds-blog] getStaticPaths fetch failed:", err);
-    return [];
-  }
-  const slugs = [...new Set(posts.map((p) => p.slug))];
-  return slugs.map((slug) => ({ params: { slug }, props: { allPosts: posts } }));
-}
-
+//
+// Server-rendered: the corpus is fetched here rather than handed in as props,
+// because `getStaticPaths` is not allowed on an on-demand route. The page is
+// cached by path, so this fetch happens once per rebuild, not once per reader.
 const { slug } = Astro.params;
-const { allPosts } = Astro.props as {
-  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
-};
+const allPosts = await listAllPosts();
 
 const localized = await resolveLocalizedPost(slug as string, "en");
 if (!localized) {

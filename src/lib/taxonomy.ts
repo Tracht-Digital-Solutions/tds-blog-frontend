@@ -4,13 +4,19 @@
  * (categories + popular tags), so they read it from here rather than each
  * re-deriving it from `listAllPosts`.
  *
- * The module-level `cache` persists for the whole `astro build`, so the
- * chrome components can call `getTaxonomy(lang)` on every page render and
- * `listAllPosts` walks the content-api cursor at most once per language.
- * `listAllPosts` already falls back to demo content / [] on a build-time
- * outage, so the chrome never breaks the build — categories just go empty.
+ * Memoised through `contentCache`, so the chrome components can call
+ * `getTaxonomy(lang)` on every page render while `listAllPosts` walks the
+ * content-api cursor at most once per language per cache generation. It used
+ * to be a module-level `Map`, which was right for a static build — one
+ * process, then exit — and would live as long as the server under SSR: a
+ * newly published article would never appear in the header dropdown, however
+ * often its cache was rebuilt.
+ *
+ * `listAllPosts` already falls back to demo content / [] on an outage, so the
+ * chrome never breaks — categories just go empty.
  */
 import { listAllPosts } from "~/lib/content-api";
+import { contentCache } from "~/lib/cache";
 
 export interface CatEntry {
   name: string;
@@ -29,7 +35,7 @@ export interface Taxonomy {
 /** How many tags the "Beliebte Tags" shortlist surfaces. */
 export const TOP_TAGS_LIMIT = 8;
 
-const cache = new Map<"de" | "en", Taxonomy>();
+
 
 /**
  * URL-safe slug for a category name. Categories are free-text on the post,
@@ -48,9 +54,10 @@ export function categorySlug(name: string): string {
 }
 
 export async function getTaxonomy(lang: "de" | "en"): Promise<Taxonomy> {
-  const cached = cache.get(lang);
-  if (cached) return cached;
+  return contentCache.get(`taxonomy:${lang}`, () => deriveTaxonomy(lang));
+}
 
+async function deriveTaxonomy(lang: "de" | "en"): Promise<Taxonomy> {
   let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
   try {
     posts = await listAllPosts(lang);
@@ -88,7 +95,5 @@ export async function getTaxonomy(lang: "de" | "en"): Promise<Taxonomy> {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
     .slice(0, TOP_TAGS_LIMIT);
 
-  const tax: Taxonomy = { categories, topTags };
-  cache.set(lang, tax);
-  return tax;
+  return { categories, topTags };
 }

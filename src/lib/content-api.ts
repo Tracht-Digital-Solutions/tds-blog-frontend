@@ -8,6 +8,7 @@
  */
 
 import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
+import { contentCache } from "./cache";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
 import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
 
@@ -199,17 +200,20 @@ const ADS_OFF: AdsConfig = {
   slotEndArticle: "",
 };
 
-let adsConfigCache: Promise<AdsConfig> | null = null;
+
 
 /**
- * The global AdSense config, baked at build time (an admin save fires a blog
- * rebuild). `enabled` is the master switch; without an `enabled` block or a
- * `publisherId` the whole feature is off — the safe default. Memoised for the
- * whole build so the 1000+ static pages share a single fetch.
+ * The global AdSense config. `enabled` is the master switch; without an
+ * `enabled` block or a `publisherId` the whole feature is off — the safe
+ * default.
+ *
+ * Memoised through `contentCache` rather than a module-level promise: under
+ * SSR a module-level memo lives as long as the server, so switching ads on in
+ * the panel would never reach a reader no matter how often the cache was
+ * rebuilt. See src/lib/cache.ts.
  */
 export function adsConfig(): Promise<AdsConfig> {
-  if (!adsConfigCache) adsConfigCache = loadAdsConfig();
-  return adsConfigCache;
+  return contentCache.get("ads:config", loadAdsConfig);
 }
 
 async function loadAdsConfig(): Promise<AdsConfig> {
@@ -261,16 +265,15 @@ export interface BlogSnippet {
   definition: Record<string, unknown>;
 }
 
-let snippetsCache: Promise<BlogSnippet[]> | null = null;
+
 
 /**
- * The custom-snippet catalog, baked at build time (an admin snippet save fires a
- * blog rebuild). Memoised for the whole build so every article page that renders
- * a `custom` block shares a single fetch. Empty on demo mode or an API outage.
+ * The custom-snippet catalog. Memoised through `contentCache` so every
+ * article rendering a `custom` block shares one fetch, while a cache rebuild
+ * still reads through. Empty on demo mode or an API outage.
  */
 export function blogSnippets(): Promise<BlogSnippet[]> {
-  if (!snippetsCache) snippetsCache = loadSnippets();
-  return snippetsCache;
+  return contentCache.get("blog:snippets", loadSnippets);
 }
 
 async function loadSnippets(): Promise<BlogSnippet[]> {

@@ -299,14 +299,88 @@ not occur once, and the card grid stopped at two columns on every screen up to
   same blog surface, so a shell width there would silently widen the public
   tools site too.
 
-## How rebuilds get triggered
+## How a published article reaches a reader (2026-08-24)
 
-When a post is published in `tds-admin`, the admin posts to
-`tds-content-api`, which is meant to fire a `workflow_dispatch`
-against this repo's deploy workflow so the build picks up the
-new post. The dispatch call isn't wired yet — tracked as
-`tds-content-api#3`. Until then, rebuilds run on push to `main`
-in this repo only.
+**Not through a repo build any more.** This site is `output: "server"`
+(`@astrojs/node`, standalone, under Passenger) behind a file-backed full-page
+cache: an article renders on demand and the result is stored as a plain file
+`public/.htaccess` serves directly. Saving in the panel rebuilds the cache of
+exactly the pages that article dates — its own page, its print view, the index,
+the archive, its category, each of its tags, its author page, the feed, the
+"Für Sie" index and the sitemap.
+
+A **cache hit is exactly as fast as the old static build, because it is the
+same thing**: a file on disk, served by Apache, with Node asleep.
+
+A `workflow_dispatch` release is still what ships *code and design*. Content no
+longer needs one — which is the point, since a full build here also re-runs the
+DeepL translations and re-renders one OG card per post.
+
+### The moving parts
+
+| Where | What |
+|---|---|
+| `src/lib/cache.ts` | Which pages a content change dates + the shared `contentCache` memo |
+| `src/lib/routes.ts` | The corpus queries the dynamic routes used to express as `getStaticPaths` |
+| `src/lib/pageCache.ts` | The single `pageCache(...)` instance both halves share |
+| `src/middleware.ts` | Serves hits, stores renders, refuses to store a bad-site-key render |
+| `src/pages/tds/cache/[action].ts` | Control plane: `status`, `rebuild`, `purge` |
+| `src/lib/sitemap.ts` | The sitemap, built from the corpus |
+| `public/.htaccess` | Cache-first rewrite; ships to `dist/client/.htaccess`, the document root |
+| `app.cjs`, `scripts/pack-release.mjs` | Passenger startup file + the release tree it starts from |
+
+### What changed in the routes, and why it had to
+
+- **`getStaticPaths` is not allowed on an on-demand route.** All twelve dynamic
+  routes read `Astro.params` and answer 404 themselves; the grouping they used
+  to inline lives in `src/lib/routes.ts`. A missing category/tag/author is a
+  **404, not an empty page** — an indexable, permanently-200 listing for
+  something nobody wrote is worse than nothing.
+- **The OG route keeps `getStaticPaths` and stays prerendered**, deliberately.
+  It pulls satori + `@resvg/resvg-js` (a native addon), and `src/og/render.ts`
+  anchors its font directory to `process.cwd()` — which is the project root
+  during a build and a deploy tree with no `src/` at runtime. The cost is that
+  an article published after the last deploy has no card of its own until the
+  next one; `Layout.astro` falls back to the default card, so it degrades
+  rather than breaks.
+- **`@astrojs/sitemap` is gone.** It derives entries from the routes the build
+  *emits*, and articles are no longer emitted — it would have shipped a sitemap
+  containing only `/install` and the error pages it used to filter out, with
+  nothing red anywhere. `src/lib/sitemap.ts` replaces it, keeping the exact
+  filenames `robots.txt` and Search Console already know, and emitting hreflang
+  alternates **only for article slugs**, which really do mirror across trees.
+
+### Things that cost time to find
+
+- **The control plane cannot be middleware.** Astro does not run middleware for
+  a path no route matches — it short-circuits into the 404 response. Mounted
+  there, every rebuild request came back as this site's own 404 page. And it
+  cannot live under `_cache/`: Astro excludes any segment beginning with `_`
+  from routing.
+- **A POST to it needs `Content-Type: application/json`**, or Astro's
+  `security.checkOrigin` rejects it as a cross-site form submission — with a
+  message that says nothing about content types.
+- **Every module-level memo becomes permanent under SSR.** `content-api.ts`
+  (ads, snippets) and `taxonomy.ts` went through `contentCache`, which the
+  rebuild invalidates. `translate.ts` is the documented exception: its key
+  contains the source text, so an entry cannot go stale — it only gained a
+  size ceiling, which a build never needed.
+- **Bundle a leaf; ship a tree.** `@astrojs/rss` pulls a small tree of XML
+  packages, and bundling it cost one failed build per transitive name. It is a
+  public-registry package, so it ships in `tds.release.runtimeDependencies`
+  instead and npm resolves the rest in one step.
+
+### Running it locally
+
+```bash
+npm run build                 # → dist/ + release/ (postbuild assembles + verifies)
+cd release && node app.cjs
+curl -sI localhost:4321/      # X-TDS-Cache: MISS, then HIT
+
+curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
+     -d '{"events":[{"type":"post","id":"mein-artikel","lang":"de"}]}' \
+     localhost:4321/tds/cache/rebuild
+```
 
 ## Status
 
