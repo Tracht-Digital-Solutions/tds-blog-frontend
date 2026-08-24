@@ -16,8 +16,24 @@
 # page instead of letting Apache serve dist/preise/index.html); now Passenger
 # is what serves the site.
 
+# `-Indexes` only, and deliberately NOT `+FollowSymLinks`. Plesk grants its
+# vhosts a restricted `AllowOverride Options=…` that omits FollowSymLinks, and
+# an Option the host does not allow is FATAL rather than ignored: Apache
+# answers EVERY request with 500 and logs `Option FollowSymLinks not allowed
+# here` — the whole site goes down, not just the rule that asked for it.
+#
+# Nothing here needs it. Per-directory rewriting already works on this host
+# under the same grant (api.tracht-digital.de rewrites everything with
+# `Options -Indexes` alone), and the `_tds-cache` symlink is created by the
+# same user that owns its target, which satisfies SymLinksIfOwnerMatch. If a
+# cache hit ever answers 403, grant it at the VHOST level — Plesk's *Additional
+# Apache directives*, which AllowOverride does not restrict:
+#
+#   <Directory /var/www/vhosts/<host>/<domain>/httpdocs/client>
+#     Options +FollowSymLinks
+#   </Directory>
 DirectoryIndex index.html
-Options -Indexes +FollowSymLinks
+Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
