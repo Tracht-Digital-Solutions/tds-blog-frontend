@@ -32,3 +32,7 @@ coverage/
 # The deployable tree scripts/pack-release.mjs assembles from dist/.
 # CI publishes it to the dev/release branch; it is never committed here.
 release/
+
+# Local page-cache store. On the host this lives outside the checkout
+# (TDS_CACHE_DIR); locally it defaults to <root>/var/page-cache.
+var/
