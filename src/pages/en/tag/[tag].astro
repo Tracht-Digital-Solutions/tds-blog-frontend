@@ -2,46 +2,19 @@
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import TagList from "~/components/TagList.astro";
-import { listAllPosts } from "~/lib/content-api";
+import { byTag } from "~/lib/routes";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
 import { tagDescription } from "~/lib/metaDescription";
 
-/**
- * Tag-filtered journal index (EN). Mirror of /tag/[tag].astro
- * against `listAllPosts("en")`.
- */
-export async function getStaticPaths() {
-  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
-  try {
-    posts = await listAllPosts("en");
-  } catch (err) {
-    console.error("[tds-blog] /en/tag getStaticPaths fetch failed:", err);
-    return [];
-  }
-
-  const tagToPosts = new Map<string, typeof posts>();
-  for (const p of posts) {
-    if (!p.tags) continue;
-    for (const t of p.tags.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)) {
-      if (!tagToPosts.has(t)) tagToPosts.set(t, []);
-      tagToPosts.get(t)!.push(p);
-    }
-  }
-
-  return Array.from(tagToPosts.entries()).map(([tag, list]) => ({
-    params: { tag },
-    props: { posts: list, allPosts: posts },
-  }));
-}
-
-interface PageProps {
-  posts: Awaited<ReturnType<typeof listAllPosts>>;
-  allPosts: Awaited<ReturnType<typeof listAllPosts>>;
-}
-
-const { posts, allPosts } = Astro.props as PageProps;
+// On demand: `getStaticPaths` is not allowed on a server-rendered route, so
+// the page looks its own subject up and answers 404 itself. A missing one is
+// a 404 rather than an empty listing: an indexable, permanently-200 page for
+// something nobody wrote is worse than nothing.
 const tag = Astro.params.tag as string;
+const group = await byTag("en", tag);
+if (!group) return new Response("Not found", { status: 404 });
+const { posts, allPosts } = group;
 
 const jsonLd = asGraph(
   websiteSchema(),

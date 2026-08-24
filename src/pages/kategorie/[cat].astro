@@ -1,52 +1,19 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
-import { listAllPosts } from "~/lib/content-api";
-import { categorySlug } from "~/lib/taxonomy";
+import { byCategory } from "~/lib/routes";
 import { categoryDescription } from "~/lib/metaDescription";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
 
-/**
- * Category-filtered journal index (DE). One static page per unique
- * category across the published DE corpus. Mirrors /tag/[tag].astro:
- * `listAllPosts` already pulls the full set for the static build, so we
- * group in JS rather than asking the content-api for a server-side filter.
- * The original category name rides along in props (the slug is lossy).
- */
-export async function getStaticPaths() {
-  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
-  try {
-    posts = await listAllPosts("de");
-  } catch (err) {
-    console.error("[tds-blog] /kategorie getStaticPaths fetch failed:", err);
-    return [];
-  }
-
-  const catToPosts = new Map<string, { name: string; list: typeof posts }>();
-  for (const p of posts) {
-    const name = p.category?.trim();
-    if (!name) continue;
-    const slug = categorySlug(name);
-    if (!slug) continue;
-    const entry = catToPosts.get(slug);
-    if (entry) entry.list.push(p);
-    else catToPosts.set(slug, { name, list: [p] });
-  }
-
-  return Array.from(catToPosts.entries()).map(([slug, { name, list }]) => ({
-    params: { cat: slug },
-    props: { name, posts: list },
-  }));
-}
-
-interface PageProps {
-  name: string;
-  posts: Awaited<ReturnType<typeof listAllPosts>>;
-}
-
-const { name, posts } = Astro.props as PageProps;
+// On demand: `getStaticPaths` is not allowed on a server-rendered route, so
+// the page looks its own subject up and answers 404 itself. A missing one is
+// a 404 rather than an empty listing: an indexable, permanently-200 page for
+// something nobody wrote is worse than nothing.
 const cat = Astro.params.cat as string;
+const group = await byCategory("de", cat);
+if (!group) return new Response("Not found", { status: 404 });
+const { name, posts } = group;
 
 const jsonLd = asGraph(
   websiteSchema(),

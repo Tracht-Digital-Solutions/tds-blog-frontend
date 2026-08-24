@@ -75,6 +75,23 @@ const BUCKET = "__tdsSiteKeyRejections__" as const;
 export const siteKeyRejections: string[] = ((globalThis as Record<string, unknown>)[BUCKET] ??=
   []) as string[];
 
+const COUNTER = "__tdsSiteKeyRejectionCount__" as const;
+
+/**
+ * How many rejections have happened, in total, ever.
+ *
+ * Separate from {@link siteKeyRejections} because that list is deduplicated by
+ * URL — it answers "which routes were refused", which is what the build-time
+ * message needs. At REQUEST time the question is a different one: "did this
+ * render hit a rejection", and the deduplicated list stops growing after the
+ * first one, so a counter derived from its length would report a clean render
+ * for every request after the first. The page cache compares this value around
+ * a render to decide whether the result may be stored; see `src/middleware.ts`.
+ */
+export function siteKeyRejectionCount(): number {
+  return ((globalThis as Record<string, unknown>)[COUNTER] as number | undefined) ?? 0;
+}
+
 /** Request headers carrying the key, or `undefined` when none is configured. */
 export function siteKeyHeaders(): Record<string, string> | undefined {
   return SITE_KEY === "" ? undefined : { "X-TDS-Site-Key": SITE_KEY };
@@ -93,6 +110,8 @@ export function assertKeyAccepted(res: Response, url: string | URL): void {
 
   const where = String(url);
   if (!siteKeyRejections.includes(where)) siteKeyRejections.push(where);
+  const store = globalThis as Record<string, unknown>;
+  store[COUNTER] = ((store[COUNTER] as number | undefined) ?? 0) + 1;
   throw new SiteKeyRejectedError(res.status, where);
 }
 

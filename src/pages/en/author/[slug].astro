@@ -1,47 +1,19 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
-import { listAllPosts } from "~/lib/content-api";
+import { byAuthor } from "~/lib/routes";
 import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
 import { authorDescription } from "~/lib/metaDescription";
 import type { BlogAuthor } from "@tracht-digital-solutions/tds-shared";
 
-/**
- * Author page (EN) — the /en/author/[slug] twin of /autor/[slug].astro.
- * Groups the EN corpus by `author.slug` at build time. altUrl={null} (like the
- * category pages: the routes don't mirror by a simple prefix swap).
- */
-export async function getStaticPaths() {
-  let posts: Awaited<ReturnType<typeof listAllPosts>> = [];
-  try {
-    posts = await listAllPosts("en");
-  } catch (err) {
-    console.error("[tds-blog] /en/author getStaticPaths fetch failed:", err);
-    return [];
-  }
-
-  const bySlug = new Map<string, { author: BlogAuthor; list: typeof posts }>();
-  for (const p of posts) {
-    const author = p.author;
-    if (!author?.slug) continue;
-    const entry = bySlug.get(author.slug);
-    if (entry) entry.list.push(p);
-    else bySlug.set(author.slug, { author, list: [p] });
-  }
-
-  return Array.from(bySlug.entries()).map(([slug, { author, list }]) => ({
-    params: { slug },
-    props: { author, posts: list },
-  }));
-}
-
-interface PageProps {
-  author: BlogAuthor;
-  posts: Awaited<ReturnType<typeof listAllPosts>>;
-}
-
-const { author, posts } = Astro.props as PageProps;
+// On demand: `getStaticPaths` is not allowed on a server-rendered route, so
+// the page looks its own subject up and answers 404 itself. A missing one is
+// a 404 rather than an empty listing: an indexable, permanently-200 page for
+// something nobody wrote is worse than nothing.
+const group = await byAuthor("en", String(Astro.params.slug ?? ""));
+if (!group) return new Response("Not found", { status: 404 });
+const { author, posts } = group as { author: BlogAuthor; posts: typeof group.posts };
 
 const pageUrl = `${siteConfig.url}/en/author/${author.slug}`;
 // A real bio is CMS-authored and is the better description whenever it

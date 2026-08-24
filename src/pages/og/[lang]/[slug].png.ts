@@ -3,6 +3,23 @@ import { listAllPosts, getPost } from "~/lib/content-api";
 import { renderOgPng } from "~/og/render";
 
 /**
+ * Prerendered, and it must stay that way.
+ *
+ * Two independent reasons. The renderer pulls in satori and @resvg/resvg-js,
+ * the second a native addon that would then have to be installed on the
+ * production host. And src/og/render.ts anchors its font directory to
+ * process.cwd(), which is the project root during `astro build` and a deploy
+ * tree with no src/ at runtime — served on demand this route would ENOENT on
+ * its first request in production and nowhere else.
+ *
+ * The cost: an article published after the last deploy has no OG card of its
+ * own until the next one. Layout.astro falls back to the default card, so it
+ * degrades rather than breaks. Prerendering keeps `getStaticPaths`, which is
+ * only allowed on prerendered routes.
+ */
+export const prerender = true;
+
+/**
  * Per-post OG image. Astro emits a static .png file at build time
  * for every post returned by listAllPosts. The endpoint receives the
  * lang + slug from the route params and produces the PNG via the

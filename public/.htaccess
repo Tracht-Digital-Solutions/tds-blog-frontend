@@ -1,0 +1,91 @@
+# Tracht Digital Solutions — Astro SSR behind a file-backed page cache.
+#
+# This file ships to dist/client/.htaccess, which IS the document root of the
+# Passenger application. That matters: Passenger does NOT read .htaccess files
+# from subdirectories, so every rule the site needs has to live here.
+#
+# The order below is the whole design:
+#   1. a real file on disk      → Apache serves it, Node stays asleep
+#   2. a prerendered directory  → same, via its index.html
+#   3. a cache entry            → same; this is what makes a dynamic site as
+#                                 fast as the static build it replaced
+#   4. anything else            → Passenger → Node → render → store → answer
+#
+# Note `PassengerEnabled off` is deliberately gone. It used to be load-bearing
+# (Passenger intercepted sub-path requests and answered with its generic error
+# page instead of letting Apache serve dist/preise/index.html); now Passenger
+# is what serves the site.
+
+DirectoryIndex index.html
+Options -Indexes +FollowSymLinks
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # (0) The cache directory is internal. Match on THE_REQUEST — the verbatim
+  #     request line, which is never rewritten — so this blocks what the client
+  #     actually asked for without also blocking our own internal rewrite in
+  #     (3). Testing REQUEST_URI here would 403 every cache hit.
+  RewriteCond %{THE_REQUEST} "\s/+_tds-cache[/\s?]" [NC]
+  RewriteRule ^ - [F,END]
+
+  # Tag the hashed asset directory so the immutable header below applies only
+  # to content whose filename changes when its bytes do.
+  RewriteRule ^_astro/ - [E=TDS_IMMUTABLE:1]
+
+  # (1) A real file: hashed assets, the prerendered OG cards, robots.txt,
+  #     the covers and brand images, favicon. DOCUMENT_ROOT + REQUEST_URI rather than
+  #     REQUEST_FILENAME, because Passenger hooks Apache's map_to_storage and
+  #     the filename mapping is no longer trustworthy once it has claimed the
+  #     request.
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+  RewriteRule ^ - [L]
+
+  # (2) A prerendered page: /404 and /404/ both resolve to /404/index.html.
+  #     The non-greedy capture with an optional slash collapses the two
+  #     spellings onto one file (build.format is "directory", trailingSlash is
+  #     "ignore"). Rule (1) matching on the re-entry pass is what terminates
+  #     the internal rewrite loop.
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
+
+  # (3) A cache hit — HTML pages.
+  #     GET/HEAD only: a POST answered from a static file would return a page
+  #     body with 200 and silently swallow the submission.
+  #     The query string is ignored on purpose. No route on this site reads
+  #     Astro.url.searchParams server-side, so ?utm_source=… cannot change the
+  #     render and must not cost a Node hit. ?nocache=1 forces a live render
+  #     for debugging.
+  RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+  RewriteCond %{QUERY_STRING} !(^|&)nocache=
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/index.html -f
+  RewriteRule ^$ /_tds-cache/index.html [L]
+
+  RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+  RewriteCond %{QUERY_STRING} !(^|&)nocache=
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /_tds-cache/$1/index.html [L]
+
+  # (3b) A cache hit — artefacts stored under their own name because they
+  #      already carry a file type: /rss.xml, /en/rss.xml, /sitemap-0.xml,
+  #      /sitemap-index.xml, /interests-index.json. Serving a feed through an
+  #      index.html would hand every reader XML labelled text/html.
+  RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+  RewriteCond %{QUERY_STRING} !(^|&)nocache=
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/$1 -f
+  RewriteRule ^(.+\.[A-Za-z0-9]+)$ /_tds-cache/$1 [L]
+
+  # (4) No file, no cache entry → fall through to Passenger.
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable" env=TDS_IMMUTABLE
+
+  # Cached HTML is a snapshot the panel can replace at any moment, so it must
+  # never be held by a browser or an intermediary. Revalidation is cheap: the
+  # cache writes a strong ETag.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+    Header append Vary "Accept-Encoding"
+  </FilesMatch>
+</IfModule>

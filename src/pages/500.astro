@@ -1,6 +1,12 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import ErrorView from "~/components/ErrorView.astro";
+// Prerendered: nothing here varies with CMS content, so it is built once at
+// deploy time. Keeping the OG routes out of the on-demand set is also what
+// keeps satori + @resvg/resvg-js (a native addon) out of the server bundle,
+// and what stops src/og/render.ts resolving its font directory against a
+// deploy tree that has no src/.
+export const prerender = true;
 ---
 
 <Layout title="500 · Serverfehler" bare noindex>
