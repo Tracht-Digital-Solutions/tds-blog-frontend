@@ -184,8 +184,22 @@ function verify() {
   // `"@tracht-digital-solutions/tds-shared/components":"_astro/index.…js"`
   // appears in entry.mjs as DATA on every healthy build. A grep for the name
   // alone would fail this check forever, for a string that is not an import.
-  const importRe =
-    /(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)["']([^"']+)["']/g;
+  // Static and dynamic imports are scanned separately, because they fail
+  // differently and one of them has a legitimate exception.
+  //
+  // A STATIC import is resolved when the module loads: missing, it is an
+  // ERR_MODULE_NOT_FOUND before the server can answer anything.
+  //
+  // A DYNAMIC import is resolved when the line RUNS. The tool packs use that
+  // deliberately — `pdfjs-dist` and `tesseract.js` are megabyte-sized
+  // browser-only engines fetched inside a click handler, so the server bundle
+  // mentions them and never executes them. Shipping those to the host would
+  // add tens of megabytes to every deploy for code that cannot run there.
+  // They are allowed to be absent, but only by NAME in `tds.release.browserOnly`,
+  // so the exception is a recorded decision rather than a silent hole.
+  const staticRe = /\bfrom\s*["']([^"']+)["']/g;
+  const dynamicRe = /\b(?:import|require)\s*\(\s*["']([^"']+)["']\s*\)/g;
+  const browserOnly = new Set(config.browserOnly ?? []);
   const forbidden = [
     { test: (s) => s.startsWith("@tracht-digital-solutions/"), why: "first-party package" },
     { test: (s) => s === "satori" || s.startsWith("@resvg/"), why: "build-only OG renderer" },
@@ -199,33 +213,53 @@ function verify() {
   // of React and made every island hook throw "Cannot read properties of null
   // (reading 'useState')" from a stack that names neither cause.
   const unresolved = new Set();
+  const unresolvedLazy = new Set();
   const seen = new Set();
+
+  const consider = (specifier, file, lazy) => {
+    const hit = forbidden.find((f) => f.test(specifier));
+    if (hit) problems.push(`server bundle imports ${specifier} (${hit.why}): ${file}`);
+
+    if (specifier.startsWith(".") || specifier.startsWith("node:")) return;
+    // The regexes also match the word "from" inside ordinary string content —
+    // minified German copy managed `…, hourSuffix: "…` — so the capture has to
+    // look like a module specifier before it is believed.
+    if (!/^[@a-zA-Z0-9][@a-zA-Z0-9._~/-]*$/.test(specifier)) return;
+    if (isBuiltin(specifier)) return;
+
+    const name = packageOf(specifier);
+    const key = `${lazy ? "lazy:" : "static:"}${name}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    if (existsSync(join(out, "node_modules", name))) return;
+    if (lazy) {
+      if (!browserOnly.has(name)) unresolvedLazy.add(name);
+    } else {
+      unresolved.add(name);
+    }
+  };
 
   for (const file of walk(join(out, "server"))) {
     const source = codeOnly(readFileSync(file, "utf8"));
-    for (const match of source.matchAll(importRe)) {
-      const specifier = match[1];
-      const hit = forbidden.find((f) => f.test(specifier));
-      if (hit) problems.push(`server bundle imports ${specifier} (${hit.why}): ${file}`);
-
-      if (specifier.startsWith(".") || specifier.startsWith("node:")) continue;
-      // The regex above also matches the word "from" inside ordinary string
-      // content — minified German copy managed `…, hourSuffix: "…` — so the
-      // capture has to look like a module specifier before it is believed.
-      if (!/^[@a-zA-Z0-9][@a-zA-Z0-9._~/-]*$/.test(specifier)) continue;
-      if (isBuiltin(specifier)) continue;
-      if (seen.has(specifier)) continue;
-      seen.add(specifier);
-      if (!existsSync(join(out, "node_modules", packageOf(specifier)))) {
-        unresolved.add(specifier);
-      }
-    }
+    for (const match of source.matchAll(staticRe)) consider(match[1], file, false);
+    for (const match of source.matchAll(dynamicRe)) consider(match[1], file, true);
   }
 
   for (const specifier of [...unresolved].sort()) {
     problems.push(
-      `server bundle imports "${specifier}", which is not in the release tree — ` +
-        "add it to tds.release.runtimeDependencies, or bundle it via vite.ssr.noExternal",
+      `server bundle imports "${specifier}" statically, and it is not in the release ` +
+        "tree — add it to tds.release.runtimeDependencies, or bundle it via " +
+        "vite.ssr.noExternal",
+    );
+  }
+
+  for (const specifier of [...unresolvedLazy].sort()) {
+    problems.push(
+      `server bundle lazily imports "${specifier}", which is not in the release tree. ` +
+        "If that code path can run on the server, ship it in " +
+        "tds.release.runtimeDependencies; if it is browser-only (a click handler " +
+        `in a client island), record it in tds.release.browserOnly as "${specifier}".`,
     );
   }
 
