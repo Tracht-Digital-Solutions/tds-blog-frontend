@@ -101,6 +101,12 @@ The site runs the platform's current line: **TypeScript 6, vitest 4, jsdom 30,
 Astro 7.2.5, shiki 4, satori 0.33** — the same set `tds-tools-frontend` moved
 to, so the three public sites stay one toolchain.
 
+The current shared-library line is **`tds-shared ^0.33.0`**. A caret on a
+`0.x` package never crosses the minor boundary, so every new shared minor must
+be repinned explicitly and verified with a fresh `npm install
+--no-package-lock`; a green build against the old installed tree proves
+nothing about the released line.
+
 - **TypeScript 7 is not a deferred decision, it is unavailable.**
   `@astrojs/check` declares `peerDependencies: { typescript: "^5.0.0 || ^6.0.0" }`,
   and `astro check` *is* the correctness gate here. Re-test it when
