@@ -117,7 +117,7 @@ export const cacheEvents: EventMap = {
       if (!slug) continue;
 
       const p = prefix(lang);
-      paths.push(`${p}/${slug}`, `${p}/${slug}/print`);
+      paths.push(`${p}/${slug}`, `${p}/${slug}/print`, `/og/${lang}/${slug}.png`);
 
       const post = (await corpus(lang)).find((candidate) => candidate.slug === slug);
       if (post) paths.push(...taxonomyPages(post, lang));

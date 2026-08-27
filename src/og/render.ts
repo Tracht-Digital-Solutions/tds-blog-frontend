@@ -1,10 +1,10 @@
 /**
- * Build-time OG image renderer.
+ * OG image renderer.
  *
  * Satori turns a JSX/object tree into SVG; resvg-js rasterises that
- * SVG to PNG. We do both at `getStaticPaths` time so each post's
- * social-preview image ships as a static file under
- * /og/{lang}/{slug}.png — no runtime cost, no third-party service.
+ * SVG to PNG. Post cards are rendered on demand and stored by the file-backed
+ * page cache under /og/{lang}/{slug}.png — no content build or third-party
+ * service is required.
  *
  * Editorial template (1200×630 — the LinkedIn / Twitter Card size):
  *
@@ -26,7 +26,10 @@ import { Resvg } from "@resvg/resvg-js";
 
 // Resolved from the project root because Astro bundles this file into dist/,
 // where `import.meta.url`-based relative paths no longer reach src/og/fonts.
-const FONT_DIR = path.join(process.cwd(), "src/og/fonts");
+const FONT_DIR = ["assets/og-fonts", "src/og/fonts"]
+  .map((candidate) => path.join(process.cwd(), candidate))
+  .find((candidate) => fs.existsSync(path.join(candidate, "Lato-Bold.ttf"))) ??
+  path.join(process.cwd(), "src/og/fonts");
 let latoBold: Buffer | null = null;
 
 function loadFonts() {
