@@ -25,11 +25,9 @@ import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
 import { contentCache } from "./cache";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
 import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
+import { contentApiBase } from "./connection";
 
 export type { TopicItem, TopicsBlock } from "./demoContent";
-
-const BASE_URL =
-  import.meta.env.CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
 
 interface ListResponse {
   posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode">>;
@@ -52,7 +50,7 @@ export type ListPost = ListResponse["posts"][number];
 export function resolveCoverHint(coverHint?: string | null): string | null {
   if (!coverHint) return null;
   if (/^https?:\/\//.test(coverHint)) return coverHint;
-  if (coverHint.startsWith("/")) return `${BASE_URL}${coverHint}`;
+  if (coverHint.startsWith("/")) return `${contentApiBase()}${coverHint}`;
   return coverHint;
 }
 
@@ -65,7 +63,7 @@ export function resolveCoverHint(coverHint?: string | null): string | null {
 export function resolveAvatar(avatarUrl?: string | null): string | null {
   if (!avatarUrl) return null;
   if (/^https?:\/\//.test(avatarUrl)) return avatarUrl;
-  if (avatarUrl.startsWith("/")) return `${BASE_URL}${avatarUrl}`;
+  if (avatarUrl.startsWith("/")) return `${contentApiBase()}${avatarUrl}`;
   return avatarUrl;
 }
 
@@ -110,7 +108,7 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
     let cursor: number | null = null;
 
     do {
-      const url = new URL(`${BASE_URL}/blog`);
+      const url = new URL(`${contentApiBase()}/blog`);
       url.searchParams.set("limit", "50");
       if (lang) url.searchParams.set("lang", lang);
       if (cursor !== null) url.searchParams.set("cursor", String(cursor));
@@ -145,7 +143,7 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
 export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListResponse["posts"]> {
   if (DEMO_MODE) return demoPostList(lang).slice(0, limit);
 
-  const url = new URL(`${BASE_URL}/blog/popular`);
+  const url = new URL(`${contentApiBase()}/blog/popular`);
   url.searchParams.set("lang", lang);
   url.searchParams.set("limit", String(limit));
 
@@ -174,7 +172,7 @@ export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListRes
 export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null> {
   if (DEMO_MODE) return demoTopics(lang);
 
-  const url = new URL(`${BASE_URL}/topics`);
+  const url = new URL(`${contentApiBase()}/topics`);
   url.searchParams.set("lang", lang);
 
   try {
@@ -220,7 +218,7 @@ function landingBlocks(): Promise<LandingBlocks | null> {
 async function loadLandingBlocks(): Promise<LandingBlocks | null> {
   if (DEMO_MODE) return null;
 
-  const url = new URL(`${BASE_URL}/landing`);
+  const url = new URL(`${contentApiBase()}/landing`);
   url.searchParams.set("lang", "de");
 
   const res = await fetch(url, { headers: siteKeyHeaders() });
@@ -326,7 +324,7 @@ export function blogSnippets(): Promise<BlogSnippet[]> {
 
 async function loadSnippets(): Promise<BlogSnippet[]> {
   if (DEMO_MODE) return [];
-  const url = new URL(`${BASE_URL}/snippets`);
+  const url = new URL(`${contentApiBase()}/snippets`);
   try {
     const res = await fetch(url, { headers: siteKeyHeaders() });
     assertKeyAccepted(res, url);
@@ -342,7 +340,7 @@ async function loadSnippets(): Promise<BlogSnippet[]> {
 export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
   if (DEMO_MODE) return demoPost(slug, lang);
 
-  const url = new URL(`${BASE_URL}/blog/${encodeURIComponent(slug)}`);
+  const url = new URL(`${contentApiBase()}/blog/${encodeURIComponent(slug)}`);
   url.searchParams.set("lang", lang);
 
   try {

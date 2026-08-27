@@ -33,15 +33,16 @@ const read = (name: string) =>
 const FETCHERS = ["content-api.ts"];
 
 describe("site key", () => {
-  it("is read from process.env, never import.meta.env", () => {
+  it("comes from private paired state with a one-release process.env fallback", () => {
     // Astro/Vite inline ONLY `PUBLIC_`-prefixed names into import.meta.env, and
     // this repo declares no envField schema — so import.meta.env.TDS_SITE_KEY
     // would be undefined in every build, forever, with nothing to say so. That
     // is exactly how TOOLS_REGISTRY_TOKEN spent its entire life: the guard that
     // read it was unconditionally true and the sync never ran once.
-    const src = read("siteKey.ts");
-    expect(src).toMatch(/process\.env\.TDS_SITE_KEY/);
-    expect(src).not.toMatch(/import\.meta\.env\.TDS_SITE_KEY/);
+    const connection = read("connection.ts");
+    expect(connection).toMatch(/fallbackSiteKey:[\s\S]*process\.env\.TDS_SITE_KEY/);
+    expect(connection).not.toMatch(/import\.meta\.env\.TDS_SITE_KEY/);
+    expect(read("siteKey.ts")).toMatch(/connection\.siteKey\(\)/);
   });
 
   it("is not PUBLIC_-prefixed anywhere", () => {
@@ -75,17 +76,19 @@ describe("site key", () => {
     }
   });
 
-  it("fails the build from an Astro hook, not from the fetch helpers", () => {
+  it("does not make the GitHub build depend on a runtime credential", () => {
     // A throw inside assertKeyAccepted is swallowed by the fail-soft try/catch
     // at every call site. That was the first version, and a real build against
     // a 401 stub printed the abort message five times and then completed GREEN.
     // astro:build:done runs outside all of them.
     const src = read("siteKey.ts");
-    expect(src).toMatch(/astro:build:done/);
-    expect(src).toMatch(/export function siteKeyGuard\(\)/);
+    expect(src).not.toMatch(/astro:build:done/);
+    expect(src).not.toMatch(/siteKeyGuard/);
 
     const config = readFileSync(join(HERE, "..", "..", "astro.config.mjs"), "utf8");
-    expect(config).toMatch(/siteKeyGuard\(\)/);
+    expect(config).not.toMatch(/siteKeyGuard/);
+    const workflow = readFileSync(join(HERE, "..", "..", ".github", "workflows", "_build.yml"), "utf8");
+    expect(workflow).not.toMatch(/TDS_SITE_KEY/);
   });
 
   it("shares the rejection list through globalThis", () => {
@@ -102,6 +105,6 @@ describe("site key", () => {
     // deploy, and a site with no key must behave exactly as it always has.
     const src = read("siteKey.ts");
     expect(src).toMatch(/res\.status !== 401 && res\.status !== 403/);
-    expect(src).toMatch(/SITE_KEY === ""\) return/);
+    expect(src).toMatch(/currentSiteKey\(\) === ""\) return/);
   });
 });

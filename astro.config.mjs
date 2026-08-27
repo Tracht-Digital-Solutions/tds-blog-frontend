@@ -4,7 +4,6 @@ import react from "@astrojs/react";
 // Shared CSS minify settings (incl. the cssTarget that keeps lightningcss
 // from dropping the .brand-header backdrop-filter prefix). See tds-shared#10.
 import { tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
-import { siteKeyGuard } from "./src/lib/siteKey";
 
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
@@ -30,12 +29,6 @@ export default defineConfig({
   }),
   integrations: [
     react(),
-    // Fails the build when TDS_SITE_KEY was rejected. It has to live here,
-    // not in the fetch helpers: every content fetch is wrapped in a
-    // fail-soft try/catch, and a throw from inside one is swallowed — a
-    // real build against a 401 stub printed the abort message five times
-    // and then completed green. astro:build:done runs outside all of them.
-    siteKeyGuard(),
     // @astrojs/sitemap is deliberately gone. It derives its entries from the
     // routes the build EMITS, and under `output: "server"` the articles,
     // taxonomy pages and archive pages are not emitted — it would have shipped
@@ -69,7 +62,7 @@ export default defineConfig({
         "zod",
       ],
       // Native addons cannot be bundled.
-      external: ["sharp"],
+      external: ["sharp", "@resvg/resvg-js", "satori"],
     },
   },
   // Pin sharp explicitly so every `<Image />` consumer gets the

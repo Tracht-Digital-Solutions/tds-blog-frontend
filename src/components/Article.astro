@@ -172,21 +172,12 @@ const authorInitials = authorName
   .slice(0, 2)
   .toUpperCase() || "TD";
 
-// Public, fire-and-forget view beacon. PUBLIC_ env so the inline script
-// below can read it (the build-time CONTENT_API_URL isn't exposed to the
-// browser); falls back to the production gateway. Disabled on demo builds.
-//
-// Deliberately NOT routed through tds-runtime.json, unlike the newsletter form
-// and the support widget. Three reasons, and they all point the same way: the
-// beacon is `is:inline` + `define:vars`, so it cannot import the resolver
-// (an inline script is not bundled, and its imports would reach the browser as
-// bare specifiers); `sendBeacon` is a simple cross-origin POST, so no CORS
-// allow-list can break it; and losing a view count is the cheapest failure in
-// this repo. Adding a config request to every article page to protect an
-// analytics ping would be the wrong trade. If the API host moves, view counts
-// stop until the next rebuild — by design.
-const beaconBase =
-  import.meta.env.PUBLIC_CONTENT_API_URL ?? "https://api.tracht-digital.de/content";
+import { contentApiBase } from "~/lib/connection";
+
+// Public, fire-and-forget view beacon. The server resolves the paired API base
+// for each render and writes only that public URL into the inline script. The
+// site key and cache token never enter the browser. Disabled on demo builds.
+const beaconBase = contentApiBase();
 const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 ---
 

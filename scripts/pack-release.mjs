@@ -202,7 +202,6 @@ function verify() {
   const browserOnly = new Set(config.browserOnly ?? []);
   const forbidden = [
     { test: (s) => s.startsWith("@tracht-digital-solutions/"), why: "first-party package" },
-    { test: (s) => s === "satori" || s.startsWith("@resvg/"), why: "build-only OG renderer" },
   ];
 
   // Every bare specifier the bundle still imports has to resolve inside THIS
@@ -275,7 +274,7 @@ function verify() {
     for (const problem of problems) console.error(`  - ${problem}`);
     process.exit(1);
   }
-  console.log("[pack-release] verified: self-contained, no first-party or native OG imports");
+  console.log("[pack-release] verified: self-contained, no first-party or unresolved imports");
 }
 
 /**
