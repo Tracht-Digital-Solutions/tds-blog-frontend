@@ -12,6 +12,23 @@ function buildApiBase(): string {
   return content.trim().replace(/\/+$/, "").replace(/\/content$/, "") || DEFAULT_API_BASE;
 }
 
+/**
+ * Where the account menu sends someone who is not signed in.
+ *
+ * This was the production URL as a literal, which made every non-production
+ * build inconsistent with itself: `CONTENT_API_URL` moved the content reads to
+ * the local stack while the account menu still bounced to the live login site
+ * — and coming back from there with a session for the wrong API looks like a
+ * login that simply did not take.
+ */
+function buildLoginUrl(): string {
+  return (
+    ((import.meta.env.PUBLIC_LOGIN_URL as string | undefined) ?? "https://auth.tracht-digital.de")
+      .trim()
+      .replace(/\/+$/, "") || "https://auth.tracht-digital.de"
+  );
+}
+
 /** The private, dynamically re-readable connection for this server. */
 export const connection = siteConnection({
   profile: "blog",
@@ -22,7 +39,7 @@ export const connection = siteConnection({
     const apiBase = buildApiBase();
     return {
       apiBase,
-      loginUrl: "https://auth.tracht-digital.de",
+      loginUrl: buildLoginUrl(),
       contactUrl: `${apiBase}/contact`,
       liveChatFrontend: "blog",
     };
