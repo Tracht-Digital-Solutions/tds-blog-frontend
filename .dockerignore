@@ -1,0 +1,28 @@
+# Build context for tds-gateway-api's `frontends` compose profile, which runs
+# this product's packed release/ tree in a container
+# (tds-gateway-api/deploy/Dockerfile.frontend).
+#
+# Two of these lines are not housekeeping:
+#
+#   **/node_modules  Two trees match — the development one at the root and the
+#                    packed one inside release/, ~170 MB. Both are installed
+#                    FOR THE DEVELOPER'S MACHINE; on Windows they hold win32
+#                    binaries (sharp most visibly) that Linux cannot load. The
+#                    image reinstalls from release/package.json, which lists
+#                    only public packages, so a copied tree is both useless and
+#                    the largest single thing in the transfer.
+#
+#   .env             A local developer .env would otherwise be baked into an
+#                    image layer. Nothing in the container reads one: every
+#                    PUBLIC_* value is already compiled into release/ by the
+#                    build that produced it.
+**/node_modules
+.env
+.env.production
+
+.git
+.github
+.astro
+dist
+var
+*.log

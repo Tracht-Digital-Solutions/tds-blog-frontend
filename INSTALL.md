@@ -59,13 +59,25 @@ and re-run `npm run og:smoke` to verify the renderer.
 ## 4. Configure
 
 ```bash
-# .env (build-time)
-CONTENT_API_URL=http://localhost:8003
+# .env — copy from .env.example
+CONTENT_API_URL=http://localhost:8080/content
 ```
 
 The default points at `https://api.tracht-digital.de/content` — so
 for a quick build against production posts you can leave `.env`
 empty.
+
+Port `8080` is the gateway in the Docker stack (`tds-gateway-api`,
+`INSTALL-DOCKER.md`); `8000` is the one `composer start` brings up. (This line
+used to read `http://localhost:8003`, which was neither — 8003 is the auth
+service's internal loopback port, and it has no `/content` routes at all.)
+
+`src/lib/connection.ts` strips a trailing `/content` to derive the API origin,
+so both `…:8080` and `…:8080/content` work. What does **not** work is an API
+under a path prefix (`http://host/api/content`): the derived origin then keeps
+a path, origin validation rejects it, and the site falls back to the
+**production** gateway — quietly, because every content read here is fail-soft
+by design. Give this variable a bare origin plus at most `/content`.
 
 ## 5. Local development
 
