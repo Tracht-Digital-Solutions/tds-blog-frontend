@@ -25,7 +25,7 @@ const latest = [...posts]
   .slice(0, 6);
 
 const jsonLd = asGraph(
-  websiteSchema(),
+  websiteSchema("en"),
   blogSchema("en"),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/en/` },

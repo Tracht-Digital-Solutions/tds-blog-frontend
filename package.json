@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "type-check": "astro check",
     "og:smoke": "tsx scripts/og-smoke.ts",
+    "og:default": "tsx scripts/og-default.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "postbuild": "node scripts/pack-release.mjs",

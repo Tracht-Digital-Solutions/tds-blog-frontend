@@ -48,18 +48,66 @@ export function personRef() {
 }
 
 /**
+ * The Organization node itself, not just a reference.
+ *
+ * `organizationRef()` names an `@id` on the marketing domain and nothing else,
+ * which is correct only for a crawler that has also fetched that domain and
+ * resolved it. Every `publisher` on this site pointed at that bare `@id`, so on
+ * its own the blog's graph declared a publisher with no name and no logo —
+ * precisely the two properties Google's article guidance asks a publisher for.
+ *
+ * Emitting a consistent full node here does not fork the entity: the `@id` is
+ * the same, so the two descriptions merge. The values must therefore stay in
+ * step with the marketing site's `seo.ts`, which is why they all come from
+ * `siteConfig`.
+ */
+export function organizationSchema() {
+  const sameAs = Object.values(siteConfig.socials).filter(
+    (url): url is string => typeof url === "string" && url !== "",
+  );
+
+  return {
+    "@type": "Organization",
+    "@id": orgId,
+    name: siteConfig.name,
+    legalName: siteConfig.legalName,
+    url: siteConfig.marketingUrl,
+    email: siteConfig.email,
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteConfig.url}/brand/td-logomark.webp`,
+    },
+    address: {
+      "@type": "PostalAddress",
+      postalCode: siteConfig.address.postalCode,
+      addressLocality: siteConfig.address.addressLocality,
+      addressRegion: siteConfig.address.addressRegion,
+      addressCountry: siteConfig.address.addressCountry,
+    },
+    founder: { "@id": personId },
+    ...(sameAs.length > 0 ? { sameAs } : {}),
+  };
+}
+
+/**
  * WebSite node for the blog. Deliberately WITHOUT a `potentialAction`
  * SearchAction: the journal has no site search endpoint, and a
  * non-functional url template is worse than none (crawlers probe it).
  * Add one only when a real search route exists.
+ *
+ * `lang` is not decoration. This node used to hard-code `blogName.de` and
+ * `description.de`, so every English page shipped a German name and a German
+ * description in its structured data while the visible page and the `og:`
+ * tags said something else — a mismatch on exactly the pages that need the
+ * language signal most.
  */
-export function websiteSchema() {
+export function websiteSchema(lang: "de" | "en" = siteConfig.defaultLocale) {
   return {
     "@type": "WebSite",
     "@id": `${siteConfig.url}/#website`,
     url: siteConfig.url,
-    name: siteConfig.blogName.de,
-    description: siteConfig.description.de,
+    name: siteConfig.blogName[lang],
+    description: siteConfig.description[lang],
     publisher: { "@id": orgId },
     inLanguage: ["de-DE", "en-GB"],
   };
@@ -97,6 +145,18 @@ interface BlogPostingInput {
   imageUrl: string;
   /** Word count for `wordCount`. Computed once by the caller. */
   wordCount: number;
+  /**
+   * The post's actual author.
+   *
+   * Every article used to claim the site owner by `@id`, whatever the byline
+   * on the page said. With more than one author that is a plain factual error
+   * in the graph, and the author pages — which do emit a Person — sat
+   * unconnected to any article. Omitted or nameless falls back to the owner,
+   * which is the correct answer for a post that genuinely has no author row.
+   */
+  author?: { name: string; url?: string | null } | null;
+  /** Comma-separated tag string as stored; empty or absent emits no keywords. */
+  tags?: string | null;
 }
 
 export function blogPostingSchema(post: BlogPostingInput): WithContext {
@@ -108,14 +168,30 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
   const datePublished = post.publishedAt ?? undefined;
   const dateModified = post.updatedAt ?? post.publishedAt ?? undefined;
 
+  const authorName = post.author?.name?.trim();
+  const author = authorName
+    ? {
+        "@type": "Person",
+        name: authorName,
+        ...(post.author?.url ? { url: post.author.url } : {}),
+      }
+    : { "@id": personId };
+
+  const keywords = (post.tags ?? "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "@id": `${pageUrl}#article`,
     mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
+    url: pageUrl,
     headline: post.title,
     description: post.excerpt,
     articleSection: post.category,
+    ...(keywords.length > 0 ? { keywords } : {}),
     inLanguage: post.lang === "de" ? "de-DE" : "en-GB",
     datePublished,
     dateModified,
@@ -126,11 +202,38 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
       width: 1200,
       height: 630,
     },
-    author: { "@id": personId },
+    author,
     publisher: { "@id": orgId },
     isPartOf: {
       "@id": `${post.lang === "en" ? `${siteConfig.url}/en/` : `${siteConfig.url}/`}#blog`,
     },
+  };
+}
+
+/**
+ * What a listing page lists, in the order it lists it.
+ *
+ * Index, archive, tag, category and author pages emitted `WebSite + Blog` and
+ * stopped there — nothing said which articles were on the page or in what
+ * order, so a listing page's structured data was indistinguishable from the
+ * home page's. `ItemList` with `url`-only entries is the shape Google reads
+ * for a collection: it points at the articles, whose own `BlogPosting` carries
+ * the detail, rather than restating them here where they could drift.
+ *
+ * Positions are 1-based and follow the rendered order, so page 2 of the
+ * archive starts at 11 rather than at 1 — the list describes the page, but the
+ * positions describe the collection.
+ */
+export function itemListSchema(urls: readonly string[], startPosition = 1) {
+  return {
+    "@type": "ItemList",
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: urls.length,
+    itemListElement: urls.map((url, i) => ({
+      "@type": "ListItem",
+      position: startPosition + i,
+      url,
+    })),
   };
 }
 

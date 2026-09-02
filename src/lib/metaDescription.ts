@@ -92,3 +92,34 @@ export function authorDescription(name: string, lang: Lang): string {
         `Posts by ${name} in the Tracht Digital Solutions journal.`,
       );
 }
+
+/**
+ * The description of an ARTICLE page.
+ *
+ * Two problems it solves, both of which were invisible:
+ *
+ *  1. **The editor's SEO field was never used.** `Article.astro` passed
+ *     `post.excerpt` and nothing else. The excerpt is a teaser written to sit
+ *     above the article; the meta description is written for a search result.
+ *     They are different jobs, which is why the panel offers both — and why the
+ *     seed migration writes one per article.
+ *  2. **Neither was measured.** Only the *generated* descriptions above are
+ *     length-tested; the excerpt shipped verbatim at whatever length the editor
+ *     typed. An excerpt past 160 characters is cut mid-sentence in the SERP.
+ *
+ * The clamp is deliberately the last step and applies to both sources: a
+ * hand-written description that overflows is still better clamped on a word
+ * boundary than truncated by Google mid-word.
+ *
+ * A description SHORTER than useful is not padded — inventing sentences to hit
+ * a character count would put words in the article's mouth. `postDescription`
+ * reports what it has; `metaDescription.test.ts` holds the committed corpus to
+ * the lower bound instead.
+ */
+export function postDescription(
+  metaDescription: string | null | undefined,
+  excerpt: string,
+): string {
+  const chosen = (metaDescription ?? "").trim() || (excerpt ?? "").trim();
+  return clampToWord(chosen);
+}

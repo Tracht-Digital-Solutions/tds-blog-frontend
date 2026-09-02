@@ -37,6 +37,32 @@ export interface SitemapUrl {
   priority: number;
   /** The other language's path, when the two really mirror. */
   alternate?: { de: string; en: string };
+  /**
+   * `YYYY-MM-DD`, derived from the newest post the URL actually shows.
+   *
+   * Every entry used to carry today's date, so the document claimed the whole
+   * site had changed on every single fetch — which tells a crawler exactly as
+   * much as saying nothing, and costs the signal on the pages that really did
+   * change. Omitted when a URL has no post behind it; `renderUrlset` then falls
+   * back to the document date.
+   *
+   * The source is `publishedAt`, not a modification timestamp: the list payload
+   * from the content-API carries no `updatedAt` (`BlogCmsModule` sets it only
+   * on the full-post read). Publication date understates an edited article,
+   * which is the harmless direction — overstating is what "today" did.
+   */
+  lastmod?: string;
+}
+
+/** `YYYY-MM-DD` of the newest post in a set, or undefined for an empty one. */
+function newestDate(posts: ReadonlyArray<{ publishedAt?: string | null }>): string | undefined {
+  let newest: string | undefined;
+  for (const post of posts) {
+    const day = (post.publishedAt ?? "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    if (!newest || day > newest) newest = day;
+  }
+  return newest;
 }
 
 function escapeXml(value: string): string {
@@ -58,21 +84,45 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   const s = SEGMENTS[lang];
   const posts = await corpus(lang);
 
+  // Newest first, so an archive page's slice and every "newest post" below are
+  // taken from the same order the pages themselves render in.
+  const ordered = [...posts].sort((a, b) =>
+    (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+  );
+  const siteNewest = newestDate(ordered);
+
   const urls: SitemapUrl[] = [
-    { path: `${p}/`, changefreq: "daily", priority: 1.0 },
-    { path: `${p}/aktuelles`, changefreq: "weekly", priority: 0.6 },
+    { path: `${p}/`, changefreq: "daily", priority: 1.0, lastmod: siteNewest },
+    { path: `${p}/aktuelles`, changefreq: "weekly", priority: 0.6, lastmod: siteNewest },
+    // The human-facing RSS explainer, not the feed. It is an ordinary
+    // indexable page that carries a canonical and alternates like any other,
+    // and it was the one such page missing from this list.
+    { path: `${p}/rss`, changefreq: "monthly", priority: 0.3, lastmod: siteNewest },
   ];
 
-  const pageCount = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
   for (let n = 2; n <= pageCount; n++) {
-    urls.push({ path: `${p}/page/${n}`, changefreq: "weekly", priority: 0.4 });
+    urls.push({
+      path: `${p}/page/${n}`,
+      changefreq: "weekly",
+      priority: 0.4,
+      // An archive page shows one slice, and an older page genuinely does not
+      // change when a new article appears at the front.
+      lastmod: newestDate(ordered.slice((n - 1) * PAGE_SIZE, n * PAGE_SIZE)),
+    });
   }
 
-  const categories = new Set<string>();
-  const tags = new Set<string>();
-  const authors = new Set<string>();
+  const categories = new Map<string, typeof ordered>();
+  const tags = new Map<string, typeof ordered>();
+  const authors = new Map<string, typeof ordered>();
 
-  for (const post of posts) {
+  const collect = (map: Map<string, typeof ordered>, key: string, post: (typeof ordered)[number]) => {
+    const bucket = map.get(key);
+    if (bucket) bucket.push(post);
+    else map.set(key, [post]);
+  };
+
+  for (const post of ordered) {
     urls.push({
       path: `${p}/${post.slug}`,
       changefreq: "monthly",
@@ -80,27 +130,43 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
       // Slugs are shared across both trees — a post authored in one language
       // is machine-translated into the other, so both URLs always exist.
       alternate: { de: `/${post.slug}`, en: `/en/${post.slug}` },
+      lastmod: newestDate([post]),
     });
 
     const category = post.category?.trim();
     if (category) {
       const slug = categorySlug(category);
-      if (slug) categories.add(slug);
+      if (slug) collect(categories, slug, post);
     }
     for (const tag of (post.tags ?? "").split(",").map((t) => t.trim().toLowerCase())) {
-      if (tag) tags.add(tag);
+      if (tag) collect(tags, tag, post);
     }
-    if (post.author?.slug) authors.add(post.author.slug);
+    if (post.author?.slug) collect(authors, post.author.slug, post);
   }
 
-  for (const slug of [...categories].sort()) {
-    urls.push({ path: `${p}/${s.category}/${slug}`, changefreq: "weekly", priority: 0.5 });
+  for (const slug of [...categories.keys()].sort()) {
+    urls.push({
+      path: `${p}/${s.category}/${slug}`,
+      changefreq: "weekly",
+      priority: 0.5,
+      lastmod: newestDate(categories.get(slug)!),
+    });
   }
-  for (const tag of [...tags].sort()) {
-    urls.push({ path: `${p}/tag/${encodeURIComponent(tag)}`, changefreq: "weekly", priority: 0.4 });
+  for (const tag of [...tags.keys()].sort()) {
+    urls.push({
+      path: `${p}/tag/${encodeURIComponent(tag)}`,
+      changefreq: "weekly",
+      priority: 0.4,
+      lastmod: newestDate(tags.get(tag)!),
+    });
   }
-  for (const slug of [...authors].sort()) {
-    urls.push({ path: `${p}/${s.author}/${slug}`, changefreq: "weekly", priority: 0.4 });
+  for (const slug of [...authors.keys()].sort()) {
+    urls.push({
+      path: `${p}/${s.author}/${slug}`,
+      changefreq: "weekly",
+      priority: 0.4,
+      lastmod: newestDate(authors.get(slug)!),
+    });
   }
 
   return urls;
@@ -137,6 +203,21 @@ export async function sitemapUrls(): Promise<SitemapUrl[]> {
   return urls.filter((url) => !groupExcluded(hreflangGroup(url.path), patterns));
 }
 
+/**
+ * The newest per-URL `lastmod` in a set — the date the index should carry.
+ *
+ * Undefined only when nothing in the list has a post behind it (an empty or
+ * unreachable corpus), in which case the caller supplies the document date.
+ */
+export function newestLastmod(urls: readonly SitemapUrl[]): string | undefined {
+  let newest: string | undefined;
+  for (const url of urls) {
+    if (url.lastmod && (!newest || url.lastmod > newest)) newest = url.lastmod;
+  }
+  return newest;
+}
+
+/** `lastmod` is the fallback for entries that carry no date of their own. */
 export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {
   const body = urls
     .map((url) => {
@@ -151,7 +232,7 @@ export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {
         "<url>",
         `<loc>${escapeXml(absolute(url.path))}</loc>`,
         alternates,
-        `<lastmod>${escapeXml(lastmod)}</lastmod>`,
+        `<lastmod>${escapeXml(url.lastmod ?? lastmod)}</lastmod>`,
         `<changefreq>${url.changefreq}</changefreq>`,
         `<priority>${url.priority.toFixed(1)}</priority>`,
         "</url>",

@@ -12,11 +12,13 @@ import TagList from "~/components/TagList.astro";
 import AdSlot from "~/components/AdSlot.astro";
 import BlockRenderer from "~/components/BlockRenderer.astro";
 import { adsConfig, effectiveAdsMode, blogSnippets } from "~/lib/content-api";
-import { blogPostingSchema, breadcrumbSchema } from "~/lib/jsonld";
+import { blogPostingSchema, breadcrumbSchema, organizationSchema } from "~/lib/jsonld";
 import { splitSections } from "~/lib/sections";
 import { splitBlockSections } from "~/lib/blockSections";
-import { authorHref } from "~/lib/nav";
-import { siteConfig } from "~/lib/seo";
+import { authorHref, categoryHref } from "~/lib/nav";
+import { categorySlug } from "~/lib/taxonomy";
+import { pageTitle, siteConfig } from "~/lib/seo";
+import { postDescription } from "~/lib/metaDescription";
 import type { LocalizedPost } from "~/lib/localizedPost";
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
 
@@ -111,25 +113,9 @@ const postUrl = new URL(postHref(post.slug), siteConfig.url).toString();
 // (the EN landingpage lives under /en/) so EN readers land on the EN form.
 const contactUrl = `https://tracht-digital.de${pfx}/#contact`;
 
-const jsonLd = [
-  blogPostingSchema({
-    slug: post.slug,
-    title: post.title,
-    excerpt: post.excerpt,
-    body: plain,
-    category: post.category,
-    publishedAt: post.publishedAt,
-    updatedAt: post.updatedAt ?? null,
-    lang,
-    imageUrl,
-    wordCount,
-  }),
-  breadcrumbSchema([
-    { name: journalLabel, url: journalHomeUrl },
-    { name: post.category, url: journalHomeUrl },
-    { name: post.title, url: postUrl },
-  ]),
-];
+// One resolved description for the head and the graph. JSON-LD that disagrees
+// with the rendered meta description is a mismatch Google reports.
+const metaDesc = postDescription(post.metaDescription, post.excerpt);
 
 const tx = lang === "de"
   ? {
@@ -172,6 +158,38 @@ const authorInitials = authorName
   .slice(0, 2)
   .toUpperCase() || "TD";
 
+// Built after the byline on purpose: the graph names the SAME author the page
+// shows. It used to be assembled further up and could only name the site owner.
+const jsonLd = [
+  blogPostingSchema({
+    slug: post.slug,
+    title: post.title,
+    excerpt: metaDesc,
+    body: plain,
+    category: post.category,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt ?? null,
+    lang,
+    imageUrl,
+    wordCount,
+    author: author
+      ? { name: author.name, url: authorPageHref ? new URL(authorPageHref, siteConfig.url).toString() : null }
+      : null,
+    tags: post.tags,
+  }),
+  organizationSchema(),
+  breadcrumbSchema([
+    { name: journalLabel, url: journalHomeUrl },
+    // The category crumb pointed at the journal home, which made the trail
+    // claim two different names for one URL. It has a page of its own.
+    {
+      name: post.category,
+      url: new URL(categoryHref(lang, categorySlug(post.category)), siteConfig.url).toString(),
+    },
+    { name: post.title, url: postUrl },
+  ]),
+];
+
 import { contentApiBase } from "~/lib/connection";
 
 // Public, fire-and-forget view beacon. The server resolves the paired API base
@@ -182,8 +200,8 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 ---
 
 <Layout
-  title={`${post.title} — Journal`}
-  description={post.excerpt}
+  title={pageTitle(post.title)}
+  description={metaDesc}
   lang={lang}
   ogImage={explicitCover}
   article={{

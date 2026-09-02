@@ -48,13 +48,21 @@ const ACCENT = "#820933";
 const MUTED = "#6b6b66";
 const LINE = "#e8e6df";
 
-interface OgOptions {
+export interface OgOptions {
   title: string;
   category: string;
   publishedAt: string | null;
   lang: "de" | "en";
   /** Byline shown in the footer; falls back to the studio name. */
   author?: string | null;
+  /**
+   * Replaces the footer's date.
+   *
+   * The site-wide default card has no date and must not invent one — without
+   * this it would fall through to the "Entwurf"/"Draft" label meant for an
+   * unpublished post, and every share of the home page would announce a draft.
+   */
+  dateLabel?: string;
 }
 
 /**
@@ -74,7 +82,9 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
 
   const { head, accent } = splitForAccent(opts.title);
   const locale = opts.lang === "de" ? "de-DE" : "en-US";
-  const dateLabel = opts.publishedAt
+  const dateLabel = opts.dateLabel
+    ? opts.dateLabel
+    : opts.publishedAt
     ? new Date(opts.publishedAt).toLocaleDateString(locale, {
         year: "numeric",
         month: "long",

@@ -14,13 +14,13 @@
  */
 
 import type { BlogBlock, BlogPost } from "@tracht-digital-solutions/tds-shared";
-import { getPost } from "./content-api";
+import { getPost, type FullPost } from "./content-api";
 import { renderMarkdown } from "./marked";
 import { translateHtml, translateText } from "./translate";
 
 export interface LocalizedPost {
   /** Post metadata in the target language (translated if not authored). */
-  post: BlogPost;
+  post: FullPost;
   /** Final article HTML for a markdown post ("" for a block post). */
   bodyHtml: string;
   /** Parsed blocks for a block post (null for a markdown post). */
@@ -79,7 +79,16 @@ export async function resolveLocalizedPost(
       translateText(src.excerpt, lang, other),
     ]);
     return {
-      post: { ...src, lang, title: title ?? src.title, excerpt: excerpt ?? src.excerpt },
+      // `metaDescription` is dropped, not carried: it is authored in `other`,
+      // and spreading it would put a German description on an English page.
+      // Null makes the description fall back to the translated excerpt.
+      post: {
+        ...src,
+        lang,
+        title: title ?? src.title,
+        excerpt: excerpt ?? src.excerpt,
+        metaDescription: null,
+      },
       bodyHtml: "",
       blocks: parseBlocks(src.body),
       translated: title !== null,
