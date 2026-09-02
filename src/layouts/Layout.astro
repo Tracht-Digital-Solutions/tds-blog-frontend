@@ -15,6 +15,7 @@ import JsonLd from "~/components/JsonLd.astro";
 import { CookieNotice, LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
 import { themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
 import { siteConfig } from "~/lib/seo";
+import { isExcluded } from "~/lib/sitemapExclusions";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
 
 interface Props {
@@ -100,8 +101,16 @@ const autoAltPath =
   lang === "de"
     ? Astro.url.pathname.replace(/^\//, "/en/")
     : Astro.url.pathname.replace(/^\/en\//, "/");
+// A page the panel excluded from the sitemap is also served `noindex`, and
+// loses its alternates with it. Both halves are required: a sitemap omission is
+// a hint a crawler may ignore, while `noindex` beside an alternate tells it to
+// follow a link it is simultaneously told to disregard. `noindex` (the prop)
+// stays the local override for pages that are never public — `/install`, the
+// print views, the error pages.
+const hidden = noindex || (await isExcluded(Astro.url.pathname));
+
 const altUrl =
-  altUrlProp === null
+  altUrlProp === null || hidden
     ? null
     : (altUrlProp ?? new URL(autoAltPath, site).toString());
 const altLang = lang === "de" ? "en" : "de";
@@ -135,7 +144,7 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#050f68" />
-    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    {hidden && <meta name="robots" content="noindex,nofollow" />}
     <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
 
         {/* No-flash theme bootstrap — shared with the landingpage and the frontend

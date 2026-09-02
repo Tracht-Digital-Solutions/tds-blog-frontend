@@ -363,6 +363,7 @@ DeepL translations and re-renders one OG card per post.
 | `src/middleware.ts` | Serves hits, stores renders, refuses to store a bad-site-key render |
 | `src/pages/tds/cache/[action].ts` | Control plane: `status`, `rebuild`, `purge` |
 | `src/lib/sitemap.ts` | The sitemap, built from the corpus |
+| `src/lib/sitemapExclusions.ts` | Paths the panel took out of the index, and the tree-pairing an exclusion follows |
 | `public/.htaccess` | Cache-first rewrite; ships to `dist/client/.htaccess`, the document root |
 | `app.cjs`, `scripts/pack-release.mjs` | Passenger startup file + the release tree it starts from |
 

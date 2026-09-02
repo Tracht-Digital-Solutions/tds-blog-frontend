@@ -23,6 +23,7 @@ import { corpus, type Lang } from "./routes";
 import { PAGE_SIZE } from "./pagination";
 import { categorySlug } from "./taxonomy";
 import { siteConfig } from "./seo";
+import { exclusionPatterns, groupExcluded, hreflangGroup } from "./sitemapExclusions";
 
 const PREFIX: Record<Lang, string> = { de: "", en: "/en" };
 const SEGMENTS: Record<Lang, { category: string; author: string }> = {
@@ -114,8 +115,26 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
  * operator page and listing it would invite a crawler to it.
  */
 export async function sitemapUrls(): Promise<SitemapUrl[]> {
-  const [de, en] = await Promise.all([urlsFor("de"), urlsFor("en")]);
-  return [...de, ...en];
+  const [de, en, patterns] = await Promise.all([
+    urlsFor("de"),
+    urlsFor("en"),
+    exclusionPatterns(),
+  ]);
+  const urls = [...de, ...en];
+  if (patterns.length === 0) return urls;
+
+  // Matched against the whole language group, never the single URL — and via
+  // `hreflangGroup`, which knows that this site's trees are not a prefix pair
+  // (`/kategorie/…` ↔ `/en/category/…`, `/autor/…` ↔ `/en/author/…`).
+  //
+  // Two reasons it must be the group even for pages that carry no alternates.
+  // For an article it is correctness: the entries name each other, so removing
+  // one side would leave the other pointing at a page no longer offered, and a
+  // single dangling alternate invalidates the set on both sides. For a tag or
+  // category page it is intent: `/tag/*` means "the tag pages", and an operator
+  // who has to write the English spelling separately will one day write only
+  // one of them and believe both are gone.
+  return urls.filter((url) => !groupExcluded(hreflangGroup(url.path), patterns));
 }
 
 export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {

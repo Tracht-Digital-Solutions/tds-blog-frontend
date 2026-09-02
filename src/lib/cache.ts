@@ -136,6 +136,35 @@ export const cacheEvents: EventMap = {
    */
   block: (event: CacheEvent) => forLanguages(event, (lang) => [prefix(lang) + "/"]),
 
+  /**
+   * The sitemap exclusion list changed.
+   *
+   * The widest event this site has, and it has to be. The list moves TWO
+   * things: the sitemap, and the `robots` meta of every page that entered or
+   * left it. Rebuilding only the sitemap would leave the excluded page itself
+   * serving its old, indexable head out of cache — the omission visible in the
+   * XML, the `noindex` nowhere, and nothing red.
+   *
+   * A pattern may be a prefix, so which pages it covers is not knowable from
+   * the event. The corpus is walked for that reason, exactly as `post` walks it
+   * for taxonomy: the article pages are what a `noindex` has to reach, and they
+   * are deliberately absent from `alwaysPaths`.
+   */
+  sitemap: async (event: CacheEvent) => {
+    const langs: Lang[] =
+      event.lang === "de" || event.lang === "en" ? [event.lang] : ["de", "en"];
+
+    const paths: string[] = ["/sitemap-index.xml"];
+    for (const lang of langs) {
+      paths.push(...(await indexPages(lang)));
+      const p = prefix(lang);
+      for (const post of await corpus(lang)) {
+        paths.push(`${p}/${post.slug}`, ...taxonomyPages(post, lang));
+      }
+    }
+    return paths;
+  },
+
   /** The legal documents live on the landingpage; nothing here shows them. */
   legal: () => [],
 };
