@@ -104,6 +104,20 @@ describe("cacheEvents", () => {
     expect(result.unknown).toEqual(["tool"]);
   });
 
+  it("rebuilds the articles too when the exclusion list changes", async () => {
+    // The list moves the `robots` meta of every page it touches, not just the
+    // sitemap. Rebuilding only the sitemap would leave an excluded article
+    // serving its old indexable head from cache — the omission visible in the
+    // XML, the `noindex` nowhere, and nothing red.
+    const result = await paths([{ type: "sitemap" }]);
+    expect(result).toContain("/sitemap-0.xml");
+    expect(result).toContain("/sitemap-index.xml");
+    expect(result).toContain("/astro-schnell");
+    expect(result).toContain("/en/astro-schnell");
+    expect(result.some((p) => p.startsWith("/kategorie/"))).toBe(true);
+    expect(result.some((p) => p.startsWith("/tag/"))).toBe(true);
+  });
+
   it("lists the entry points a cold-cache rebuild needs", async () => {
     // Articles are deliberately absent: the cache cannot know the corpus, and
     // enumerating it here would be a fourth copy of the route table.
