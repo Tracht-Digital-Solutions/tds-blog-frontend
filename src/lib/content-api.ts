@@ -38,6 +38,25 @@ interface ListResponse {
 export type ListPost = ListResponse["posts"][number];
 
 /**
+ * A full-post read, plus the one field tds-shared's `BlogPost` does not carry.
+ *
+ * The content-API returns `metaDescription` — but only on the full-post read,
+ * never in the list payload (`BlogCmsModule` sets it inside the same branch as
+ * `body`). The panel has offered the field since the SEO changepoint and the
+ * seed migration writes one for every article, yet no page rendered it: the
+ * type stopped at the API boundary, so `Article.astro` fell back to the excerpt
+ * and every carefully written description went nowhere.
+ *
+ * Widened here rather than in tds-shared on purpose. The field is read by this
+ * repo alone, and a minor there is minor-locked by six `0.x` carets — six
+ * repins for one optional string.
+ */
+export type FullPost = BlogPost & {
+  /** Editor-maintained `<meta name="description">`; null falls back to the excerpt. */
+  metaDescription?: string | null;
+};
+
+/**
  * Make an uploaded cover URL absolute. The content-API's cover endpoint
  * persists `coverHint` as a storage-relative `/uploads/...` path, but every
  * consumer here (the `<img src>` in `PostCover`, the OG `explicitCover`) gates
@@ -337,7 +356,7 @@ async function loadSnippets(): Promise<BlogSnippet[]> {
   }
 }
 
-export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost | null> {
+export async function getPost(slug: string, lang: "de" | "en"): Promise<FullPost | null> {
   if (DEMO_MODE) return demoPost(slug, lang);
 
   const url = new URL(`${contentApiBase()}/blog/${encodeURIComponent(slug)}`);
@@ -350,7 +369,7 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<BlogPost
     if (!res.ok) {
       throw new Error(`content-api ${url.pathname} → ${res.status}`);
     }
-    const { post } = (await res.json()) as { post: BlogPost };
+    const { post } = (await res.json()) as { post: FullPost };
     return withResolvedAuthor({ ...post, coverHint: resolveCoverHint(post.coverHint) });
   } catch (err) {
     // API down → serve the matching demo post (keeps demo slugs from

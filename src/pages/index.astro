@@ -5,9 +5,8 @@ import ForYou from "~/components/islands/ForYou.tsx";
 import ToolsPromo from "~/components/ToolsPromo.astro";
 import { listAllPosts, listPopular } from "~/lib/content-api";
 import { PAGE_SIZE } from "~/lib/pagination";
-import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
-
-const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
+import { asGraph, blogSchema, itemListSchema, organizationSchema, websiteSchema } from "~/lib/jsonld";
+import { siteConfig } from "~/lib/seo";
 
 let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
 let popular: Awaited<ReturnType<typeof listPopular>> = [];
@@ -16,6 +15,16 @@ try {
 } catch (err) {
   console.error("[tds-blog] failed to fetch posts at build time:", err);
 }
+
+// Built after the fetch: the graph names the articles the page actually
+// shows, in the order it shows them. Only the first page is listed — the
+// island filters client-side, but a crawler sees the server-rendered set.
+const jsonLd = asGraph(
+  websiteSchema("de"),
+  blogSchema("de"),
+  organizationSchema(),
+  itemListSchema(allPosts.slice(0, PAGE_SIZE).map((p) => `${siteConfig.url}/${p.slug}`)),
+);
 ---
 
 <Layout

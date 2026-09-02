@@ -3,8 +3,9 @@ import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import TagList from "~/components/TagList.astro";
 import { byTag } from "~/lib/routes";
-import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
-import { siteConfig } from "~/lib/seo";
+import { asGraph, blogSchema, breadcrumbSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { tagAlternate } from "~/lib/alternates";
+import { pageTitle, siteConfig } from "~/lib/seo";
 import { tagDescription } from "~/lib/metaDescription";
 
 // On demand: `getStaticPaths` is not allowed on a server-rendered route, so
@@ -16,9 +17,15 @@ const group = await byTag("de", tag);
 if (!group) return new Response("Not found", { status: 404 });
 const { posts, allPosts } = group;
 
+// Only when the English tree really carries this tag — DE and EN tag tokens
+// are written separately (`webshop` vs `online-shop`), so a prefix-swapped
+// guess would point at a 404 more often than not.
+const altPath = await tagAlternate("de", tag);
+
 const jsonLd = asGraph(
-  websiteSchema(),
+  websiteSchema("de"),
   blogSchema("de"),
+  itemListSchema(posts.map((p) => `${siteConfig.url}/${p.slug}`)),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/` },
     { name: `#${tag}`, url: `${siteConfig.url}/tag/${tag}` },
@@ -27,10 +34,10 @@ const jsonLd = asGraph(
 ---
 
 <Layout
-  title={`#${tag} — Journal`}
+  title={pageTitle(`#${tag}`)}
   description={tagDescription(tag, "de")}
   jsonLd={jsonLd}
-  altUrl={null}
+  altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
   <main id="main" class="tds-shell py-16 lg:py-24">
     <header class="mb-10">

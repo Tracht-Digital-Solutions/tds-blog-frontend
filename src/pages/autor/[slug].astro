@@ -2,9 +2,10 @@
 import Layout from "~/layouts/Layout.astro";
 import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
 import { byAuthor } from "~/lib/routes";
-import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
-import { siteConfig } from "~/lib/seo";
-import { authorDescription } from "~/lib/metaDescription";
+import { asGraph, blogSchema, breadcrumbSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { authorAlternate } from "~/lib/alternates";
+import { pageTitle, siteConfig } from "~/lib/seo";
+import { authorDescription, clampToWord } from "~/lib/metaDescription";
 import type { BlogAuthor } from "@tracht-digital-solutions/tds-shared";
 
 // On demand: `getStaticPaths` is not allowed on a server-rendered route, so
@@ -18,7 +19,11 @@ const { author, posts } = group as { author: BlogAuthor; posts: typeof group.pos
 const pageUrl = `${siteConfig.url}/autor/${author.slug}`;
 // A real bio is CMS-authored and is the better description whenever it
 // exists; the fallback only has to work for an author who has not written one.
-const description = author.bio ? author.bio : authorDescription(author.name, "de");
+const description = author.bio
+  ? // A CMS bio is the better description, but it is written as a biography,
+    // not to a length limit — clamp it the same way every generated one is.
+    clampToWord(author.bio.trim())
+  : authorDescription(author.name, "de");
 
 const personSchema = {
   "@type": "Person",
@@ -29,10 +34,13 @@ const personSchema = {
   ...(author.avatarUrl ? { image: author.avatarUrl } : {}),
 };
 
+const altPath = await authorAlternate("de", author.slug);
+
 const jsonLd = asGraph(
-  websiteSchema(),
+  websiteSchema("de"),
   blogSchema("de"),
   personSchema,
+  itemListSchema(posts.map((p) => `${siteConfig.url}/${p.slug}`)),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/` },
     { name: author.name, url: pageUrl },
@@ -52,10 +60,10 @@ const cards = posts.map((p) => ({
 ---
 
 <Layout
-  title={`${author.name} — Journal`}
+  title={pageTitle(author.name)}
   description={description}
   jsonLd={jsonLd}
-  altUrl={null}
+  altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
   <main id="main" class="tds-shell py-16 lg:py-24">
     <header class="mb-10">

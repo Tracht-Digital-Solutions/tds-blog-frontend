@@ -5,7 +5,10 @@ import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { archivePage } from "~/lib/routes";
 import { paginate } from "~/lib/pagination";
 import { archiveDescription } from "~/lib/metaDescription";
-import { asGraph, blogSchema, websiteSchema } from "~/lib/jsonld";
+import { asGraph, blogSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { archiveAlternate } from "~/lib/alternates";
+import { pageTitle, siteConfig } from "~/lib/seo";
+import { PAGE_SIZE } from "~/lib/pagination";
 
 // On demand: `getStaticPaths` is not allowed on a server-rendered route, so
 // the page looks its own subject up and answers 404 itself. A missing one is
@@ -18,14 +21,26 @@ const t = translations.de;
 const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);
 const olderHref = page + 1 <= pageCount ? `/page/${page + 1}` : null;
 const newerHref = page - 1 <= 1 ? "/" : `/page/${page - 1}`;
-const jsonLd = asGraph(websiteSchema(), blogSchema("de"));
+// Both trees hold the same articles today, so this normally resolves — but a
+// page count comes from a live list and is not something to assume.
+const altPath = await archiveAlternate("de", page);
+
+// Positions continue the collection rather than restarting at 1 on every page.
+const jsonLd = asGraph(
+  websiteSchema("de"),
+  blogSchema("de"),
+  itemListSchema(
+    items.map((p) => `${siteConfig.url}/${p.slug}`),
+    (page - 1) * PAGE_SIZE + 1,
+  ),
+);
 ---
 
 <Layout
-  title={`Journal · Seite ${page} — Tracht Digital Solutions`}
+  title={pageTitle(`Archiv · Seite ${page}`)}
   description={archiveDescription(page, "de")}
   jsonLd={jsonLd}
-  altUrl={null}
+  altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
   <main id="main" class="tds-shell py-16 lg:py-24">
     <header class="mb-10">

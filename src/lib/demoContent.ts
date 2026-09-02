@@ -208,6 +208,46 @@ const SEEDS: DemoSeed[] = [
       ].join("\n\n"),
     },
   },
+  {
+    slug: "vom-baukasten-shop-zum-eigenen-shop",
+    publishedAt: date(-1),
+    de: {
+      category: "Webshop",
+      title: "Wenn der Baukasten-Shop nicht mehr mitwächst",
+      excerpt:
+        "Ein gehosteter Shop-Baukasten trägt die ersten Jahre zuverlässig. Woran man merkt, dass er es nicht mehr tut — und was ein Umzug wirklich bedeutet.",
+      tags: "webshop,produktdaten,preispflege",
+      body: [
+        "Ein gehosteter Shop-Baukasten ist für den Start eine vernünftige Entscheidung. Er kostet wenig, läuft ohne eigenen Server und bringt Zahlungsarten, Versandregeln und eine Bestellabwicklung mit. Irgendwann kippt das Verhältnis: Der Shop läuft weiter wie immer, aber jede Änderung daran kostet mehr Zeit als früher.",
+        "## Woran man merkt, dass der Baukasten eng wird",
+        "**Das Sortiment wächst schneller als die Werkzeuge.** Zweihundert Artikel pflegt man von Hand, zwanzigtausend nicht mehr. **Der Import bleibt ein Formular** — sobald die Daten des Lieferanten anders aussehen, entsteht Handarbeit. Und **kleine Wünsche werden zu großen Fragen**: In einem Baukasten ist etwas entweder vorgesehen oder es geht nicht.",
+        "## Ein Umzug ist kein Design-Projekt",
+        "Der Umzug entscheidet sich an den Daten, nicht am Aussehen. Aus dem alten System kommt ein Export, und der ist fast nie so, wie ihn das neue System braucht: Varianten stehen als eigene Artikel nebeneinander, Hersteller heißen an drei Stellen unterschiedlich, Preise enthalten mal Steuer und mal nicht.",
+        "## Produktdaten sind das eigentliche Projekt",
+        "Bei großen Sortimenten besteht die Pflege aus drei Dingen, die sich wiederholen: **analysieren** (was fehlt, was weicht ab), **filtern** (eine Marke, eine Serie, alles unter einer Marge) und **Preise aktualisieren** — als nachvollziehbarer Lauf, den man zurückdrehen kann, nicht als Reihe einzelner Eingaben.",
+        "## Ein Sortiment, mehrere Vertriebskanäle",
+        "Jeder Marktplatz will die Daten in seinem eigenen Zuschnitt. Jeden Kanal für sich zu pflegen funktioniert genau so lange, bis sich ein Preis ändert. Tragfähig ist ein gepflegter Datenbestand als Quelle, aus dem jeder Kanal seine Fassung bekommt.",
+      ].join("\n\n"),
+    },
+    en: {
+      category: "Online shop",
+      title: "When the hosted shop builder stops keeping up",
+      excerpt:
+        "A hosted shop builder carries you reliably for the first few years. How to tell when it no longer does — and what a migration actually involves.",
+      tags: "online-shop,product-data,pricing",
+      body: [
+        "A hosted shop builder is a sensible decision at the start. It costs little, runs without a server of your own, and brings payment methods, shipping rules and order handling with it. At some point the balance tips: the shop keeps running exactly as before, but every change to it costs more time than it used to.",
+        "## How to tell the builder is getting tight",
+        "**The catalogue grows faster than the tools.** Two hundred articles can be maintained by hand, twenty thousand cannot. **The import stays a form** — as soon as a supplier's data looks different, manual work appears. And **small wishes turn into big questions**: in a builder something is either provided for or it is not.",
+        "## A migration is not a design project",
+        "A migration is decided by the data, not the appearance. The old system produces an export, and it is almost never what the new system needs: variants stand next to each other as separate articles, manufacturers are spelled three different ways, prices sometimes include tax and sometimes do not.",
+        "## The product data is the real project",
+        "With a large catalogue, upkeep is three repeating things: **analysis** (what is missing, what differs), **filtering** (one brand, one series, everything below a margin) and **price updates** — as a traceable, reversible run rather than a series of individual edits.",
+        "## One catalogue, several sales channels",
+        "Every marketplace wants the data in its own shape. Maintaining each channel separately works exactly until a price changes. What holds up is one maintained set of data as the source, from which every channel gets its own version.",
+      ].join("\n\n"),
+    },
+  },
 ];
 
 function summaryFor(seed: DemoSeed, id: number, lang: "de" | "en"): PostSummary {

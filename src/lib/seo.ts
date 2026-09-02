@@ -63,3 +63,37 @@ export const siteConfig = {
 } as const;
 
 export type SiteConfig = typeof siteConfig;
+
+/** What Google actually renders of a `<title>`. */
+export const RENDERED_TITLE_LENGTH = 60;
+
+/** The brand half of a page title, appended when there is room for it. */
+const TITLE_SUFFIX = " — Journal";
+
+/**
+ * Compose a page `<title>`.
+ *
+ * Every route used to build its own string inline, which produced two
+ * different brand halves (`— Journal` on articles and taxonomy pages,
+ * `— Tracht Digital Solutions` on the archive) and no length control at all:
+ * only descriptions were ever measured. A title past what a search result
+ * renders is cut by the engine, wherever that happens to land.
+ *
+ * The rule when it does not fit is to **drop the brand, never the subject**.
+ * The article's own words are what a reader scans for; the site name is the
+ * part that can be inferred from the URL. Clamping is the last resort, and
+ * only for a title long enough to be useless in a result either way.
+ */
+export function pageTitle(subject: string): string {
+  const name = subject.trim().replace(/\s+/g, " ");
+  if (!name) return siteConfig.blogName[siteConfig.defaultLocale];
+
+  const full = `${name}${TITLE_SUFFIX}`;
+  if (full.length <= RENDERED_TITLE_LENGTH) return full;
+  if (name.length <= RENDERED_TITLE_LENGTH * 1.5) return name;
+
+  const cut = name.slice(0, Math.floor(RENDERED_TITLE_LENGTH * 1.5) - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  const body = lastSpace > RENDERED_TITLE_LENGTH ? cut.slice(0, lastSpace) : cut;
+  return `${body.trimEnd().replace(/[\s.,;:—–-]+$/, "")}…`;
+}

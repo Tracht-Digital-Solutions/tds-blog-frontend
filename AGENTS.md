@@ -860,16 +860,30 @@ after the props destructure.
   post exists in both languages via the DeepL build fallback — and
   for name-mirrored twins); `null` = suppress the hreflang links +
   x-default entirely (canonical only); string = explicit URL. The
-  listing routes (`tag/`, `kategorie/`↔`en/category/`, `page/`) pass
-  `altUrl={null}` because their twins do NOT mirror by prefix —
-  don't remove that or the head links point at 404s.
-- **Sitemap** (`astro.config.mjs`) filters out `/og/`, `.png`
-  endpoints, `interests-index.json` and the error pages. Deliberately
-  NO sitemap `i18n` option here (unlike the landingpage): blog routes
-  don't mirror by prefix, so prefix-derived alternates would 404.
-  `lastmod` via `serialize` was considered and skipped — the
-  integration only sees URL strings, and mapping slug→updatedAt would
-  duplicate the content-api client inside the config context.
+  listing routes (`tag/`, `kategorie/`↔`en/category/`, `autor/`,
+  `page/`) do NOT mirror by prefix, so they must never derive an
+  alternate from the path. They now get one from `src/lib/alternates.ts`,
+  which **looks the counterpart up in the other language's corpus** and
+  returns a path only when that page really exists — `null` otherwise,
+  which still renders canonical-only. A German category is usually
+  filed under a different English name, so `categoryAlternate` returning
+  null is the normal case, not a bug. Never replace these with a prefix
+  swap: `/en/tag/webshop` does not exist (English posts are tagged
+  `online-shop`), and one dangling alternate invalidates the set on both
+  sides.
+- **Sitemap** is hand-written in `src/lib/sitemap.ts` plus the two
+  endpoints `sitemap-index.xml.ts` / `sitemap-0.xml.ts`.
+  `@astrojs/sitemap` was removed: under `output: "server"` it derives
+  entries from the routes the build EMITS, and the articles, taxonomy
+  and archive pages are not emitted. Deliberately no prefix-derived
+  alternates — only article slugs really mirror.
+  **`lastmod` is per URL**, from the newest post the URL shows
+  (`newestDate`), with the document date as the fallback for an entry
+  that has no post behind it. Every entry used to carry today's date,
+  which told a crawler the whole site had changed on every fetch. The
+  source is `publishedAt`, not `updatedAt`: the content-API's list
+  payload has no `updatedAt` (it is set only on the full-post read), so
+  an edited article understates its date — the harmless direction.
 - **RSS is per-language:** `/rss.xml` (DE) + `/en/rss.xml` (EN); the
   Layout autodiscovery link and the RssInfo explainer both pick the
   feed matching the page language.
@@ -901,14 +915,22 @@ stays consistent across both domains.
 - Don't drop the TTFs from `src/og/fonts/`. They're OFL-licensed
   and committed deliberately because @fontsource-variable ships
   woff2 only, which Satori can't read.
-- Don't redefine Organization or Person nodes here — the marketing
-  site is the canonical home for those.
-- Don't delete `src/types/shared-augment.d.ts` until tds-shared-pkg
-  ships `BlogPost.tags` and we bump the dep. The installed
-  `@tracht-digital-solutions/tds-shared@0.4.0` `BlogPost` type
-  is missing the field that the content-api already returns and
-  `TagList` already renders. The augmentation patches it
-  locally; tracked in tds-shared-pkg#8.
+- Don't give the Organization or Person a **different** identity here —
+  the marketing site is the canonical home, and the `@id` values must
+  keep pointing at `tracht-digital.de`. Emitting a *consistent* full
+  `organizationSchema()` node on this domain is deliberate and not a
+  fork: every `publisher` used to be a bare `@id` reference, so on its
+  own the blog's graph named a publisher with no name and no logo —
+  the two properties Google's article guidance asks for. The values all
+  come from `siteConfig`; keep them in step with the marketing site's
+  `seo.ts`.
+- ~~Don't delete `src/types/shared-augment.d.ts`.~~ **Stale — the file
+  and the whole `src/types/` directory are gone.** `BlogPost.tags`
+  ships in tds-shared and the dependency is long since bumped. The one
+  field still missing from that type is `metaDescription`, which is
+  widened locally as `FullPost` in `src/lib/content-api.ts` rather than
+  in tds-shared: only this repo reads it, and a minor there is
+  minor-locked by six `0.x` carets.
 - Don't write `WithContext<object>` on Schema.org node builders.
   TypeScript treats `object` as too narrow to accept additional
   named property literals (`@type`, `@graph`), and the type-check
@@ -918,7 +940,27 @@ stays consistent across both domains.
 
 ## Don't
 
-- Don't fetch posts at runtime. SSG only.
+- Don't reintroduce `Disallow: /og/` in `public/robots.txt`. Those are
+  the site's own social images — `/og/{lang}/{slug}.png` is the
+  `og:image` of every article and the `image` of its `BlogPosting`. The
+  rule blocked crawlers from the picture the page told them to fetch;
+  `seoContract.test.ts` fails if it comes back.
+- Don't pass a raw `excerpt` or a CMS bio straight into
+  `description`. Article descriptions go through `postDescription`
+  (editor's `metaDescription`, else the excerpt, clamped); author bios
+  through `clampToWord`. Only the generated taxonomy descriptions were
+  ever measured, so an over-long hand-written one shipped unnoticed.
+- Don't build a `<title>` inline. `pageTitle()` in `src/lib/seo.ts`
+  owns the `" — Journal"` suffix and the length rule (it drops the
+  brand, never the subject). The tab script in `Layout.astro` splits on
+  that exact separator.
+- Don't call `websiteSchema()` without a language. It used to hard-code
+  the German name and description onto every English page.
+- ~~Don't fetch posts at runtime. SSG only.~~ **Stale — the opposite is
+  true now.** `astro.config.mjs` sets `output: "server"`; every page
+  fetches at request time and the file-backed page cache absorbs the
+  cost. What still holds is the reason behind the old rule: never do
+  per-visitor work on a cached route.
 - Don't import `marked` in a React island — it's heavy. Render to
   HTML at build time and pass the resulting string to islands if
   they need it.

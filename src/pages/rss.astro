@@ -9,7 +9,7 @@ import { siteConfig } from "~/lib/seo";
  * actual feed stays at /rss.xml.
  */
 const jsonLd = asGraph(
-  websiteSchema(),
+  websiteSchema("de"),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/` },
     { name: "RSS", url: `${siteConfig.url}/rss` },
