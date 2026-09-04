@@ -25,14 +25,24 @@ interface Labels {
   categories: string;
   expandCats: string;
   collapseCats: string;
-  results: string;
-  /** Status-message phrasing for a category filter: "N Beiträge in <cat>". */
-  inCategory: string;
+  /**
+   * Counted nouns as [singular, plural]. German "Treffer" does not inflect
+   * and English "result" does, and both languages need the singular for a
+   * one-hit filter — "1 Beiträge" and "1 results" are what a hard-coded
+   * plural produces, and nothing on the page would have reported it.
+   */
+  results: readonly [string, string];
+  inCategory: readonly [string, string];
   clear: string;
   noResults: string;
   empty: string;
   older: string;
   minRead: string;
+}
+
+/** Pick the singular for exactly one, the plural for everything else. */
+function plural(forms: readonly [string, string], n: number): string {
+  return n === 1 ? forms[0] : forms[1];
 }
 
 const LABELS: Record<"de" | "en", Labels> = {
@@ -43,8 +53,8 @@ const LABELS: Record<"de" | "en", Labels> = {
     categories: "Kategorien",
     expandCats: "Kategorien ausklappen",
     collapseCats: "Kategorien einklappen",
-    results: "Treffer für",
-    inCategory: "Beiträge in der Kategorie",
+    results: ["Treffer für", "Treffer für"],
+    inCategory: ["Beitrag in der Kategorie", "Beiträge in der Kategorie"],
     clear: "Zurücksetzen",
     noResults: "Keine Beiträge gefunden. Versuchen Sie einen anderen Suchbegriff.",
     empty: "Noch keine Artikel veröffentlicht.",
@@ -58,8 +68,8 @@ const LABELS: Record<"de" | "en", Labels> = {
     categories: "Categories",
     expandCats: "Expand categories",
     collapseCats: "Collapse categories",
-    results: "results for",
-    inCategory: "posts in category",
+    results: ["result for", "results for"],
+    inCategory: ["post in category", "posts in category"],
     clear: "Clear",
     noResults: "No posts found. Try a different search term.",
     empty: "No articles published yet.",
@@ -119,12 +129,13 @@ function CategorySidebar({
 
   if (collapsed) {
     return (
-      <nav className="sidenav" aria-label={t.categories}>
+      <nav className="sidenav" id="blog-cat-rail" aria-label={t.categories}>
         <button
           type="button"
           className="sidenav-toggle"
           onClick={onToggle}
           aria-label={t.expandCats}
+          aria-controls="blog-cat-rail"
           aria-expanded="false"
         >
           <Chevron />
@@ -133,7 +144,7 @@ function CategorySidebar({
     );
   }
   return (
-    <nav className="sidenav" aria-label={t.categories}>
+    <nav className="sidenav" id="blog-cat-rail" aria-label={t.categories}>
       <div className="sidenav-head">
         <span>{t.categories}</span>
         <button
@@ -141,16 +152,22 @@ function CategorySidebar({
           className="sidenav-toggle"
           onClick={onToggle}
           aria-label={t.collapseCats}
+          aria-controls="blog-cat-rail"
           aria-expanded="true"
         >
           <Chevron left />
         </button>
       </div>
+      {/* aria-pressed, because the `on` class is the only other place the
+          selected category exists. The mobile chip strip below has carried it
+          all along, so the same filter reported its state on a phone and said
+          nothing on a desktop — the wider screen is the one with the rail. */}
       {["all", ...cats].map((c) => (
         <button
           type="button"
           key={c}
           className={`sidenav-item${value === c ? " on" : ""}`}
+          aria-pressed={value === c}
           onClick={() => onChange(c)}
         >
           <span>{c === "all" ? t.all : c}</span>
@@ -233,9 +250,9 @@ export default function BlogIndex({
   // case repeats the summary that is already on screen, the category case has
   // no visible counterpart at all.
   const statusMessage = searching
-    ? `${matches.length} ${t.results} ${quoted}`
+    ? `${matches.length} ${plural(t.results, matches.length)} ${quoted}`
     : cat !== "all"
-      ? `${matches.length} ${t.inCategory} ${cat}`
+      ? `${matches.length} ${plural(t.inCategory, matches.length)} ${cat}`
       : "";
 
   const GridHeading = searching ? "h1" : "h2";
@@ -301,7 +318,7 @@ export default function BlogIndex({
           {searching && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>
-                {matches.length} {t.results} {quoted}
+                {matches.length} {plural(t.results, matches.length)} {quoted}
               </span>
               <button type="button" className="chip-flat" onClick={() => setQ("")}>
                 {t.clear}

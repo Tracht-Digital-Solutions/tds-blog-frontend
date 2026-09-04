@@ -297,15 +297,23 @@ export interface TopicsBlock {
 }
 
 /**
- * Demo "Aktuelle Themen" for a no-API build, per language. The hrefs point at
+ * Demo topics block for a no-API build, per language. The hrefs point at
  * tag pages, so each tag must actually appear in a seed's `tags` above or the
  * link lands on an empty listing.
+ *
+ * The headline must not repeat the page's own `<h1>`. `/aktuelles` is titled
+ * "Aktuelle Themen" (the label the nav uses for the route), and this block
+ * used the same words — so a demo build rendered that phrase twice within one
+ * screen, at 60px and again at 30px, each followed by an intro saying the same
+ * thing. A fallback exists so a visitor cannot tell it apart from the real
+ * site; one that repeats itself fails that on sight. This headline names what
+ * the cards below it are, which is the job of a section heading.
  */
 export function demoTopics(lang: "de" | "en"): TopicsBlock {
   if (lang === "en") {
     return {
-      headline: "Current topics",
-      intro: "What I'm thinking and writing about right now.",
+      headline: "Browse by topic",
+      intro: "Three ways into the journal, by the subject you came for.",
       items: [
         { title: "Digitalization", description: "Starting with one workflow instead of a big project.", href: "/en/tag/digitalization" },
         { title: "Online shops", description: "Selling online without complicating the shop floor.", href: "/en/tag/online-shop" },
@@ -314,8 +322,8 @@ export function demoTopics(lang: "de" | "en"): TopicsBlock {
     };
   }
   return {
-    headline: "Aktuelle Themen",
-    intro: "Worüber ich gerade nachdenke und schreibe.",
+    headline: "Themen im Überblick",
+    intro: "Drei Einstiege ins Journal — nach dem Thema, wegen dem Sie hier sind.",
     items: [
       { title: "Digitalisierung", description: "Mit einem Ablauf anfangen statt mit einem Großprojekt.", href: "/tag/digitalisierung" },
       { title: "Webshops", description: "Online verkaufen, ohne den Ladenalltag zu verkomplizieren.", href: "/tag/webshop" },
