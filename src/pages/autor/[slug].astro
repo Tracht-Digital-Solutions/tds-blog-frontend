@@ -129,6 +129,12 @@ const cards = posts.map((p) => ({
       )}
     </header>
 
+    {/* The list jumped from the <h1> straight to the cards’ <h3>: the one
+        template on the site whose post list carries no heading of its own
+        (the index has “Alle Beiträge”, a category page has its name). Visually
+        hidden, because the page already says whose articles these are — the
+        heading is here to close the level skip, not to add a line. */}
+    <h2 class="sr-only">Artikel von {author.name}</h2>
     <AuthorPostList posts={cards} lang="de" client:load />
   </main>
 </Layout>

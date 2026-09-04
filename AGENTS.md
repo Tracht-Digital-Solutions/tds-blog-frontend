@@ -759,7 +759,12 @@ The cheap regression check is the built bundle, not the source:
 npm run build && cat dist/_astro/*.css | grep -o "animation:[^;}]*" | sort -u
 ```
 
-Anything beyond the four `tds-*` keyframes above is new decoration. Note that
+Anything that is not a `tds-*` keyframe is new decoration. The shared library
+has grown its own set since this note was written — a 2026-09-04 build emits
+`tds-circuit-draw`, `tds-circuit-node`, `tds-modal-backdrop-in`, `tds-modal-in`,
+`tds-skeleton-pulse`, `tds-spin`, `tds-stale-pulse`, `tds-toast-in` — so count
+the prefix, not the number; a new one from tds-shared is not a regression here.
+Note that
 `npm run type-check` will NOT catch a broken `<style>` block — astro check does
 not parse CSS, so a mangled rule only surfaces at build time.
 
