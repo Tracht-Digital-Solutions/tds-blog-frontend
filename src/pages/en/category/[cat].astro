@@ -2,7 +2,7 @@
 import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import { byCategory } from "~/lib/routes";
-import { asGraph, blogSchema, breadcrumbSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { asGraph, blogSchema, breadcrumbSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
 import { categoryAlternate } from "~/lib/alternates";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { categoryDescription } from "~/lib/metaDescription";
@@ -20,10 +20,22 @@ const { name, posts } = group;
 // DE twin for why that is usually not the case.
 const altPath = await categoryAlternate("en", cat);
 
+const pageUrl = `${siteConfig.url}/en/category/${cat}`;
+const title = pageTitle(name);
+const description = categoryDescription(name, "en");
+
+// The ItemList sits inside the CollectionPage rather than beside it: on its
+// own it named a set of articles without ever saying which page listed them.
 const jsonLd = asGraph(
   websiteSchema("en"),
   blogSchema("en"),
-  itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
+  collectionPageSchema({
+    url: pageUrl,
+    name: title,
+    description,
+    lang: "en",
+    itemList: itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
+  }),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/en/` },
     { name, url: `${siteConfig.url}/en/category/${cat}` },
@@ -32,8 +44,8 @@ const jsonLd = asGraph(
 ---
 
 <Layout
-  title={pageTitle(name)}
-  description={categoryDescription(name, "en")}
+  title={title}
+  description={description}
   lang="en"
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}

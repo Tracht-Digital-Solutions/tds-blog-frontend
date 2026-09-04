@@ -2,8 +2,8 @@
 import Layout from "~/layouts/Layout.astro";
 import PostCard from "~/components/PostCard.tsx";
 import { listAllPosts, listTopics } from "~/lib/content-api";
-import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
-import { siteConfig } from "~/lib/seo";
+import { asGraph, blogSchema, breadcrumbSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { pageTitle, siteConfig } from "~/lib/seo";
 
 /**
  * /en/aktuelles (EN) — English mirror of /aktuelles: curated "current topics"
@@ -24,19 +24,33 @@ const latest = [...posts]
   .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
   .slice(0, 6);
 
+const pageUrl = `${siteConfig.url}/en/aktuelles`;
+const title = pageTitle("Latest");
+const description =
+  "The latest posts from the TDS Journal: current topics on digitalization for businesses, web development and everyday automation.";
+
+// This route lists the six newest posts and was the only listing page that
+// named none of them in its graph.
 const jsonLd = asGraph(
   websiteSchema("en"),
   blogSchema("en"),
+  collectionPageSchema({
+    url: pageUrl,
+    name: title,
+    description,
+    lang: "en",
+    itemList: itemListSchema(latest.map((p) => `${siteConfig.url}/en/${p.slug}`)),
+  }),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/en/` },
-    { name: "Latest", url: `${siteConfig.url}/en/aktuelles` },
+    { name: "Latest", url: pageUrl },
   ]),
 );
 ---
 
 <Layout
-  title="Latest — Journal"
-  description="The latest posts from the TDS Journal: current topics on digitalization for businesses, web development and everyday automation."
+  title={title}
+  description={description}
   jsonLd={jsonLd}
   lang="en"
 >

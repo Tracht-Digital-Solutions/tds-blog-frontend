@@ -5,7 +5,7 @@ import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { archivePage } from "~/lib/routes";
 import { paginate } from "~/lib/pagination";
 import { archiveDescription } from "~/lib/metaDescription";
-import { asGraph, blogSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { asGraph, blogSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
 import { archiveAlternate } from "~/lib/alternates";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { PAGE_SIZE } from "~/lib/pagination";
@@ -25,20 +25,32 @@ const newerHref = page - 1 <= 1 ? "/" : `/page/${page - 1}`;
 // page count comes from a live list and is not something to assume.
 const altPath = await archiveAlternate("de", page);
 
+const pageUrl = `${siteConfig.url}/page/${page}`;
+const title = pageTitle(`Archiv · Seite ${page}`);
+const description = archiveDescription(page, "de");
+
+// The ItemList sits inside the CollectionPage rather than beside it: on its
+// own it named a set of articles without ever saying which page listed them.
 // Positions continue the collection rather than restarting at 1 on every page.
 const jsonLd = asGraph(
   websiteSchema("de"),
   blogSchema("de"),
-  itemListSchema(
-    items.map((p) => `${siteConfig.url}/${p.slug}`),
-    (page - 1) * PAGE_SIZE + 1,
-  ),
+  collectionPageSchema({
+    url: pageUrl,
+    name: title,
+    description,
+    lang: "de",
+    itemList: itemListSchema(
+      items.map((p) => `${siteConfig.url}/${p.slug}`),
+      (page - 1) * PAGE_SIZE + 1,
+    ),
+  }),
 );
 ---
 
 <Layout
-  title={pageTitle(`Archiv · Seite ${page}`)}
-  description={archiveDescription(page, "de")}
+  title={title}
+  description={description}
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >

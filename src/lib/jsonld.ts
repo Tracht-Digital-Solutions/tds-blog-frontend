@@ -23,6 +23,21 @@ const orgId = `${siteConfig.marketingUrl}/#organization`;
 const personId = `${siteConfig.marketingUrl}/#person`;
 
 /**
+ * The @id of the Person an author page describes. One rule, two callers —
+ * `blogPostingSchema` (the byline on an article) and `profilePageSchema`
+ * (the page itself) — because that shared identifier is the only thing that
+ * makes them the same entity to a crawler.
+ */
+export function authorPersonId(authorPageUrl: string): string {
+  return `${authorPageUrl}#person`;
+}
+
+/** The @id of a language tree's Blog node (`blogSchema` owns the node). */
+function blogId(lang: "de" | "en"): string {
+  return `${lang === "en" ? `${siteConfig.url}/en/` : `${siteConfig.url}/`}#blog`;
+}
+
+/**
  * Light Organization stub. The marketing site emits the full
  * Organization graph; here we only reference it by @id so search
  * engines can resolve it without us duplicating address/founder.
@@ -121,7 +136,7 @@ export function blogSchema(lang: "de" | "en") {
   const langUrl = lang === "en" ? `${siteConfig.url}/en/` : `${siteConfig.url}/`;
   return {
     "@type": "Blog",
-    "@id": `${langUrl}#blog`,
+    "@id": blogId(lang),
     url: langUrl,
     name: siteConfig.blogName[lang],
     description: siteConfig.description[lang],
@@ -168,12 +183,17 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
   const datePublished = post.publishedAt ?? undefined;
   const dateModified = post.updatedAt ?? post.publishedAt ?? undefined;
 
+  // The @id is what connects the article to the author's own page. Without
+  // it this Person and the one `profilePageSchema` emits on /autor/<slug>
+  // were two unrelated nodes that merely happened to share a name — the
+  // author pages carried a Person nobody's article pointed at. Same URL, same
+  // #person fragment, so a crawler stitches them into one entity.
   const authorName = post.author?.name?.trim();
   const author = authorName
     ? {
         "@type": "Person",
+        ...(post.author?.url ? { "@id": authorPersonId(post.author.url), url: post.author.url } : {}),
         name: authorName,
-        ...(post.author?.url ? { url: post.author.url } : {}),
       }
     : { "@id": personId };
 
@@ -204,9 +224,7 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
     },
     author,
     publisher: { "@id": orgId },
-    isPartOf: {
-      "@id": `${post.lang === "en" ? `${siteConfig.url}/en/` : `${siteConfig.url}/`}#blog`,
-    },
+    isPartOf: { "@id": blogId(post.lang) },
   };
 }
 
@@ -237,6 +255,65 @@ export function itemListSchema(urls: readonly string[], startPosition = 1) {
   };
 }
 
+/**
+ * The listing page itself.
+ *
+ * The listing routes emitted `WebSite + Blog + ItemList + BreadcrumbList` and
+ * nothing that *was* the page: the ItemList floated in the graph attached to
+ * no entity, so nothing said which page listed those articles or where it
+ * belonged. `CollectionPage` is that node — it carries the page's own URL,
+ * the same name and description the `<head>` already commits to, its place in
+ * the language tree, and the list as its `mainEntity`.
+ *
+ * The caller passes the ItemList it built, rather than the URLs, because
+ * archive pages number their positions from the corpus (page 2 starts at 11)
+ * and only the caller knows the offset.
+ */
+export function collectionPageSchema(opts: {
+  url: string;
+  name: string;
+  description: string;
+  lang: "de" | "en";
+  itemList: object;
+}) {
+  return {
+    "@type": "CollectionPage",
+    "@id": `${opts.url}#page`,
+    url: opts.url,
+    name: opts.name,
+    description: opts.description,
+    inLanguage: opts.lang === "de" ? "de-DE" : "en-GB",
+    isPartOf: { "@id": blogId(opts.lang) },
+    mainEntity: opts.itemList,
+  };
+}
+
+/**
+ * An author page.
+ *
+ * `ProfilePage` with the Person as `mainEntity` is the shape Google documents
+ * for author pages; a bare Person node says who someone is but never says the
+ * page is *about* them. The Person keeps the `@id` from `authorPersonId`, so
+ * every article that person wrote points at this same node.
+ */
+export function profilePageSchema(opts: {
+  url: string;
+  lang: "de" | "en";
+  person: object;
+  /** Newest post date on the page — `dateModified` for the profile. */
+  dateModified?: string | null;
+}) {
+  return {
+    "@type": "ProfilePage",
+    "@id": `${opts.url}#page`,
+    url: opts.url,
+    inLanguage: opts.lang === "de" ? "de-DE" : "en-GB",
+    isPartOf: { "@id": blogId(opts.lang) },
+    ...(opts.dateModified ? { dateModified: opts.dateModified } : {}),
+    mainEntity: opts.person,
+  };
+}
+
 /** BreadcrumbList helper (Home → category → post). */
 export function breadcrumbSchema(
   items: { name: string; url: string }[],
@@ -253,9 +330,26 @@ export function breadcrumbSchema(
   };
 }
 
+/**
+ * Wrap nodes into a single `@graph` document.
+ *
+ * The members are stripped of their own `@context` on the way in. Several
+ * builders here return a standalone document (they are also used on their
+ * own — `Article.astro` passes an array of independent objects to `JsonLd`,
+ * where each one needs its context), and nesting those inside `@graph` left
+ * the context declared twice: once on the document and once on a member that
+ * inherits it anyway. Harmless to a lenient parser, wrong per JSON-LD, and
+ * the kind of thing that only shows up in a validator months later.
+ *
+ * `asGraph` is the sole context owner for anything it wraps.
+ */
 export function asGraph(...nodes: object[]): WithContext {
   return {
     "@context": "https://schema.org",
-    "@graph": nodes,
+    "@graph": nodes.map((node) => {
+      if (!("@context" in node)) return node;
+      const { "@context": _ctx, ...rest } = node as Record<string, unknown>;
+      return rest;
+    }),
   };
 }

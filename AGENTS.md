@@ -1,12 +1,19 @@
 # Agent notes — tds-blog-frontend
 
-Astro 6 SSG. Public blog at `blog.tracht-digital.de`. All posts are
-fetched at **build time** from `tds-content-api` so the rendered HTML
-ships static — no runtime API calls, no client-side data fetching.
+Astro 7, `output: "server"` (`@astrojs/node`, standalone, under Passenger).
+Public blog at `blog.tracht-digital.de`. A page renders **on demand** and the
+result is stored as a plain file the web server hands out directly — see "How a
+published article reaches a reader" below for the cache and its control plane.
+
+> This paragraph read "Astro 6 SSG … ships static — no runtime API calls" until
+> 2026-09-04, which had been wrong since the SSR move on 2026-08-24. The code
+> is the source of truth; a cache *hit* is as fast as the old static build
+> because it is the same thing, a file on disk, but nothing about the build is
+> static any more.
 
 > Status: **required, not superseded.** Still deployed. Posts come from
 > `tds-content-api` today; after the frontend-platform cutover the source becomes
-> `tds-ext-blog-cms-pkg` (`/blogs/...`), read at build time the same way. See the root
+> `tds-ext-blog-cms-pkg` (`/blogs/...`), read the same way. See the root
 > `MIGRATION-STATUS.md`.
 Self-hosted **Lato** (display) + **Plus Jakarta Sans** (body) +
 **JetBrains Mono** (mono). The editorial type vocabulary (`.display`,
@@ -101,7 +108,7 @@ The site runs the platform's current line: **TypeScript 6, vitest 4, jsdom 30,
 Astro 7.2.5, shiki 4, satori 0.33** — the same set `tds-tools-frontend` moved
 to, so the three public sites stay one toolchain.
 
-The current shared-library line is **`tds-shared ^0.33.0`**. A caret on a
+The current shared-library line is **`tds-shared ^0.34.0`**. A caret on a
 `0.x` package never crosses the minor boundary, so every new shared minor must
 be repinned explicitly and verified with a fresh `npm install
 --no-package-lock`; a green build against the old installed tree proves
@@ -893,6 +900,26 @@ after the props destructure.
 - Index pages (DE + EN, both page 1 and `/page/[num]`) emit
   `WebSite` + `Blog` graph. The WebSite node has no SearchAction —
   there is no search endpoint; don't add a fake one.
+- **Every listing route emits a page-level node, and the `ItemList` lives
+  inside it** (2026-09-04). Category, tag, archive and `/aktuelles` build a
+  `CollectionPage` (`collectionPageSchema`); the author pages build a
+  `ProfilePage` around their `Person` (`profilePageSchema`), which is the shape
+  Google documents for author pages. Before this the `ItemList` sat loose in
+  the graph: it named a set of articles while nothing said which page listed
+  them, and a bare `Person` said who someone was while nothing said the page
+  was about them. `/aktuelles` and `/en/aktuelles` listed six posts and named
+  none of them — they were the only listing routes with no `ItemList` at all.
+  Pass the built list to `collectionPageSchema`, not the URLs: only the caller
+  knows an archive page's position offset.
+- **`authorPersonId(pageUrl)` is why an article and its author page are one
+  entity.** `blogPostingSchema` used to emit an inline `Person` with a name and
+  a url but no `@id`, so it and the author page's `Person` were two nodes that
+  merely agreed on a name. One helper, both callers — don't inline the
+  fragment at either end.
+- **`asGraph` is the sole owner of `@context`** and strips it from its members.
+  Several builders return a standalone document because they are also used that
+  way (`Article.astro` passes an array of independent objects to `JsonLd`);
+  nesting one of those must not declare the context twice.
 - Organization + Person `@id`s are anchored on `tracht-digital.de`
   (the marketing origin), so this site references them by `@id`
   rather than redefining them.
@@ -954,6 +981,15 @@ stays consistent across both domains.
   owns the `" — Journal"` suffix and the length rule (it drops the
   brand, never the subject). The tab script in `Layout.astro` splits on
   that exact separator.
+  **The two index pages are the deliberate exception** and must stay inline:
+  a home page leads with the brand (`TDS Journal — Digitalisierung, Software
+  & Mittelstand`, 53 chars; the EN twin, 45), where every other route leads
+  with its subject. Running them through `pageTitle()` would move "TDS
+  Journal" to the end — and the tab script takes the segment *before* the
+  separator as the prefix it restores, so the index would then announce its
+  own subject as the brand. Both are inside the 60-character budget; check
+  that when the copy changes. `/aktuelles` is **not** an exception and does
+  use `pageTitle()`.
 - Don't call `websiteSchema()` without a language. It used to hard-code
   the German name and description onto every English page.
 - ~~Don't fetch posts at runtime. SSG only.~~ **Stale — the opposite is
