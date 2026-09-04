@@ -235,12 +235,18 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         <nav class="toc" aria-label={tx.contents} id="article-toc">
           <div class="toc-head">
             <p class="eyebrow toc-title">{tx.contents}</p>
+            {/* aria-controls names the rail, not the page. The fold class
+                lands on `#main` because the collapsed styling reaches the
+                links from there (`.toc-collapsed .toc-link`) — but what this
+                button expands and collapses is the nav beside the article.
+                Pointing it at `#main` told assistive tech the control folded
+                away the entire article. */}
             <button
               type="button"
               class="toc-toggle"
               id="toc-toggle"
               aria-expanded="true"
-              aria-controls="main"
+              aria-controls="article-toc"
               title={tx.tocCollapse}
               aria-label={tx.tocCollapse}
               data-label-collapse={tx.tocCollapse}

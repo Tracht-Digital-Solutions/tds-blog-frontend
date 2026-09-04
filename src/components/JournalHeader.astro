@@ -18,6 +18,15 @@
  * The desktop search field drives the BlogIndex island when one is on the
  * page (CustomEvent `tds-blog-search`, flagged via `data-blog-live-search`
  * on <html>); everywhere else Enter navigates to the index with `?q=`.
+ * It carries `role="search"` so the one search affordance on the site is
+ * reachable as a landmark — on the index it filters the grid in place, so a
+ * screen-reader user has no other way back to it.
+ *
+ * "Entdecken" is a DISCLOSURE, not a menu. It deliberately carries no
+ * `aria-haspopup`: the panel it opens is a `role="group"`, and announcing a
+ * menu that never arrives leaves a screen-reader user waiting for arrow-key
+ * navigation this control does not implement. `aria-expanded` plus
+ * `aria-controls` is the whole pattern.
  */
 import { AccountMenu, ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
 import {
@@ -81,7 +90,6 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
               type="button"
               id="jnl-entdecken-btn"
               class="jnav-item jnav-dd-btn whitespace-nowrap"
-              aria-haspopup="true"
               aria-expanded="false"
               aria-controls="jnl-entdecken-panel"
               aria-current={entdeckenActive ? "true" : undefined}
@@ -130,7 +138,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
       )}
     </nav>
 
-    <div class="nav-search hidden lg:flex">
+    <div class="nav-search hidden lg:flex" role="search">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
         <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>

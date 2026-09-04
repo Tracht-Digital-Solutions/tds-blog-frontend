@@ -394,6 +394,8 @@ export default function HeroSlider({
                     key={meta.id}
                     type="button"
                     role="tab"
+                    id={`hero-tab-${meta.id}`}
+                    aria-controls="hero-stage"
                     aria-selected={on}
                     tabIndex={on ? 0 : -1}
                     onClick={() => go(meta.id)}
@@ -419,9 +421,22 @@ export default function HeroSlider({
           )}
         </div>
 
+        {/* The tab and the panel were two unconnected nodes: no aria-controls
+            on the tabs, no id on the panel, so nothing tied the selected set
+            to the strip it selects. There is one stage for all sets (they sit
+            side by side in .hero-track), so every tab controls the same panel
+            and the panel is labelled by whichever tab is active. With a single
+            set there is no tablist, so the panel role goes too — a tabpanel
+            with no owning tab is a structure error, not a hint.
+
+            aria-live is gone with the wiring. A polite region around the whole
+            stage re-read the entire set — heading, excerpt, byline, links — on
+            every tab press; the tab pattern already reports the selection, and
+            that is the part a user asked for. */}
         <div
-          role="tabpanel"
-          aria-live="polite"
+          role={sets.length > 1 ? "tabpanel" : undefined}
+          id="hero-stage"
+          aria-labelledby={sets.length > 1 ? `hero-tab-${current.meta.id}` : undefined}
           className="hero-stage"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

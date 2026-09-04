@@ -99,7 +99,12 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
         </div>
         <div>
           {state === "done" ? (
+            /* The success case replaces the form outright. Without a live
+               region that is a submit followed by silence: the control the
+               user was on is gone and nothing says why. `role="status"`
+               announces the confirmation where it appears. */
             <p
+              role="status"
               style={{
                 fontSize: 16,
                 lineHeight: 1.6,
@@ -121,6 +126,8 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t.placeholder}
                 aria-label={t.placeholder}
+                aria-invalid={state === "error" || undefined}
+                aria-describedby="newsletter-note"
               />
               <button
                 type="submit"
@@ -133,11 +140,23 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
               </button>
             </form>
           )}
+          {/* One line carries two jobs: the standing legal note (which the
+              field points at via aria-describedby) and, on failure, the
+              error. The error used to replace the text with no role at all,
+              so a submit that failed changed a paragraph nothing was
+              listening to. `role="alert"` appears only in the error state,
+              which is what makes the swap an announcement.
+
+              .45 white on --color-surface-ink measured 4.49:1 at 12px —
+              under AA by a hundredth. .55 lands at ~5.6:1 and is not
+              distinguishable from the old value on the panel. */}
           <p
+            id="newsletter-note"
+            role={state === "error" ? "alert" : undefined}
             style={{
               fontSize: 12,
               lineHeight: 1.5,
-              color: state === "error" ? "var(--color-accent-pink)" : "rgba(255,255,255,.45)",
+              color: state === "error" ? "var(--color-accent-pink)" : "rgba(255,255,255,.55)",
               margin: "14px 0 0",
             }}
           >

@@ -26,6 +26,8 @@ interface Labels {
   expandCats: string;
   collapseCats: string;
   results: string;
+  /** Status-message phrasing for a category filter: "N Beiträge in <cat>". */
+  inCategory: string;
   clear: string;
   noResults: string;
   empty: string;
@@ -42,6 +44,7 @@ const LABELS: Record<"de" | "en", Labels> = {
     expandCats: "Kategorien ausklappen",
     collapseCats: "Kategorien einklappen",
     results: "Treffer für",
+    inCategory: "Beiträge in der Kategorie",
     clear: "Zurücksetzen",
     noResults: "Keine Beiträge gefunden. Versuchen Sie einen anderen Suchbegriff.",
     empty: "Noch keine Artikel veröffentlicht.",
@@ -56,6 +59,7 @@ const LABELS: Record<"de" | "en", Labels> = {
     expandCats: "Expand categories",
     collapseCats: "Collapse categories",
     results: "results for",
+    inCategory: "posts in category",
     clear: "Clear",
     noResults: "No posts found. Try a different search term.",
     empty: "No articles published yet.",
@@ -222,6 +226,20 @@ export default function BlogIndex({
   const hasOlder = !filtering && matches.length > pageSize;
   const quoted = lang === "de" ? `„${q.trim()}“` : `“${q.trim()}”`;
 
+  // What the status region announces. Typing in the nav search and pressing a
+  // category button both replace the grid in place, and neither moved focus or
+  // said anything — a screen-reader user got silence and a changed page. Empty
+  // in the unfiltered default so the region says nothing on load; the search
+  // case repeats the summary that is already on screen, the category case has
+  // no visible counterpart at all.
+  const statusMessage = searching
+    ? `${matches.length} ${t.results} ${quoted}`
+    : cat !== "all"
+      ? `${matches.length} ${t.inCategory} ${cat}`
+      : "";
+
+  const GridHeading = searching ? "h1" : "h2";
+
   if (posts.length === 0) {
     return <p className="tds-shell py-16 text-[var(--color-muted)] italic">{t.empty}</p>;
   }
@@ -276,6 +294,10 @@ export default function BlogIndex({
             </div>
           </div>
 
+          <p className="sr-only" role="status">
+            {statusMessage}
+          </p>
+
           {searching && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>
@@ -287,7 +309,13 @@ export default function BlogIndex({
             </div>
           )}
 
-          <h2
+          {/* The page's only <h1> lives in HeroSlider — and the hero is not
+              rendered while a search is running, so the results view shipped
+              with no top-level heading at all. This heading takes the rank
+              over in exactly that state. Nothing moves: no shared rule
+              targets a bare h1/h2, Tailwind's preflight normalises both, and
+              the size is set inline either way. */}
+          <GridHeading
             className="display-tight"
             style={{ fontSize: "1.625rem", margin: "0 0 18px", display: "flex", alignItems: "center", gap: 10 }}
           >
@@ -309,7 +337,7 @@ export default function BlogIndex({
               <rect x="14" y="14" width="7" height="7" />
             </svg>
             {cat === "all" ? t.all : cat}
-          </h2>
+          </GridHeading>
 
           {gridPosts.length === 0 ? (
             <p style={{ padding: "48px 0", color: "var(--color-muted)" }}>
