@@ -2,7 +2,15 @@
 import Layout from "~/layouts/Layout.astro";
 import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
 import { byAuthor } from "~/lib/routes";
-import { asGraph, blogSchema, breadcrumbSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import {
+  asGraph,
+  authorPersonId,
+  blogSchema,
+  breadcrumbSchema,
+  itemListSchema,
+  profilePageSchema,
+  websiteSchema,
+} from "~/lib/jsonld";
 import { authorAlternate } from "~/lib/alternates";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { authorDescription, clampToWord } from "~/lib/metaDescription";
@@ -25,21 +33,38 @@ const description = author.bio
     clampToWord(author.bio.trim())
   : authorDescription(author.name, "de");
 
+// The @id comes from the same helper `blogPostingSchema` uses for a byline,
+// so this Person and the author of every article they wrote are one node
+// rather than two that merely share a name.
 const personSchema = {
   "@type": "Person",
-  "@id": `${pageUrl}#person`,
+  "@id": authorPersonId(pageUrl),
   name: author.name,
   url: pageUrl,
   ...(author.bio ? { description: author.bio } : {}),
   ...(author.avatarUrl ? { image: author.avatarUrl } : {}),
 };
 
+// dateModified for the profile: the newest article it lists. The list read
+// carries publishedAt only, so an edited post understates it — the harmless
+// direction, and the same source the sitemap uses.
+const newestPublished =
+  posts.map((p) => p.publishedAt).filter(Boolean).sort().at(-1) ?? null;
+
 const altPath = await authorAlternate("de", author.slug);
 
+// ProfilePage with the Person as mainEntity is the shape Google documents
+// for author pages. A bare Person said who this is; nothing said the page was
+// about them, or when it last changed.
 const jsonLd = asGraph(
   websiteSchema("de"),
   blogSchema("de"),
-  personSchema,
+  profilePageSchema({
+    url: pageUrl,
+    lang: "de",
+    person: personSchema,
+    dateModified: newestPublished,
+  }),
   itemListSchema(posts.map((p) => `${siteConfig.url}/${p.slug}`)),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/` },

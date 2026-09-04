@@ -14,9 +14,14 @@ import path from "node:path";
 import { pageTitle, RENDERED_TITLE_LENGTH, siteConfig } from "./seo";
 import { postDescription, RENDERED_META_LENGTH } from "./metaDescription";
 import {
+  asGraph,
+  authorPersonId,
   blogPostingSchema,
+  breadcrumbSchema,
+  collectionPageSchema,
   itemListSchema,
   organizationSchema,
+  profilePageSchema,
   websiteSchema,
 } from "./jsonld";
 import { newestLastmod, renderUrlset, type SitemapUrl } from "./sitemap";
@@ -232,5 +237,120 @@ describe("sitemap lastmod", () => {
     expect(newestLastmod(urls)).toBe("2026-09-01");
     expect(newestLastmod([urls[2]])).toBeUndefined();
     expect(newestLastmod([])).toBeUndefined();
+  });
+});
+
+describe("the author's identity across the graph", () => {
+  const authorUrl = "https://blog.tracht-digital.de/autor/julian-tracht";
+
+  it("gives an article's byline the same @id the author page's Person carries", () => {
+    // The whole point of the helper: two builders, one identifier. Without it
+    // the author pages carried a Person that no article ever pointed at.
+    const article = blogPostingSchema({
+      slug: "ein-artikel",
+      title: "Ein Artikel",
+      excerpt: "Eine Beschreibung.",
+      body: "wort ".repeat(50),
+      category: "Webshop",
+      publishedAt: "2026-09-01 09:00:00",
+      lang: "de",
+      imageUrl: "https://blog.tracht-digital.de/og/de/ein-artikel.png",
+      wordCount: 50,
+      author: { name: "Julian Tracht", url: authorUrl },
+    });
+    const profile = profilePageSchema({
+      url: authorUrl,
+      lang: "de",
+      person: { "@type": "Person", "@id": authorPersonId(authorUrl), name: "Julian Tracht" },
+    });
+
+    expect((article.author as Record<string, unknown>)["@id"]).toBe(`${authorUrl}#person`);
+    expect((profile.mainEntity as Record<string, unknown>)["@id"]).toBe(
+      (article.author as Record<string, unknown>)["@id"],
+    );
+  });
+
+  it("still falls back to the site owner, with no author @id, for a post with no page", () => {
+    const schema = blogPostingSchema({
+      slug: "gast",
+      title: "Gastbeitrag",
+      excerpt: "x",
+      body: "wort",
+      category: "Webshop",
+      publishedAt: null,
+      lang: "de",
+      imageUrl: "https://blog.tracht-digital.de/og-default.png",
+      wordCount: 1,
+      author: { name: "Gast", url: null },
+    });
+    expect(schema.author).toEqual({ "@type": "Person", name: "Gast" });
+  });
+});
+
+describe("profilePageSchema", () => {
+  const person = { "@type": "Person", "@id": "https://x/autor/a#person", name: "A" };
+
+  it("makes the page about the person rather than merely naming one", () => {
+    const schema = profilePageSchema({
+      url: "https://blog.tracht-digital.de/autor/a",
+      lang: "de",
+      person,
+      dateModified: "2026-09-01",
+    });
+    expect(schema["@type"]).toBe("ProfilePage");
+    expect(schema.mainEntity).toBe(person);
+    expect(schema["@id"]).toBe("https://blog.tracht-digital.de/autor/a#page");
+    expect(schema.isPartOf).toEqual({ "@id": `${siteConfig.url}/#blog` });
+    expect(schema.inLanguage).toBe("de-DE");
+    expect(schema.dateModified).toBe("2026-09-01");
+  });
+
+  it("hangs an English profile off the English Blog node and omits an unknown date", () => {
+    const schema = profilePageSchema({ url: "https://x/en/author/a", lang: "en", person });
+    expect(schema.isPartOf).toEqual({ "@id": `${siteConfig.url}/en/#blog` });
+    expect(schema.inLanguage).toBe("en-GB");
+    expect(schema).not.toHaveProperty("dateModified");
+  });
+});
+
+describe("collectionPageSchema", () => {
+  it("carries the list as its mainEntity so the articles hang off a page", () => {
+    const itemList = itemListSchema(["https://x/a", "https://x/b"], 11);
+    const schema = collectionPageSchema({
+      url: "https://blog.tracht-digital.de/kategorie/webshop",
+      name: "Webshop — Journal",
+      description: "Beiträge zur Kategorie Webshop.",
+      lang: "de",
+      itemList,
+    });
+    expect(schema["@type"]).toBe("CollectionPage");
+    expect(schema.mainEntity).toBe(itemList);
+    // The positions the caller chose survive the wrapping — an archive page's
+    // second page continues the collection instead of restarting at 1.
+    expect(itemList.itemListElement[0].position).toBe(11);
+    expect(schema.isPartOf).toEqual({ "@id": `${siteConfig.url}/#blog` });
+  });
+});
+
+describe("asGraph", () => {
+  it("is the only owner of @context, and strips it off its members", () => {
+    // breadcrumbSchema and blogPostingSchema are also used standalone (the
+    // article page passes an array of independent documents), so they keep
+    // their own context — nesting them must not declare it twice.
+    const crumbs = breadcrumbSchema([{ name: "Journal", url: "https://x/" }]);
+    expect(crumbs["@context"]).toBe("https://schema.org");
+
+    const graph = asGraph(websiteSchema("de"), crumbs);
+    expect(graph["@context"]).toBe("https://schema.org");
+    for (const node of graph["@graph"] as object[]) {
+      expect(node).not.toHaveProperty("@context");
+    }
+    // Stripping is non-destructive: the standalone document is unchanged.
+    expect(crumbs["@context"]).toBe("https://schema.org");
+  });
+
+  it("keeps every other property of a wrapped node", () => {
+    const graph = asGraph(breadcrumbSchema([{ name: "Journal", url: "https://x/" }]));
+    expect((graph["@graph"] as Record<string, unknown>[])[0]["@type"]).toBe("BreadcrumbList");
   });
 });

@@ -2,8 +2,8 @@
 import Layout from "~/layouts/Layout.astro";
 import PostCard from "~/components/PostCard.tsx";
 import { listAllPosts, listTopics } from "~/lib/content-api";
-import { asGraph, blogSchema, breadcrumbSchema, websiteSchema } from "~/lib/jsonld";
-import { siteConfig } from "~/lib/seo";
+import { asGraph, blogSchema, breadcrumbSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { pageTitle, siteConfig } from "~/lib/seo";
 
 /**
  * /aktuelles (DE) — curated "Aktuelle Themen" (from the content-api topics
@@ -24,19 +24,33 @@ const latest = [...posts]
   .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
   .slice(0, 6);
 
+const pageUrl = `${siteConfig.url}/aktuelles`;
+const title = pageTitle("Aktuelles");
+const description =
+  "Die neuesten Beiträge aus dem TDS Journal: aktuelle Themen rund um Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Betrieb.";
+
+// This route lists the six newest posts and was the only listing page that
+// named none of them in its graph.
 const jsonLd = asGraph(
   websiteSchema("de"),
   blogSchema("de"),
+  collectionPageSchema({
+    url: pageUrl,
+    name: title,
+    description,
+    lang: "de",
+    itemList: itemListSchema(latest.map((p) => `${siteConfig.url}/${p.slug}`)),
+  }),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/` },
-    { name: "Aktuelles", url: `${siteConfig.url}/aktuelles` },
+    { name: "Aktuelles", url: pageUrl },
   ]),
 );
 ---
 
 <Layout
-  title="Aktuelles — Journal"
-  description="Die neuesten Beiträge aus dem TDS Journal: aktuelle Themen rund um Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Betrieb."
+  title={title}
+  description={description}
   jsonLd={jsonLd}
   lang="de"
 >

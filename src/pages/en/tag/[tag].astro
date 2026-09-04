@@ -3,7 +3,7 @@ import Layout from "~/layouts/Layout.astro";
 import BlogPostCard from "~/components/BlogPostCard.astro";
 import TagList from "~/components/TagList.astro";
 import { byTag } from "~/lib/routes";
-import { asGraph, blogSchema, breadcrumbSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { asGraph, blogSchema, breadcrumbSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
 import { tagAlternate } from "~/lib/alternates";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { tagDescription } from "~/lib/metaDescription";
@@ -20,10 +20,22 @@ const { posts, allPosts } = group;
 // Only when the German tree really carries this tag — see the DE twin.
 const altPath = await tagAlternate("en", tag);
 
+const pageUrl = `${siteConfig.url}/en/tag/${tag}`;
+const title = pageTitle(`#${tag}`);
+const description = tagDescription(tag, "en");
+
+// The ItemList sits inside the CollectionPage rather than beside it: on its
+// own it named a set of articles without ever saying which page listed them.
 const jsonLd = asGraph(
   websiteSchema("en"),
   blogSchema("en"),
-  itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
+  collectionPageSchema({
+    url: pageUrl,
+    name: title,
+    description,
+    lang: "en",
+    itemList: itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
+  }),
   breadcrumbSchema([
     { name: "Journal", url: `${siteConfig.url}/en/` },
     { name: `#${tag}`, url: `${siteConfig.url}/en/tag/${tag}` },
@@ -32,8 +44,8 @@ const jsonLd = asGraph(
 ---
 
 <Layout
-  title={pageTitle(`#${tag}`)}
-  description={tagDescription(tag, "en")}
+  title={title}
+  description={description}
   lang="en"
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
