@@ -721,6 +721,58 @@ that and renders each section body with **`BlockRenderer.astro`** instead of
 - `blogSnippets()` in `content-api.ts` — build-time snippet catalog fetch (memoised
   for the whole build; empty on demo/outage).
 
+## TDShop product placement (2026-09-07, tds-shared 0.35.1)
+
+Products from `shop.tracht-digital.de` appear here two ways, and both read the
+same public endpoints through `src/lib/shop-api.ts` — fail-soft, memoised per
+cache generation, and rendering **nothing** on failure. An article missing a
+card still reads; an error box in the middle of one does not.
+
+- **Inline**, the `product` block: a block type in tds-shared's
+  `BlogBlockSchema`, gated on `integration: "shop"`. The blog-CMS editor picks
+  the command up from `BLOG_BLOCKS` with no change of its own, and the body
+  stays opaque JSON server-side, so there is no PHP validator to mirror.
+  `BlockRenderer.astro` breaks the prose flow for it, the way it does for an
+  embed — a shared card inside `.tds-prose` would inherit article typography
+  and lose its own geometry. `ProductEmbed.astro` renders it.
+- **Fixed slot**, `ProductSlot.astro`: `blog-article-end`, placed before
+  `RelatedArticles` (a reader who has finished the piece is at their most
+  interested there, and the related strip is the natural end of the page) and
+  inside `focus-hide`, because reader focus mode removes chrome and advertising
+  is chrome.
+
+### Three things that are decisions, not details
+
+**No price is rendered on this site.** Every embedded offer is passed on with
+`priceCents` and `priceCheckedAt` nulled. An affiliate quote expires after 24
+hours, so a price in an article would need that article rebuilt on every sync
+tick — a rebuild of the whole journal for a number nobody came here to read. It
+also reads better: the card's job is to send an interested reader to the
+product page, where the price lives with its date and its disclaimer.
+
+**`ProductSlot` is NOT built on `AdSlot`.** That one is AdSense-specific and
+consent-gated because it loads a third-party script that sets cookies. A
+product slot loads nothing, sets nothing, and its click counter stores a daily
+total with no identifier — so there is nothing to consent to, and reusing the
+gated component would hide the slot from most readers for no reason. What is
+copied is the *labelling*: same wording, same weight, one vocabulary for "this
+is an ad".
+
+**Never rebuild an affiliate URL here.** `offer.url` already points at the
+shop's `/go/{id}` redirect; `attributeOffers()` only appends the surface and
+slot. The partner tag belongs in one database row, not baked into every article
+that ever mentioned the offer.
+
+### If embedded products render blank in production, check this first
+
+These routes sit under `/content/shop`, a **different prefix** from this site's
+own `/content/blog`. `SiteConnectionIdentity::allows()` waves through a key with
+no scopes, but a key that carries scopes passes only the prefixes it lists — so
+a blog site key scoped to `/content/blog` is rejected on `/content/shop`. And
+because every read here is fail-soft, the only symptom is a slot that renders
+nothing. Add `/content/shop` to the blog connection's scopes, or reissue the key
+without scopes.
+
 ## No decorative motion
 
 The blog does not animate for effect. What used to be here and is now gone:
