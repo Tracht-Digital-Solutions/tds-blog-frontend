@@ -13,6 +13,7 @@
  */
 import type { BlogBlock } from "@tracht-digital-solutions/tds-shared";
 import AdSlot from "./AdSlot.astro";
+import ProductEmbed from "./ProductEmbed.astro";
 import { renderBlockHtml } from "../lib/renderBlock";
 
 interface SnippetLike {
@@ -38,7 +39,8 @@ const { blocks, ads = null, showAds = false, lang = "de", snippets = [], dropCap
 type Part =
   | { kind: "prose"; html: string }
   | { kind: "raw"; html: string }
-  | { kind: "ad"; slot: string | null };
+  | { kind: "ad"; slot: string | null }
+  | { kind: "product"; slug: string; variant: "card" | "inline" | "list" };
 
 const parts: Part[] = [];
 let buf = "";
@@ -51,6 +53,16 @@ for (const block of blocks) {
   if (block.type === "adsense") {
     flush();
     parts.push({ kind: "ad", slot: block.slot ?? null });
+    continue;
+  }
+  if (block.type === "product") {
+    // The inline product placement. Breaks the prose flow like an embed does:
+    // a card inside a `.tds-prose` container would inherit article typography
+    // and lose the shared card geometry.
+    flush();
+    if (block.slug.trim() !== "") {
+      parts.push({ kind: "product", slug: block.slug, variant: block.variant });
+    }
     continue;
   }
   if (block.type === "custom") {
@@ -75,6 +87,8 @@ const firstProse = parts.findIndex((p) => p.kind === "prose");
 {parts.map((part, i) =>
   part.kind === "prose" ? (
     <div class:list={["tds-prose", dropCap && i === firstProse && "drop-cap"]} set:html={part.html} />
+  ) : part.kind === "product" ? (
+    <ProductEmbed slug={part.slug} variant={part.variant} lang={lang} />
   ) : part.kind === "raw" ? (
     <div class="tds-block-embed" set:html={part.html} />
   ) : showAds && ads?.publisherId ? (

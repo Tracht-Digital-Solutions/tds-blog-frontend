@@ -1,0 +1,71 @@
+---
+import { ProductCard } from "@tracht-digital-solutions/tds-shared/components";
+
+import { attributeOffers, getShopProduct } from "../lib/shop-api";
+
+/**
+ * A TDShop product placed inline in an article — the rendered half of the
+ * `product` block.
+ *
+ * ### No price is shown here, and that is deliberate
+ *
+ * Every offer is handed to `ProductCard` with its price and timestamp
+ * stripped. Two reasons:
+ *
+ * 1. **Cache economics.** An affiliate price expires after 24 hours, so a
+ *    price shown in an article would need that article rebuilt whenever the
+ *    offer sync ticks. On a catalogue of any size that is a rebuild of the
+ *    whole journal for a number nobody came here to read.
+ * 2. **It reads better.** The job of an embedded card is to send an interested
+ *    reader to the product page, where the price lives with its retrieval date
+ *    and its disclaimer. A figure in the middle of an article invites a
+ *    comparison the article is not making.
+ *
+ * The advertising label still renders — `ProductCard` emits it whenever an
+ * affiliate offer is present, whatever else was passed.
+ *
+ * A slug that resolves to nothing renders NOTHING: no error box, no
+ * placeholder. A reader has no use for "product xyz-3 could not be loaded",
+ * and an article missing one card still reads.
+ */
+interface Props {
+  slug: string;
+  variant: "card" | "inline" | "list";
+  lang?: "de" | "en";
+}
+
+const { slug, variant, lang = "de" } = Astro.props;
+
+const product = await getShopProduct(slug, lang);
+const shown = product
+  ? attributeOffers(
+      {
+        ...product,
+        offers: product.offers.map((offer) => ({
+          ...offer,
+          priceCents: null,
+          priceCheckedAt: null,
+        })),
+      },
+      lang,
+      "blog-inline",
+    )
+  : null;
+---
+
+{
+  shown ? (
+    <div class="tds-block-product">
+      <ProductCard product={shown} lang={lang} variant={variant} />
+    </div>
+  ) : null
+}
+
+<style>
+  /* Only the spacing that separates the card from the prose around it. The
+     card itself is entirely tds-shared's — this site must not re-declare a
+     shared class. */
+  .tds-block-product {
+    margin: 2rem 0;
+  }
+</style>

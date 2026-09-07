@@ -8,6 +8,7 @@
  */
 import Layout from "~/layouts/Layout.astro";
 import RelatedArticles from "~/components/RelatedArticles.astro";
+import ProductSlot from "~/components/ProductSlot.astro";
 import TagList from "~/components/TagList.astro";
 import AdSlot from "~/components/AdSlot.astro";
 import BlockRenderer from "~/components/BlockRenderer.astro";
@@ -482,6 +483,14 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
               </p>
             </div>
           </aside>
+      </div>
+
+      {/* Products before the related articles, not after: the reader who has
+          finished the piece is at their most interested here, and the related
+          strip is the natural end of the page. `focus-hide` because reader
+          focus mode removes every piece of chrome, and advertising is chrome. */}
+      <div class="focus-hide">
+        <ProductSlot slotKey="blog-article-end" lang={lang} category={post.category} />
       </div>
 
       <div class="focus-hide">

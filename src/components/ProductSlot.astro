@@ -1,0 +1,95 @@
+---
+import { ProductCard } from "@tracht-digital-solutions/tds-shared/components";
+
+import { attributeOffers, getShopPlacement } from "../lib/shop-api";
+
+/**
+ * A fixed advertising slot — the article end and the sidebar.
+ *
+ * Deliberately NOT built on `AdSlot.astro`. That component is AdSense-specific
+ * (an `<ins class="adsbygoogle">` plus a push script) and is gated on ad
+ * consent, because it loads a third-party script that sets cookies. A product
+ * slot loads nothing and sets nothing: the markup is ours, the images come
+ * from the merchant's CDN as an ordinary `<img>`, and the click counter stores
+ * a daily total with no identifier in it. So there is nothing to consent to,
+ * and reusing the consent-gated component would hide the slot from most
+ * readers for no reason.
+ *
+ * What IS taken from `AdSlot` is the labelling: same wording, same visual
+ * weight, so a reader does not have to learn two vocabularies for "this is an
+ * ad". The label text comes from the API with the placement.
+ *
+ * An empty slot renders nothing at all — no heading, no frame. An empty box
+ * announcing an absence of advertising is worse than the absence.
+ */
+interface Props {
+  /** Placement key, e.g. `blog-article-end`. Seeded in the shop extension. */
+  slotKey: string;
+  lang?: "de" | "en";
+  /** The article's category, so an automatic slot can match the piece it sits in. */
+  category?: string;
+  /** `strip` scrolls horizontally; `single` is one card in a sidebar. */
+  layout?: "strip" | "single";
+}
+
+const { slotKey, lang = "de", category, layout = "strip" } = Astro.props;
+
+const placement = await getShopPlacement(slotKey, lang, category);
+const products = placement.products.map((product) =>
+  attributeOffers(
+    {
+      ...product,
+      // Same reasoning as ProductEmbed: no price in the journal, so a price
+      // tick never has to rebuild an article.
+      offers: product.offers.map((offer) => ({
+        ...offer,
+        priceCents: null,
+        priceCheckedAt: null,
+      })),
+    },
+    lang,
+    slotKey,
+  ),
+);
+---
+
+{
+  products.length > 0 ? (
+    <aside class="tds-product-slot" aria-label={placement.label}>
+      <p class="tds-product-slot__label">{placement.label}</p>
+      {placement.heading ? <h2 class="tds-product-slot__title">{placement.heading}</h2> : null}
+      <div class={layout === "strip" ? "tds-product-strip" : ""}>
+        {products.map((product) => (
+          <ProductCard
+            product={product}
+            lang={lang}
+            variant={layout === "single" ? "card" : "card"}
+          />
+        ))}
+      </div>
+    </aside>
+  ) : null
+}
+
+<style>
+  .tds-product-slot {
+    margin: 3rem 0;
+  }
+
+  /* Matches .tds-adslot__label in AdSlot.astro on purpose — one vocabulary. */
+  .tds-product-slot__label {
+    display: block;
+    margin: 0 0 0.35rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b6b66);
+  }
+
+  .tds-product-slot__title {
+    margin: 0 0 1rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.125rem;
+  }
+</style>
