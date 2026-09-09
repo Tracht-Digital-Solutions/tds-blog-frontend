@@ -10,10 +10,10 @@
  * Ressourcen and Rechtliches. The Entdecken category links are dynamic
  * (`getTaxonomy`); the rest are stable hardcoded targets.
  */
+import { ConsentLink } from "@tracht-digital-solutions/tds-shared/consent";
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
 import { entdeckenLabels, categoryHref, topicsHref, TOOLS_URL, SHOP_URL } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
-import { adsConfig } from "~/lib/content-api";
 
 interface Props {
   lang?: "de" | "en";
@@ -21,9 +21,7 @@ interface Props {
 
 const { lang = "de" } = Astro.props;
 const year = new Date().getFullYear();
-// Ad-consent revoke link — only meaningful when AdSense is enabled.
-const adsEnabled = (await adsConfig()).enabled;
-const adConsentLabel = lang === "de" ? "Werbe-Einwilligung ändern" : "Ad-consent settings";
+
 const labels = entdeckenLabels(lang);
 const { categories } = await getTaxonomy(lang);
 
@@ -146,30 +144,30 @@ const groups =
     >
       <p>© {year} Tracht Digital Solutions</p>
       <div class="flex items-center gap-4">
-        {adsEnabled && (
-          <button
-            type="button"
-            id="tds-ad-consent-reset"
-            class="text-white/50 hover:text-white transition-colors bg-transparent border-0 cursor-pointer p-0"
-            style="font-family: var(--font-mono); font-size: inherit;"
-          >
-            {adConsentLabel}
-          </button>
-        )}
+        {/*
+          The way back into the consent settings.
+
+          It replaces a button that removed `tds-ad-consent` and reloaded — i.e.
+          it FORGOT the decision rather than letting it be changed, and after
+          the consent record arrived it would have stopped working entirely:
+          clearing the legacy key leaves `tds-consent` in place, so the banner
+          would not have come back and the visitor would have had no way to
+          revoke anything.
+
+          Unconditional now. It was shown only when advertising was on, which
+          made the one control that reopens the settings appear and disappear
+          with a CMS toggle. Art. 7 Abs. 3 DSGVO wants withdrawing to be as easy
+          as giving, and "as easy" cannot depend on whether an ad slot is
+          currently filled.
+        */}
+        <ConsentLink
+          client:idle
+          lang={lang}
+          className="text-white/50 hover:text-white transition-colors"
+        />
         <p>DE / EN</p>
       </div>
     </div>
-    {adsEnabled && (
-      <script is:inline>
-        (function () {
-          var b = document.getElementById("tds-ad-consent-reset");
-          if (!b) return;
-          b.addEventListener("click", function () {
-            try { localStorage.removeItem("tds-ad-consent"); } catch (e) {}
-            location.reload();
-          });
-        })();
-      </script>
-    )}
+
   </div>
 </footer>

@@ -32,7 +32,37 @@ function vimeoId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-export async function renderBlockHtml(block: BlogBlock): Promise<string> {
+/**
+ * The consent gate's own copy.
+ *
+ * Server-rendered rather than built by the script, so a reader without
+ * JavaScript still learns who the recipient would be and gets a working link to
+ * the video at its source. `lang` is threaded down for this and nothing else.
+ */
+const EMBED_TEXT = {
+  de: {
+    title: "Externer Inhalt",
+    body: (p: string) =>
+      `Dieses Video wird von ${p} geladen. Dabei werden Ihre IP-Adresse und ` +
+      `Angaben zu Ihrem Gerät an ${p} übertragen.`,
+    load: "Video laden",
+    settings: "Dauerhaft entscheiden",
+    open: (p: string) => `Bei ${p} ansehen`,
+  },
+  en: {
+    title: "External content",
+    body: (p: string) =>
+      `This video is loaded from ${p}. Doing so transmits your IP address and ` +
+      `details about your device to ${p}.`,
+    load: "Load video",
+    settings: "Decide permanently",
+    open: (p: string) => `Watch on ${p}`,
+  },
+} as const;
+
+export type EmbedLang = keyof typeof EMBED_TEXT;
+
+export async function renderBlockHtml(block: BlogBlock, lang: EmbedLang = "de"): Promise<string> {
   switch (block.type) {
     case "heading":
       return `<h${block.level} id="${slugify(block.text)}">${inline(block.text)}</h${block.level}>`;
@@ -75,7 +105,35 @@ export async function renderBlockHtml(block: BlogBlock): Promise<string> {
         block.provider === "youtube"
           ? `https://www.youtube-nocookie.com/embed/${id}`
           : `https://player.vimeo.com/video/${id}`;
-      return `<div class="tds-video-embed"><iframe src="${src}" loading="lazy" allowfullscreen title="Video"></iframe></div>`;
+
+      /*
+       * A gate, not the frame.
+       *
+       * An <iframe> contacts its origin the moment it is parsed, so the frame
+       * used to reach Google or Vimeo on every article that carried one —
+       * before any banner was answered, and whatever the privacy policy said.
+       * `youtube-nocookie` narrows what is STORED; it does not stop the
+       * connection, and the IP address has already gone by then.
+       *
+       * `src/lib/gatedEmbeds.ts` creates the frame once there is a consent to
+       * create it under. The two buttons ship `hidden` and are revealed by that
+       * script — without it they could do nothing, and the link beside them is
+       * the version that works either way.
+       */
+      const provider = block.provider === "youtube" ? "YouTube" : "Vimeo";
+      const t = EMBED_TEXT[lang];
+      return (
+        `<div class="tds-video-embed consent-placeholder" data-consent-embed="marketing"` +
+        ` data-embed-src="${esc(src)}" data-embed-title="${esc(provider)}">` +
+        `<p class="consent-placeholder__title">${esc(t.title)}</p>` +
+        `<p class="consent-placeholder__body">${esc(t.body(provider))}</p>` +
+        `<div class="consent-placeholder__actions">` +
+        `<button type="button" class="btn btn-primary" data-embed-load hidden>${esc(t.load)}</button>` +
+        `<button type="button" class="btn btn-ghost" data-embed-settings hidden>${esc(t.settings)}</button>` +
+        `<a class="btn btn-ghost" href="${esc(block.url)}" target="_blank" rel="noopener noreferrer">` +
+        `${esc(t.open(provider))}</a>` +
+        `</div></div>`
+      );
     }
     default:
       return ""; // adsense / custom handled in BlockRenderer.astro
@@ -96,6 +154,7 @@ interface SnippetLike {
 export async function renderBlocksToHtml(
   blocks: BlogBlock[],
   snippets: SnippetLike[] = [],
+  lang: EmbedLang = "de",
 ): Promise<string> {
   const out: string[] = [];
   for (const block of blocks) {
@@ -105,11 +164,11 @@ export async function renderBlocksToHtml(
       if (!s) continue;
       if (s.kind === "embed" && typeof s.definition.html === "string") out.push(s.definition.html);
       else if (s.kind === "preset" && typeof s.definition.type === "string") {
-        out.push(await renderBlockHtml(s.definition as unknown as BlogBlock));
+        out.push(await renderBlockHtml(s.definition as unknown as BlogBlock, lang));
       }
       continue;
     }
-    out.push(await renderBlockHtml(block));
+    out.push(await renderBlockHtml(block, lang));
   }
   return out.join("\n");
 }

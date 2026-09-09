@@ -12,7 +12,8 @@ import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
-import { CookieNotice, LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
+import { LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
+import { ConsentBanner } from "@tracht-digital-solutions/tds-shared/consent";
 import { themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
 import { siteConfig } from "~/lib/seo";
 import { isExcluded } from "~/lib/sitemapExclusions";
@@ -124,12 +125,26 @@ const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
 const ads = bare ? null : await adsConfig();
 const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off";
 
-// Cookie/privacy banner. When ads run we show the *consent* variant (a real
-// opt-in gate that also covers the cookie disclosure); otherwise the existing
-// informational one, baked from the `cookie_banner` toggle. Off when absent /
-// demo / API down.
-const showConsent = !!ads && ads.enabled;
-const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
+/**
+ * The consent manager, on every page that is not `bare`.
+ *
+ * This used to be two mutually exclusive mounts: an informational notice, or —
+ * when advertising was on — a consent gate INSTEAD of it. That swap is the part
+ * worth naming, because it read as thorough and was not: the disclosure of what
+ * the site stores disappeared exactly when the site started storing more.
+ *
+ * One component now, and `categories` decides whether it asks a question or
+ * states a fact. Advertising is the only optional purpose this site has.
+ *
+ * The old informational variant was additionally gated behind
+ * `cookieBannerEnabled()`, a CMS toggle — fine for a notice, wrong for a gate,
+ * because whether a consent must be obtained is not a content decision. The
+ * toggle still silences the purely informational case; it can no longer
+ * suppress a real question.
+ */
+const consentCategories: readonly "marketing"[] = !!ads && ads.enabled ? ["marketing"] : [];
+const showConsent =
+  !bare && (consentCategories.length > 0 || (await cookieBannerEnabled()));
 ---
 
 <!DOCTYPE html>
@@ -241,15 +256,27 @@ const showCookieNotice = !bare && !showConsent && (await cookieBannerEnabled());
       )
     }
 
-    {/* Admin-toggleable cookie/privacy notice — baked at build time from
-        the cookie_banner content block; links the central privacy policy
-        on the marketing site (the component's default URL). */}
-    {showCookieNotice && <CookieNotice client:idle lang={lang} />}
+    {/* One banner. With advertising on it is a real opt-in per purpose; with
+        it off it states what the site stores and offers an acknowledgement.
+        The AdSense loader below is unchanged — it still reads `tds-ad-consent`,
+        which the store keeps writing. */}
+    {showConsent && (
+      <ConsentBanner
+        client:idle
+        lang={lang}
+        categories={consentCategories}
+        privacyUrl="https://tracht-digital.de/legal/datenschutz"
+        imprintUrl="https://tracht-digital.de/legal/impressum"
+      />
+    )}
 
-    {/* AdSense consent gate — when ads are enabled this replaces the
-        informational notice with a real Accept/Decline opt-in; the loader
-        below only runs after "granted". */}
-    {showConsent && <CookieNotice client:idle lang={lang} consent />}
+    {/* Upgrades the consent gates in front of video embeds. A module script,
+        not an island: it needs no UI and no React — see the note in
+        gatedEmbeds.ts. */}
+    <script>
+      import { initGatedEmbeds } from "~/lib/gatedEmbeds";
+      initGatedEmbeds();
+    </script>
 
     {/* Floating support widget — self-hides unless the live-chat-cta extension
         enables the "blog" frontend in the admin.
