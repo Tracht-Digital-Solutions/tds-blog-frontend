@@ -26,6 +26,9 @@
      .display { font-weight: 800 }  .display-tight { 700 }
      .eyebrow { font-family: display; font-weight: 600 }
      .brand-wordmark { … }          byte-identical to primitives.css
+     .brand-logo / --inverse        NOT byte-identical — the local copy
+                                    carried a wrong aspect ratio; see the
+                                    logomark note below
      .chip { border-radius: 0 }     now --tds-radius-chip: 0
      :root { --flat-tint / --flat-hover }  now --tds-flat-tint/-hover,
                                     declared by surfaces/blog.css
@@ -86,21 +89,23 @@
 }
 
 /* ---- Brand logomark ----
-   The TD mark rendered via CSS mask so it follows a colour token rather
-   than shipping a second dark asset. Default tracks --color-primary
-   (navy in light, light-blue in dark); the inverse variant is fixed
-   white for the navy footer/surfaces. Ratio 201/227 ≈ 0.885. */
-.brand-logo {
-  display: inline-block;
-  flex-shrink: 0;
-  width: calc(1.4em * 0.885);
-  height: 1.4em;
-  background-color: var(--color-primary);
-  -webkit-mask: url("/brand/td-logomark.webp") center / contain no-repeat;
-  mask: url("/brand/td-logomark.webp") center / contain no-repeat;
-}
-.brand-logo--inverse {
-  background-color: #fff;
+   The rule itself now lives in primitives.css; only the ASSET URL is
+   app-local, because tds-shared cannot serve a `public/`-rooted path.
+
+   The local copy that stood here declared `width: calc(1.4em * 0.885)` — a
+   PORTRAIT box for a LANDSCAPE asset (713x483 => 1.476). The mask is
+   `contain`-fitted, so the art fitted by width and rendered about 0.84em tall
+   inside a 1.4em box: the mark has been drawing undersized, letterboxed and
+   vertically off-centre against the wordmark, with nothing anywhere to say so.
+   The shared rule's default ratio is the real aspect of this exact file.
+
+   It also authored `mask` and `-webkit-mask` by hand. lightningcss collapses a
+   hand-written prefix pair down to the `-webkit-` form and drops the standard
+   property, which leaves Firefox with no mask at all — a solid navy rectangle
+   where the mark should be. The shared rule authors the unprefixed property
+   only and lets the build add the prefix. */
+:root {
+  --tds-brand-logo-mask: url("/brand/td-logomark.webp");
 }
 
 /* ---- Top nav pieces ---- */
