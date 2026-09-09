@@ -15,7 +15,13 @@
 export type Lang = "de" | "en";
 
 export type BlogNavNode =
-  | { kind: "link"; key: "journal" | "tools"; label: string; href: string; external?: boolean }
+  | {
+      kind: "link";
+      key: "journal" | "tools" | "shop";
+      label: string;
+      href: string;
+      external?: boolean;
+    }
   | { kind: "group"; key: "entdecken"; label: string };
 
 /**
@@ -25,6 +31,15 @@ export type BlogNavNode =
  */
 export const TOOLS_URL = "https://tools.tracht-digital.de";
 
+/**
+ * The shop. Same rule as `TOOLS_URL`, same tab, for the same reason.
+ *
+ * The label is "Shop" in both languages: it is the property's name here, and
+ * translating it to "Store" for the English edition would name a second site
+ * that does not exist.
+ */
+export const SHOP_URL = "https://shop.tracht-digital.de";
+
 export function primaryNav(lang: Lang): BlogNavNode[] {
   const home = lang === "de" ? "/" : "/en/";
   return [
@@ -33,6 +48,7 @@ export function primaryNav(lang: Lang): BlogNavNode[] {
     // `isActiveNav` simply never matches an absolute URL, so this entry is
     // permanently inactive — which is correct: you are never "on" it here.
     { kind: "link", key: "tools", label: "Tools", href: TOOLS_URL, external: true },
+    { kind: "link", key: "shop", label: "Shop", href: SHOP_URL, external: true },
   ];
 }
 
