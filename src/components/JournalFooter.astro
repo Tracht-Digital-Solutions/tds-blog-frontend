@@ -11,7 +11,7 @@
  * (`getTaxonomy`); the rest are stable hardcoded targets.
  */
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
-import { entdeckenLabels, categoryHref, topicsHref, TOOLS_URL } from "~/lib/nav";
+import { entdeckenLabels, categoryHref, topicsHref, TOOLS_URL, SHOP_URL } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
 import { adsConfig } from "~/lib/content-api";
 
@@ -48,6 +48,7 @@ const groups =
           items: [
             { label: "Hauptseite", href: "https://tracht-digital.de" },
             { label: "Werkzeuge", href: TOOLS_URL },
+            { label: "Shop", href: SHOP_URL },
             { label: "Kundenportal", href: "https://app.tracht-digital.de" },
             { label: "Kontakt", href: "https://tracht-digital.de/#contact" },
           ],
@@ -74,6 +75,7 @@ const groups =
           items: [
             { label: "Main site", href: "https://tracht-digital.de" },
             { label: "Tools", href: TOOLS_URL },
+            { label: "Shop", href: SHOP_URL },
             { label: "Customer portal", href: "https://app.tracht-digital.de" },
             { label: "Contact", href: "https://tracht-digital.de/#contact" },
           ],
