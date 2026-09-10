@@ -215,8 +215,15 @@ jobs:
           # stays even though nothing here needs a credential: whatever is
           # warmed now stays cached until the next deploy.
           status=$(curl -sS -L --max-time 20 "${origin}/tds/connect/status" 2>/dev/null)
+          # TWO healthy answers, not one. `connected` is the newer pairing
+          # record; `legacy_environment` means the site is configured through
+          # TDS_SITE_KEY / TDS_CACHE_TOKEN in its runtime environment instead —
+          # which is how production actually runs. Gating on `connected` alone
+          # skipped the warm-up on every single deploy, and a check that reads
+          # red while the site is plainly serving traffic is a check to suspect.
           case "$status" in
             *'"connected":true'*) ;;
+            *'"legacy_environment":true'*) ;;
             *)
               echo "::warning title=Cache left cold::${origin}/tds/connect/status did not report a connected site, so the warm-up was skipped. The cache is empty and correct - visitors will refill it. Warming an unpaired site would cache its degraded pages until the next deploy."
               exit 0
