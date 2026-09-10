@@ -87,7 +87,15 @@ describe("site key", () => {
 
     const config = readFileSync(join(HERE, "..", "..", "astro.config.mjs"), "utf8");
     expect(config).not.toMatch(/siteKeyGuard/);
-    const workflow = readFileSync(join(HERE, "..", "..", ".github", "workflows", "_build.yml"), "utf8");
+    // Comments stripped first, for the same reason this file strips them from
+    // the modules above: what is forbidden is the build DEPENDING on the
+    // credential, and a `#` line cannot create a dependency. The cache warm-up
+    // step explains in prose why the site's status endpoint reports a
+    // `legacy_environment`, and naming the variable there tripped this — a
+    // false red on a comment, while every real use would still be caught,
+    // because `TDS_SITE_KEY: ${{ secrets… }}` is not a comment.
+    const workflow = readFileSync(join(HERE, "..", "..", ".github", "workflows", "_build.yml"), "utf8")
+      .replace(/^[ \t]*#.*$/gm, "");
     expect(workflow).not.toMatch(/TDS_SITE_KEY/);
   });
 
