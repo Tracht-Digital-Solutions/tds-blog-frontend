@@ -204,31 +204,6 @@ jobs:
           fi
           echo "Host is serving ${GITHUB_SHA}; its cache was discarded on boot."
 
-          # ---- Only warm while the site knows its API ----------------------
-          # Honest about what this proves: `connected` says the site is PAIRED
-          # with an API base, not that the API is answering this second. A real
-          # liveness gate is not available from here, because the public content
-          # fetches are fail-soft by design — during an outage a page still
-          # returns 200, just with a section missing.
-          #
-          # That is the residual risk of warming at all, and it is why the gate
-          # stays even though nothing here needs a credential: whatever is
-          # warmed now stays cached until the next deploy.
-          status=$(curl -sS -L --max-time 20 "${origin}/tds/connect/status" 2>/dev/null)
-          # TWO healthy answers, not one. `connected` is the newer pairing
-          # record; `legacy_environment` means the site is configured through
-          # TDS_SITE_KEY / TDS_CACHE_TOKEN in its runtime environment instead —
-          # which is how production actually runs. Gating on `connected` alone
-          # skipped the warm-up on every single deploy, and a check that reads
-          # red while the site is plainly serving traffic is a check to suspect.
-          case "$status" in
-            *'"connected":true'*) ;;
-            *'"legacy_environment":true'*) ;;
-            *)
-              echo "::warning title=Cache left cold::${origin}/tds/connect/status did not report a connected site, so the warm-up was skipped. The cache is empty and correct - visitors will refill it. Warming an unpaired site would cache its degraded pages until the next deploy."
-              exit 0
-              ;;
-          esac
 
           # The site's own sitemap is the route list, so this warms exactly what
           # is published and needs no second list to keep in step.
@@ -239,8 +214,25 @@ jobs:
             exit 0
           fi
 
+          # The FIRST page is the smoke test, and it replaces a gate that asked
+          # the wrong question.
+          #
+          # This used to check /tds/connect/status for a "connected" site. Two
+          # real release runs showed production reports neither `connected` nor
+          # `legacy_environment` — that endpoint describes CMS PAIRING, which
+          # these sites do not rely on, so the gate skipped the warm-up every
+          # time while the site served traffic perfectly.
+          #
+          # Rendering one page and looking at the status code says something
+          # true instead: if the very first request does not come back 2xx, the
+          # deploy is broken in a way worth stopping for, and warming 40 pages
+          # would only cache 40 copies of the problem. It does NOT claim to
+          # detect a degraded upstream — the content fetches are fail-soft, so
+          # a page returns 200 with a section missing. That risk is the known,
+          # accepted cost of warming at all.
           warmed=0
           failed=0
+          first=1
           for u in $urls; do
             c=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 45 "$u" 2>/dev/null)
             if [ "${c:-000}" -ge 200 ] && [ "${c:-000}" -lt 300 ]; then
@@ -248,7 +240,12 @@ jobs:
             else
               failed=$((failed + 1))
               echo "  warm ${u} -> HTTP ${c:-000}"
+              if [ "$first" = "1" ]; then
+                echo "::warning title=Cache left cold::The first page (${u}) answered HTTP ${c:-000}, so the warm-up stopped there rather than caching the same failure across the site. The cache is empty and correct; visitors will refill it."
+                exit 0
+              fi
             fi
+            first=0
             # A moment between renders: this is a single-process Node host and
             # the point is a warm cache, not a load test against our own site.
             sleep 1
