@@ -150,32 +150,45 @@ jobs:
             echo "::warning title=Deploy webhook failed::Webhook returned HTTP $code. The release branch is published but the host was not notified - check DEPLOY_WEBHOOK_URL."
           fi
 
-      # The file-backed page cache on the host outlives a deploy: cached routes
-      # keep answering 200 while pointing at asset hashes that no longer exist,
-      # and only the uncached ones render correctly. This clears it, then warms
-      # it again - which used to be a manual job after every release.
-      - name: Refresh the page cache
+      # The host clears its own page cache; this only warms it again.
+      #
+      # `resolveCacheDirs()` in tds-shared runs at every boot — and a deploy
+      # restarts the process — where `discardCacheOfOtherBuild()` fingerprints
+      # the sorted filenames in `client/_astro`. Those are content-hashed, so a
+      # new build always yields a new fingerprint; on a mismatch it empties both
+      # the page and the meta directory. The purge therefore needs no endpoint,
+      # no token and no step here, and it is strictly more reliable than one:
+      # it cannot race the deploy, cannot be skipped, and covers a deploy made
+      # by hand or a rollback just the same.
+      #
+      # What is left for CI is the half the library does NOT do: filling the
+      # cache again, so the first real visitor does not pay a render. That is
+      # plain public GETs — no secret of any kind.
+      - name: Warm the page cache
         if: ${{ inputs.deploy }}
-        env:
-          SITE_ORIGIN: ${{ secrets.SITE_ORIGIN }}
-          TDS_CACHE_TOKEN: ${{ secrets.TDS_CACHE_TOKEN }}
         run: |
           # Never `set -e`: release/ is published and the host is already
           # notified by this point, so nothing below may red the run. Every
           # failure is a warning and an early, successful exit.
           set +e
-          if [ -z "${SITE_ORIGIN}" ] || [ -z "${TDS_CACHE_TOKEN}" ]; then
-            echo "SITE_ORIGIN or TDS_CACHE_TOKEN not set - skipping cache refresh."
+
+          # The origin comes from the repo, because it is not a secret — it is
+          # the canonical address this site publishes under. `astro.config.mjs`
+          # is where Astro itself keeps it (`site:`), so a domain change moves
+          # this along with everything else instead of leaving a copy behind in
+          # repository settings that nobody remembers to update.
+          origin=$(grep -o 'site: *"https://[^"]*"' astro.config.mjs | head -1 | sed 's/.*"\(https:\/\/[^"]*\)".*/\1/')
+          origin="${origin%/}"
+          if [ -z "$origin" ]; then
+            echo "::warning title=Cache not warmed::No 'site' found in astro.config.mjs, so there is no origin to warm. The cache is empty and correct; visitors will refill it."
             exit 0
           fi
-          origin="${SITE_ORIGIN%/}"
 
-          # ---- 1. Wait until the host actually serves THIS commit -----------
-          # The deploy webhook is fire-and-forget; the host pulls asynchronously.
-          # Purging before the new code is live would clear the OLD build's
-          # cache, which the OLD build would immediately refill - leaving
-          # exactly the stale pages this step exists to remove. `.build-info` is
-          # stamped with the commit and lives in the document root for this.
+          # ---- Wait until the host serves THIS commit ----------------------
+          # The deploy webhook is fire-and-forget and the host pulls
+          # asynchronously. Warming before the new build is live would fill the
+          # cache with the OLD build's pages — which the restart would then
+          # discard anyway, so the work would simply be thrown away.
           deadline=$(( $(date +%s) + 300 ))
           live=""
           while [ "$(date +%s)" -lt "$deadline" ]; do
@@ -186,34 +199,21 @@ jobs:
             sleep 10
           done
           if [ -z "$live" ]; then
-            echo "::warning title=Cache left untouched::${origin} is still not serving ${GITHUB_SHA} after 5 minutes. Purging now would only clear the previous build's cache and it would refill immediately, so nothing was done."
+            echo "::warning title=Cache not warmed::${origin} is still not serving ${GITHUB_SHA} after 5 minutes. Nothing was warmed - the cache is empty and correct, and visitors will refill it."
             exit 0
           fi
-          echo "Host is serving ${GITHUB_SHA}."
+          echo "Host is serving ${GITHUB_SHA}; its cache was discarded on boot."
 
-          # ---- 2. Purge ----------------------------------------------------
-          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -L --max-time 60 \
-            -H "x-tds-cache-token: ${TDS_CACHE_TOKEN}" \
-            -H 'content-type: application/json' \
-            -d '{}' "${origin}/tds/cache/purge" 2>/dev/null)
-          if [ "${code:-000}" -ge 200 ] && [ "${code:-000}" -lt 300 ]; then
-            echo "Page cache purged (HTTP ${code})."
-          else
-            echo "::warning title=Cache purge failed::HTTP ${code:-000} from ${origin}/tds/cache/purge - stale pages may still be served. Check TDS_CACHE_TOKEN against the host's runtime environment."
-            exit 0
-          fi
-
-          # ---- 3. Warm it, but only when the site knows its API -------------
+          # ---- Only warm while the site knows its API ----------------------
           # Honest about what this proves: `connected` says the site is PAIRED
           # with an API base, not that the API is answering this second. A real
           # liveness gate is not available from here, because the public content
-          # fetches are fail-soft by design - during an outage a page still
+          # fetches are fail-soft by design — during an outage a page still
           # returns 200, just with a section missing.
           #
-          # That is the residual risk of warming on deploy, and it is the known
-          # cost of the choice: whatever is warmed now stays cached until the
-          # next deploy. The gate removes the cheap half of the problem (a site
-          # that is not paired at all); the expensive half is accepted.
+          # That is the residual risk of warming at all, and it is why the gate
+          # stays even though nothing here needs a credential: whatever is
+          # warmed now stays cached until the next deploy.
           status=$(curl -sS -L --max-time 20 "${origin}/tds/connect/status" 2>/dev/null)
           case "$status" in
             *'"connected":true'*) ;;
@@ -224,9 +224,7 @@ jobs:
           esac
 
           # The site's own sitemap is the route list, so this warms exactly what
-          # is published and needs no second list to keep in step. Plain GETs:
-          # the cache fills the same way a visitor fills it, which is also why
-          # no `rebuild` endpoint is needed (the control plane has none).
+          # is published and needs no second list to keep in step.
           urls=$(curl -sS -L --max-time 30 "${origin}/sitemap-0.xml" 2>/dev/null \
             | grep -o '<loc>[^<]*</loc>' | sed 's|</\?loc>||g' | head -40)
           if [ -z "$urls" ]; then
