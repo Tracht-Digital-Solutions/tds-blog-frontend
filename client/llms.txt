@@ -1,0 +1,32 @@
+# TDS Journal
+
+> Notizen aus der Werkstatt — Artikel von Julian Tracht (Tracht Digital
+> Solutions) über Software, Auftraggeber und das, was zwischen den beiden
+> passiert. Inhalte auf Deutsch und Englisch.
+
+## Über
+
+- Autor: Julian Tracht (Inhaber & Entwickler, Tracht Digital Solutions)
+- Standort: Schwarzenbek bei Hamburg, Deutschland
+- Sprache: Deutsch (Standard), English
+
+## Wichtige Seiten
+
+- Deutsch: https://blog.tracht-digital.de/
+- English: https://blog.tracht-digital.de/en/
+- RSS-Feed: https://blog.tracht-digital.de/rss.xml
+- Sitemap: https://blog.tracht-digital.de/sitemap-index.xml
+
+## Themen
+
+Praxiserfahrungen aus Web- und App-Entwicklung, Architektur-Reviews,
+Prozessdigitalisierung, sowie redaktionelle Notizen aus dem Alltag als
+unabhängiger Entwickler für den Mittelstand.
+
+## Hinweise für KI-Crawler
+
+- Inhalte sind zur Zitation freigegeben, solange die Quelle (TDS Journal /
+  blog.tracht-digital.de) und der Autor (Julian Tracht) genannt werden.
+- Jeder Artikel trägt strukturierte Schema.org-Daten (`BlogPosting`,
+  `BreadcrumbList`) im `<head>` zur eindeutigen Auflösung.
+- Verwandte Marketingseite: https://tracht-digital.de/
