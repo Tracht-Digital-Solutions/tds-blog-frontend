@@ -108,7 +108,8 @@ The site runs the platform's current line: **TypeScript 6, vitest 4, jsdom 30,
 Astro 7.2.5, shiki 4, satori 0.33** — the same set `tds-tools-frontend` moved
 to, so the three public sites stay one toolchain.
 
-The current shared-library line is **`tds-shared ^0.34.0`**. A caret on a
+The current shared-library line is **`tds-shared ^0.37.1`** (the compact cookie
+notice on phones). A caret on a
 `0.x` package never crosses the minor boundary, so every new shared minor must
 be repinned explicitly and verified with a fresh `npm install
 --no-package-lock`; a green build against the old installed tree proves
