@@ -1,6 +1,6 @@
 {
   "name": "tds-blog-frontend",
-  "version": "0.31.0",
+  "version": "0.31.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,7 +24,7 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@fontsource/lato": "^5.2.7",
     "@tailwindcss/postcss": "~4.3.3",
-    "@tracht-digital-solutions/tds-shared": "^0.37.0",
+    "@tracht-digital-solutions/tds-shared": "^0.37.1",
     "astro": "^7.2.5",
     "marked": "^18.0.0",
     "react": "^19.0.0",
@@ -62,7 +62,10 @@
         "satori": "^0.33.4"
       },
       "extraFiles": [
-        { "from": "src/og/fonts", "to": "assets/og-fonts" }
+        {
+          "from": "src/og/fonts",
+          "to": "assets/og-fonts"
+        }
       ]
     }
   }
