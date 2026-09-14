@@ -79,9 +79,11 @@ describe("mobile navigation", () => {
     // hid its nav at `md` the two would disagree for 256px of viewport, with
     // neither the desktop nav nor a hamburger on screen.
     expect(source).not.toMatch(/\bmd:(flex|hidden)\b/);
-    for (const cls of ["hidden lg:flex", "flex-1 lg:hidden"]) {
-      expect(source).toContain(cls);
-    }
+    // The bar's own breakpoint is `.tds-sitebar__nav` / `__desktop` (tds-shared,
+    // 64rem); the search field is the one local piece and keeps `hidden lg:flex`.
+    expect(source).toContain('<nav class="tds-sitebar__nav"');
+    expect(source).toContain('<div class="tds-sitebar__desktop">');
+    expect(source).toContain("hidden lg:flex");
   });
 
   it("never hides the mobile chrome with a utility", () => {
@@ -130,6 +132,50 @@ describe("the desktop search field", () => {
   });
 });
 
+describe("the property bar", () => {
+  /**
+   * The journal, the tools site and the shop share one bar. The three used to
+   * differ in width, link style, and the names and order of the sibling links,
+   * so following a link between them moved the logo and renamed the links.
+   */
+
+  it("is the shared bar, with no local copy of its pieces left behind", () => {
+    expect(source).toContain('<div class="tds-shell tds-sitebar">');
+    expect(source).toContain('class="tds-sitebar__brand brand-wordmark"');
+    expect(source).not.toMatch(/\bjnav-item\b/);
+    expect(css).not.toMatch(/\.jnav-item\b/);
+    expect(css).not.toMatch(/\.nav-divider\b/);
+  });
+
+  it("lists the properties in the shared order, with Entdecken after the journal", async () => {
+    const { primaryNav } = await import("../lib/nav");
+    for (const lang of ["de", "en"] as const) {
+      const nav = primaryNav(lang);
+      expect(nav.map((node) => node.key)).toEqual(["journal", "entdecken", "tools", "shop", "main"]);
+      for (const node of nav) {
+        if (node.kind !== "link" || node.key === "journal") continue;
+        // Siblings are absolute and stay in the reader's language.
+        expect(node.href.endsWith("/en/")).toBe(lang === "en");
+      }
+    }
+  });
+
+  it("lets the CTA yield on a wrapper and sends it in the reader's language", () => {
+    expect(source).toMatch(/<div class="tds-sitebar__wide">\s*<a href=\{contact\} class="btn btn-primary/);
+    expect(source).toContain("propertyContact(lang)");
+    expect(source).not.toContain("https://tracht-digital.de/#contact");
+  });
+
+  it("resolves the bar in the INSTALLED tds-shared", () => {
+    const shared = join(process.cwd(), "node_modules", "@tracht-digital-solutions", "tds-shared");
+    expect(readFileSync(join(shared, "styles", "primitives.css"), "utf8")).toContain(".tds-sitebar__wide");
+    expect(readFileSync(join(shared, "styles", "surfaces", "blog.css"), "utf8")).toMatch(
+      /--tds-shell-max:\s*120rem/,
+    );
+    expect(readFileSync(join(shared, "dist", "nav", "index.d.ts"), "utf8")).toMatch(/\bpropertyNav\b/);
+  });
+});
+
 describe("the account menu", () => {
   /**
    * The shared session, visible in the header. The blog had no auth code at
@@ -159,11 +205,12 @@ describe("the account menu", () => {
     // Inside `hidden lg:flex` it would vanish on a phone — where it is the
     // only control beside the hamburger, so its absence is total rather than
     // partial.
-    const desktopCluster = source.indexOf('class="hidden lg:flex items-center gap-2"');
-    // The cluster's own closing tag: the first `</div>` after the CTA anchor
-    // that lives inside it. `lastIndexOf("btn-flat")` would find the mobile
-    // sheet's copy of the same CTA, further down the file.
-    const clusterEnd = source.indexOf("</div>", source.indexOf("btn-flat", desktopCluster));
+    const desktopCluster = source.indexOf('<div class="tds-sitebar__desktop">');
+    // The cluster's own closing tag: the second `</div>` after the CTA, which
+    // sits in `.tds-sitebar__wide`. Searching from the end would find the
+    // mobile sheet's copy of the same CTA, further down the file.
+    const cta = source.indexOf("btn btn-primary", desktopCluster);
+    const clusterEnd = source.indexOf("</div>", source.indexOf("</div>", cta) + 1);
     const mount = source.indexOf("<AccountMenu");
     const toggle = source.indexOf('id="jnl-menu-toggle"');
 

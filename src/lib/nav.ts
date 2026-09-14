@@ -3,21 +3,25 @@
  * top JournalHeader (incl. its mobile drawer) and the article-page
  * ArticleSidebar so the two never drift.
  *
- * The primary nav is Journal · Entdecken ▾. "Entdecken" is a group
- * node — its three sections (Kategorien · Beliebte Tags · Aktuelle Themen)
- * are built at render time from `getTaxonomy()` (categories/tags are
- * derived from the corpus, so they can't be hard-coded here). The href
- * helpers below keep those links consistent across surfaces.
+ * The primary nav is tds-shared's property list — Journal · Tools · Shop ·
+ * Tracht Digital, the same list, names and order the tools site's and the
+ * shop's bars show — with the journal's own "Entdecken" group after its own
+ * entry. "Entdecken" is a group node: its three sections (Kategorien · Beliebte
+ * Tags · Aktuelle Themen) are built at render time from `getTaxonomy()`
+ * (categories/tags are derived from the corpus, so they can't be hard-coded
+ * here). The href helpers below keep those links consistent across surfaces.
  *
- * Labels stay here as DE/EN literals to match the existing local
+ * The Entdecken labels stay here as DE/EN literals to match the existing local
  * convention; promoting them into tds-shared i18n is a follow-up.
  */
+import { PROPERTY_ORIGINS, propertyNav } from "@tracht-digital-solutions/tds-shared/nav";
+
 export type Lang = "de" | "en";
 
 export type BlogNavNode =
   | {
       kind: "link";
-      key: "journal" | "tools" | "shop";
+      key: "journal" | "tools" | "shop" | "main";
       label: string;
       href: string;
       external?: boolean;
@@ -29,7 +33,7 @@ export type BlogNavNode =
  * SAME tab — forcing `target="_blank"` on a link within one's own group of
  * sites takes a decision away from the reader for no reason.
  */
-export const TOOLS_URL = "https://tools.tracht-digital.de";
+export const TOOLS_URL = PROPERTY_ORIGINS.tools;
 
 /**
  * The shop. Same rule as `TOOLS_URL`, same tab, for the same reason.
@@ -38,18 +42,25 @@ export const TOOLS_URL = "https://tools.tracht-digital.de";
  * translating it to "Store" for the English edition would name a second site
  * that does not exist.
  */
-export const SHOP_URL = "https://shop.tracht-digital.de";
+export const SHOP_URL = PROPERTY_ORIGINS.shop;
 
 export function primaryNav(lang: Lang): BlogNavNode[] {
   const home = lang === "de" ? "/" : "/en/";
-  return [
-    { kind: "link", key: "journal", label: "Journal", href: home },
-    { kind: "group", key: "entdecken", label: lang === "de" ? "Entdecken" : "Discover" },
-    // `isActiveNav` simply never matches an absolute URL, so this entry is
-    // permanently inactive — which is correct: you are never "on" it here.
-    { kind: "link", key: "tools", label: "Tools", href: TOOLS_URL, external: true },
-    { kind: "link", key: "shop", label: "Shop", href: SHOP_URL, external: true },
-  ];
+  // Sibling links are absolute and keep the reader's language (`/en/` on an
+  // English page). `isActiveNav` never matches an absolute URL, so they are
+  // permanently inactive — which is correct: you are never "on" them here.
+  return propertyNav("journal", lang, home).flatMap((property): BlogNavNode[] => {
+    const link: BlogNavNode = {
+      kind: "link",
+      key: property.key,
+      label: property.label,
+      href: property.href,
+      ...(property.current ? {} : { external: true }),
+    };
+    return property.current
+      ? [link, { kind: "group", key: "entdecken", label: entdeckenLabels(lang).group }]
+      : [link];
+  });
 }
 
 /** Section labels inside the Entdecken group. */
