@@ -9,6 +9,12 @@
  * Themen, surfaced here for crawlers as well as readers), Tracht Digital,
  * Ressourcen and Rechtliches. The Entdecken category links are dynamic
  * (`getTaxonomy`); the rest are stable hardcoded targets.
+ *
+ * Secondary text on the navy (Schwarzenbek, the column heads, the bottom bar)
+ * is white at 0.6. At 0.5 it cleared AA on the light theme's #050f68 but not
+ * on the dark theme's lifted #1d2e72, where the 11–13px labels measured
+ * 4.32:1; 0.6 is 5.5:1 and still sits below the blurb (0.65) and the links
+ * (0.75).
  */
 import { ConsentLink } from "@tracht-digital-solutions/tds-shared/consent";
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
@@ -116,13 +122,13 @@ const groups =
         <p class="text-sm leading-relaxed" style="color: rgb(255 255 255 / 0.65); max-width: 32ch;">
           {blurb}
         </p>
-        <p class="mt-5 text-[0.8125rem]" style="font-family: var(--font-mono); color: rgb(255 255 255 / 0.5);">
+        <p class="mt-5 text-[0.8125rem]" style="font-family: var(--font-mono); color: rgb(255 255 255 / 0.6);">
           Schwarzenbek
         </p>
       </div>
       {groups.map((g) => (
         <div>
-          <p class="eyebrow mb-4" style="color: rgb(255 255 255 / 0.5);">{g.head}</p>
+          <p class="eyebrow mb-4" style="color: rgb(255 255 255 / 0.6);">{g.head}</p>
           <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
             {g.items.map((it) => (
               <li>
@@ -140,7 +146,7 @@ const groups =
     </div>
     <div
       class="mt-9 pt-4 flex flex-wrap justify-between items-center gap-4 text-xs"
-      style="border-top: 1px solid rgb(255 255 255 / 0.1); font-family: var(--font-mono); color: rgb(255 255 255 / 0.5);"
+      style="border-top: 1px solid rgb(255 255 255 / 0.1); font-family: var(--font-mono); color: rgb(255 255 255 / 0.6);"
     >
       <p>© {year} Tracht Digital Solutions</p>
       <div class="flex items-center gap-4">
@@ -163,7 +169,7 @@ const groups =
         <ConsentLink
           client:idle
           lang={lang}
-          className="text-white/50 hover:text-white transition-colors"
+          className="text-white/60 hover:text-white transition-colors"
         />
         <p>DE / EN</p>
       </div>
