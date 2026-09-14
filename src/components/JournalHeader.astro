@@ -29,6 +29,7 @@
  * `aria-controls` is the whole pattern.
  */
 import { AccountMenu, ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
+import { propertyContact } from "@tracht-digital-solutions/tds-shared/nav";
 import {
   primaryNav,
   isActiveNav,
@@ -60,27 +61,44 @@ const searchPlaceholder = lang === "de" ? "Suchen …" : "Search …";
 // website deliberately makes no consultation promise at all.
 const cta = lang === "de" ? "Unverbindlich anfragen" : "Get in touch";
 const menuLabel = lang === "en" ? "Menu" : "Menü";
+const contact = propertyContact(lang);
+
+/**
+ * The bar marks the property you are in, as the tools site's and the shop's
+ * do: `page` on the journal's home, `true` anywhere else in it — except where
+ * Entdecken already carries the mark, so one underline says where you are.
+ * A sibling property is never current here.
+ */
+const currentFor = (node: { key: string; href: string }): "page" | "true" | undefined => {
+  if (node.key !== "journal") return undefined;
+  if (isActiveNav(node.href, path)) return "page";
+  return entdeckenActive ? undefined : "true";
+};
 ---
 
 <header class:list={["brand-header", className]}>
-  <div class="tds-shell min-h-15 py-2.5 flex flex-nowrap items-center gap-x-2 sm:gap-x-4">
+  {/* The public property bar, shared with the tools site and the shop
+      (`.tds-sitebar*` and `propertyNav()`, tds-shared): the same width, link
+      voice, list and order on all three. The journal adds only what is its
+      own — Entdecken and the search field. */}
+  <div class="tds-shell tds-sitebar">
     <a
       href={home}
       aria-label="Tracht Journal"
-      class="brand-wordmark text-[0.9375rem] sm:text-[1.0625rem] tracking-tight shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 sm:gap-2"
+      class="tds-sitebar__brand brand-wordmark"
     >
       <span class="brand-logo" aria-hidden="true"></span>
       <span class="accent-italic">Journal</span>
     </a>
-    <span class="nav-divider hidden sm:block" aria-hidden="true"></span>
+    <span class="tds-sitebar__divider" aria-hidden="true"></span>
 
-    <nav class="hidden lg:flex items-center gap-1 flex-1 min-w-0" aria-label="Navigation">
+    <nav class="tds-sitebar__nav" aria-label="Navigation">
       {nav.map((node) =>
         node.kind === "link" ? (
           <a
             href={node.href}
-            class="jnav-item whitespace-nowrap"
-            aria-current={isActiveNav(node.href, path) ? "page" : undefined}
+            class="tds-sitebar__link"
+            aria-current={currentFor(node)}
           >
             {node.label}
           </a>
@@ -89,7 +107,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
             <button
               type="button"
               id="jnl-entdecken-btn"
-              class="jnav-item jnav-dd-btn whitespace-nowrap"
+              class="tds-sitebar__link jnav-dd-btn"
               aria-expanded="false"
               aria-controls="jnl-entdecken-panel"
               aria-current={entdeckenActive ? "true" : undefined}
@@ -153,42 +171,36 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
       />
     </div>
 
-    {/* Push the mobile controls to the right (the desktop nav already takes
-        the flex space from lg up). */}
-    <div class="flex-1 lg:hidden"></div>
+    {/* Language, theme and the CTA only from lg up; below that they live in
+        the sheet and just the account menu and the hamburger remain. The CTA
+        yields once more below 80rem through its `.tds-sitebar__wide` wrapper:
+        this row, with five nav entries and the search field, is the one that
+        runs out of room first, and all three bars follow it. */}
+    <div class="tds-sitebar__desktop">
+      <div class="tds-lang-toggle" role="group" aria-label="Sprache / Language">
+        <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+        <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+      </div>
 
-    {/* Right-hand controls. Language, theme and the CTA only show from lg
-        up; below that they live in the panel and just the hamburger remains. */}
-    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <div class="hidden lg:flex items-center gap-2">
-        <div class="tds-lang-toggle" role="group" aria-label="Sprache / Language">
-          <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-          <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
-        </div>
+      <ThemeToggle
+        client:idle
+        labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
+        labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+      />
 
-        <ThemeToggle
-          client:idle
-          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
-          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
-        />
-
-        <a href="https://tracht-digital.de/#contact" class="btn-flat" style="height: 2.25rem;">
+      <div class="tds-sitebar__wide">
+        <a href={contact} class="btn btn-primary no-underline">
           {cta}
         </a>
       </div>
+    </div>
 
-      {/* Outside the `hidden lg:flex` block on purpose: who you are is not
-          desktop chrome, and below `lg` this is the only thing beside the
-          hamburger. It renders NOTHING for a signed-out reader — the blog is
-          public and a login CTA next to the contact button would be noise —
-          so an anonymous visitor sees the header exactly as before.
-
-          Utilities ride on this wrapper, never on the island: tds-shared's CSS
-          is unlayered while Tailwind's utilities sit in `@layer utilities`, so
-          a class on `.tds-dropdown` itself would lose. */}
-      <div class="flex items-center">
-        <AccountMenu client:idle lang={lang} />
-      </div>
+    {/* Outside the desktop cluster on purpose: who you are is not desktop
+        chrome, and below `lg` this is the only thing beside the hamburger. It
+        renders NOTHING for a signed-out reader — the blog is public and a login
+        CTA next to the contact button would be noise. */}
+    <div class="tds-sitebar__actions">
+      <AccountMenu client:idle lang={lang} />
 
       <button
         id="jnl-menu-toggle"
@@ -300,7 +312,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
         />
       </div>
       <a
-        href="https://tracht-digital.de/#contact"
+        href={contact}
         data-menu-link
         class="btn-flat jnl-fullmenu-cta"
       >
@@ -347,7 +359,7 @@ const menuLabel = lang === "en" ? "Menu" : "Menü";
   }
 
   /* Large editorial links (display grotesk); sub-items drop to the body
-     font. Flat accent-underline hover, consistent with .jnav-item. */
+     font. Flat accent-underline hover, consistent with .tds-sitebar__link. */
   .jnl-fullmenu-link {
     position: relative;
     display: flex;

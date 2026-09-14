@@ -61,7 +61,7 @@ const SHARED = join(
 );
 const effectiveCss = [
   cssCode,
-  ...["base.css", "primitives.css", "prose.css"].map((f) => codeOf(join(SHARED, f))),
+  ...["base.css", "primitives.css", "prose.css", "surfaces/blog.css"].map((f) => codeOf(join(SHARED, f))),
 ].join("\n");
 
 describe("page shell", () => {
@@ -85,9 +85,11 @@ describe("page shell", () => {
     ]) {
       expect(effectiveCss, `${token} resolves to nothing`).toContain(`${token}:`);
     }
-    // The two the blog genuinely overrides must be set HERE, or the site
-    // silently renders at tds-shared's 90rem default.
-    expect(cssCode).toMatch(/--tds-shell-max:\s*120rem/);
+    // The width comes from the blog SURFACE in tds-shared, which the tools site
+    // and the shop render too; a local copy is how the three edges drift apart
+    // again. The rail is the journal's alone and is set here.
+    expect(codeOf(join(SHARED, "surfaces", "blog.css"))).toMatch(/--tds-shell-max:\s*120rem/);
+    expect(cssCode).not.toMatch(/--tds-shell-max:/);
     expect(cssCode).toContain("--tds-rail:");
   });
 

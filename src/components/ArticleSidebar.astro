@@ -13,6 +13,7 @@
  * the same minimal toggle + theme + CTA.
  */
 import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/components";
+import { propertyContact } from "@tracht-digital-solutions/tds-shared/nav";
 import {
   primaryNav,
   isActiveNav,
@@ -39,6 +40,8 @@ const { categories, topTags } = await getTaxonomy(lang);
 // website deliberately makes no consultation promise at all.
 const cta = lang === "de" ? "Unverbindlich anfragen" : "Get in touch";
 const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navigation";
+// The header's address for the same CTA, in the reader's language.
+const contact = propertyContact(lang);
 ---
 
 <aside class="blog-sidebar" id="article-sidebar">
@@ -117,11 +120,11 @@ const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navig
     <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
   </div>
 
-  <a href="https://tracht-digital.de/#contact" class="btn-flat sidebar-hide-collapsed">{cta}</a>
+  <a href={contact} class="btn-flat sidebar-hide-collapsed">{cta}</a>
 
   {/* Collapsed CTA: phone icon, same target */}
   <a
-    href="https://tracht-digital.de/#contact"
+    href={contact}
     class="btn-flat sidebar-show-collapsed self-center"
     title={cta}
     aria-label={cta}

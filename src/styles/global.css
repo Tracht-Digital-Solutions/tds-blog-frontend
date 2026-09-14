@@ -74,14 +74,12 @@
    `var(--tds-shell-2xl)` is captured as `--tds-shell-` and fails naming a
    token nobody wrote. Word suffixes only. */
 :root {
-  /* No fixed ceiling by design: the shell keeps growing and the intrinsic
-     grid answers with MORE COLUMNS rather than longer lines. 120rem (vs the
-     shared 90rem default) is the practical stop — past ~1920px a 6th column
-     would drop each card below its comfortable minimum. Expect 1920 and 2560
-     to render identically; that is the editorial answer (bigger content, not
-     more of it), not a bug. */
-  --tds-shell-max: 120rem;
-  --tds-shell-wide: 132rem;
+  /* The page width (`--tds-shell-max: 120rem`, `--tds-shell-wide`) lives in
+     tds-shared's blog surface, which the tools site and the shop render too:
+     the three public bars share their edges only while ONE file sets them.
+     120rem is the practical stop — past ~1920px a 6th column would drop each
+     card below its comfortable minimum, so 1920 and 2560 render identically;
+     that is the editorial answer (bigger content, not more of it), not a bug. */
 
   /* Blog-only: the index's category rail. Nothing in the shared library has
      a rail, so this stays here rather than in base.css. */
@@ -108,56 +106,11 @@
   --tds-brand-logo-mask: url("/brand/td-logomark.webp");
 }
 
-/* ---- Top nav pieces ---- */
-.nav-divider {
-  width: 5px;
-  height: 5px;
-  background: var(--color-accent);
-  flex-shrink: 0;
-}
-.jnav-item {
-  position: relative;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-muted);
-  text-decoration: none;
-  padding: 0.5rem 0.8125rem;
-  transition: color 180ms ease;
-}
-/* Flat hover/active — a crisp accent underline instead of a filled pill,
-   to match the angular blog kit. The ::after line is absolutely positioned
-   so toggling it never shifts layout. */
-.jnav-item::after {
-  content: "";
-  position: absolute;
-  left: 0.8125rem;
-  right: 0.8125rem;
-  bottom: 0.25rem;
-  height: 2px;
-  background: var(--color-accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 180ms ease;
-}
-.jnav-item:hover {
-  color: var(--color-ink);
-}
-.jnav-item:hover::after,
-.jnav-item:focus-visible::after {
-  transform: scaleX(1);
-}
-.jnav-item[aria-current="page"] {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-.jnav-item[aria-current="page"]::after {
-  transform: scaleX(1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .jnav-item::after {
-    transition: none;
-  }
-}
+/* ---- Top nav ----
+   The bar, the divider square and the nav links are tds-shared's
+   `.tds-sitebar*` now, shared with the tools site and the shop.
+   What stays below is the journal's own: the search field and the Entdecken
+   disclosure. */
 
 /* No `display` here, deliberately — the header supplies it with
    `hidden lg:flex`. This file is unlayered while Tailwind's utilities live in
@@ -197,8 +150,15 @@
      left the width + background change as the only focus indicator — neither
      of which is a focus indicator under WCAG 2.4.11. Both stay as
      supplementary cues; the ring does the actual work. */
-  width: 14rem;
   background: var(--tds-flat-tint);
+}
+/* The field grows on focus only where the row has room for it. The shared
+   property bar holds five nav entries here; at 1024px, signed in, the extra
+   3.5rem pushed the row past its edge by a few pixels (measured headless). */
+@media (min-width: 80rem) {
+  .nav-search input:focus {
+    width: 14rem;
+  }
 }
 .nav-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
@@ -278,11 +238,6 @@
 }
 .jnav-dd-btn[aria-expanded="true"] .jnav-dd-caret {
   transform: rotate(180deg);
-}
-/* Reuse the .jnav-item underline for the active/open button. */
-.jnav-dd-btn[aria-current="true"] {
-  color: var(--color-primary);
-  font-weight: 600;
 }
 .jnav-dropdown {
   position: absolute;
