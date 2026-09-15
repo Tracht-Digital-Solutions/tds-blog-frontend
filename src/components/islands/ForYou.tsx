@@ -102,52 +102,57 @@ export default function ForYou({ lang, limit = 3 }: { lang: "de" | "en"; limit?:
 
   const locale = lang === "de" ? "de-DE" : "en-US";
 
+  // The sand band between the bordeaux tools promo and the ink newsletter.
+  // It renders its own ground and shell, and the picks are tint tiles on 1px
+  // seams — the hairline and the margins that used to frame it are gone.
   return (
-    <aside className="mb-14 pb-12 hairline-b" aria-labelledby="for-you-heading">
-      <div className="flex flex-wrap items-baseline justify-between gap-3 mb-8">
-        <div>
-          <p className="section-num mb-3">{t.eyebrow}</p>
-          <h2 id="for-you-heading" className="display-tight text-3xl">
-            {t.heading}
-          </h2>
+    <aside className="jnl-band jnl-tone-sand" aria-labelledby="for-you-heading">
+      <div className="tds-shell">
+        <div className="flex flex-wrap items-baseline justify-between gap-3 pb-8">
+          <div>
+            <p className="section-num mb-3">{t.eyebrow}</p>
+            <h2 id="for-you-heading" className="display-tight text-3xl">
+              {t.heading}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={reset}
+            className="link-underline text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)] cursor-pointer"
+          >
+            {t.reset}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={reset}
-          className="link-underline text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)] cursor-pointer"
-        >
-          {t.reset}
-        </button>
-      </div>
 
-      <ul className="tds-grid-auto tds-grid-roomy">
-        {picks.map((p) => (
-          <li key={p.slug}>
-            {/* Article pages for both languages live at the root route. */}
-            <a href={`/${p.slug}`} className="block group">
-              <p className="eyebrow mb-2">{p.category}</p>
-              <h3 className="display-tight text-xl mb-2 group-hover:text-[var(--color-accent)] transition-colors">
-                {p.title}
-              </h3>
-              <p className="text-sm text-[var(--color-muted)] leading-relaxed line-clamp-3 mb-3">
-                {p.excerpt}
-              </p>
-              <div className="text-xs text-[var(--color-muted)] flex items-center justify-between gap-3">
-                {p.publishedAt && (
-                  <time className="tabular" dateTime={p.publishedAt}>
-                    {new Date(p.publishedAt).toLocaleDateString(locale, {
-                      year: "numeric",
-                      month: "short",
-                      day: "2-digit",
-                    })}
-                  </time>
-                )}
-                <span className="link-underline text-[var(--color-accent)]">{t.read}</span>
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
+        <ul className="tds-grid-auto tds-grid-roomy jnl-mosaic">
+          {picks.map((p) => (
+            <li key={p.slug}>
+              {/* Article pages for both languages live at the root route. */}
+              <a href={`/${p.slug}`} className="jnl-tile block group h-full p-5">
+                <p className="eyebrow mb-2">{p.category}</p>
+                <h3 className="display-tight text-xl mb-2 group-hover:text-[var(--color-accent)] transition-colors">
+                  {p.title}
+                </h3>
+                <p className="text-sm text-[var(--color-muted)] leading-relaxed line-clamp-3 mb-3">
+                  {p.excerpt}
+                </p>
+                <div className="text-xs text-[var(--color-muted)] flex items-center justify-between gap-3">
+                  {p.publishedAt && (
+                    <time className="tabular" dateTime={p.publishedAt}>
+                      {new Date(p.publishedAt).toLocaleDateString(locale, {
+                        year: "numeric",
+                        month: "short",
+                        day: "2-digit",
+                      })}
+                    </time>
+                  )}
+                  <span className="link-underline text-[var(--color-accent)]">{t.read}</span>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </aside>
   );
 }

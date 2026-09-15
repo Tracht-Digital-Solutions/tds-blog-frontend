@@ -11,10 +11,10 @@
  * gives those tool pages a route in from the only corpus that gets crawled.
  *
  * Deliberately restrained, for the same reason the tools site keeps its own
- * marketing to one line: this is an editorial page, and a boxed advert after
- * every article reads as bait. It is a plain block on the page's own ground with
- * named links — no second accent colour and nothing that competes with the
- * header CTA.
+ * marketing to one line: named links and nothing that competes with the header
+ * CTA. Since the colour-band rework (2026-09-15) it is the bordeaux band between
+ * the article grid and the newsletter, and it renders that band and its shell
+ * itself, so the index places it without a wrapper.
  *
  * `TOOLS_URL` is the single source for the origin (`lib/nav.ts`), so the domain
  * is never retyped here.
@@ -60,21 +60,23 @@ const picks = [
 ];
 ---
 
-<aside class="tools-promo" aria-labelledby="tools-promo-heading">
-  <p class="tools-promo__eyebrow">{copy.eyebrow}</p>
-  <h2 id="tools-promo-heading" class="tools-promo__heading">{copy.heading}</h2>
-  <p class="tools-promo__body">{copy.body}</p>
-  <p class="tools-promo__lead">{copy.lead}</p>
-  <ul class="tools-promo__list">
-    {picks.map((p) => (
-      <li>
-        <a href={`${base}/tools/${p.slug}`} class="tools-promo__link">
-          {lang === "de" ? p.de : p.en}
-        </a>
-      </li>
-    ))}
-  </ul>
-  <p class="tools-promo__all">
-    <a href={base} class="tools-promo__link">{copy.all}</a>
-  </p>
+<aside class="tools-promo jnl-band jnl-tone-accent" aria-labelledby="tools-promo-heading">
+  <div class="tds-shell">
+    <p class="tools-promo__eyebrow">{copy.eyebrow}</p>
+    <h2 id="tools-promo-heading" class="tools-promo__heading">{copy.heading}</h2>
+    <p class="tools-promo__body">{copy.body}</p>
+    <p class="tools-promo__lead">{copy.lead}</p>
+    <ul class="tools-promo__list">
+      {picks.map((p) => (
+        <li>
+          <a href={`${base}/tools/${p.slug}`} class="tools-promo__link">
+            {lang === "de" ? p.de : p.en}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="tools-promo__all">
+      <a href={base} class="tools-promo__link">{copy.all}</a>
+    </p>
+  </div>
 </aside>

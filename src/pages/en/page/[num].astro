@@ -55,44 +55,52 @@ const jsonLd = asGraph(
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
-  <main id="main" class="tds-shell py-16 lg:py-24">
-    <header class="mb-10">
-      <p class="section-num mb-4">{t.blog.label} · Page {page} / {pageCount}</p>
-      <h1 class="display page-title">
-        {t.blog.headline}
-        {" "}
-        <span class="accent-italic">{t.blog.headlineAccent}</span>
-      </h1>
-      <p class="marginalia mt-3 max-w-prose">
-        Older notes from the archive. Equally valid, just further
-        back in time.
-      </p>
+  <main id="main">
+    {/* Navy head band, then the rows and the pager on a tint band — flush,
+        no margin. */}
+    <header class="jnl-band jnl-tone-navy">
+      <div class="tds-shell">
+        <p class="section-num mb-4">{t.blog.label} · Page {page} / {pageCount}</p>
+        <h1 class="display page-title">
+          {t.blog.headline}
+          {" "}
+          <span class="accent-italic">{t.blog.headlineAccent}</span>
+        </h1>
+        <p class="marginalia mt-3 max-w-prose">
+          Older notes from the archive. Equally valid, just further
+          back in time.
+        </p>
+      </div>
     </header>
 
-    <ul class="list-none p-0 m-0">
-      {items.map((p) => (
-        <BlogPostCard
-          slug={p.slug}
-          category={p.category}
-          title={p.title}
-          excerpt={p.excerpt}
-          publishedAt={p.publishedAt}
-          lang="en"
-        />
-      ))}
-    </ul>
+    <section class="jnl-band jnl-tone-tint">
+      <div class="tds-shell">
+        <ul class="jnl-stack">
+          {items.map((p) => (
+            <BlogPostCard
+              slug={p.slug}
+              category={p.category}
+              title={p.title}
+              excerpt={p.excerpt}
+              publishedAt={p.publishedAt}
+              lang="en"
+            />
+          ))}
+        </ul>
 
-    <nav class="mt-16 flex items-center justify-between text-sm">
-      {hasNewer ? (
-        <a href={newerHref} class="link-underline text-[var(--color-accent)]">
-          ← Newer articles
-        </a>
-      ) : <span></span>}
-      {olderHref && hasOlder ? (
-        <a href={olderHref} class="link-underline text-[var(--color-accent)]">
-          Older articles →
-        </a>
-      ) : <span></span>}
-    </nav>
+        <nav class="pt-10 flex items-center justify-between text-sm">
+          {hasNewer ? (
+            <a href={newerHref} class="link-underline text-[var(--color-accent)]">
+              ← Newer articles
+            </a>
+          ) : <span></span>}
+          {olderHref && hasOlder ? (
+            <a href={olderHref} class="link-underline text-[var(--color-accent)]">
+              Older articles →
+            </a>
+          ) : <span></span>}
+        </nav>
+      </div>
+    </section>
   </main>
 </Layout>

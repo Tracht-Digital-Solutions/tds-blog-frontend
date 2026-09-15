@@ -37,12 +37,10 @@ const jsonLd = asGraph(
         the island only filters client-side. */}
     <BlogIndex posts={allPosts} popular={popular} lang="de" pageSize={PAGE_SIZE} client:load />
 
-    <div class="tds-shell">
-      <ToolsPromo lang="de" />
-    </div>
-
-    <div class="tds-shell pb-14">
-      <ForYou lang="de" client:idle />
-    </div>
+    {/* Both render their own full-bleed band and shell: the tools promo is the
+        bordeaux band, "Für Sie" the sand one — and nothing at all without a
+        reading profile, so there is never an empty band. */}
+    <ToolsPromo lang="de" />
+    <ForYou lang="de" client:idle />
   </main>
 </Layout>

@@ -50,35 +50,47 @@ const jsonLd = asGraph(
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
-  <main id="main" class="tds-shell py-16 lg:py-24">
-    <header class="mb-10">
-      <a href="/en/" class="btn-back mb-6">
-        <span aria-hidden="true">←</span> All posts
-      </a>
-      <p class="section-num mb-4 mt-6">Journal · Tag</p>
-      <h1 class="display page-title">
-        #<span class="accent-italic">{tag}</span>
-      </h1>
-      <p class="marginalia mt-3">
-        {posts.length === 1
-          ? "One article on the topic."
-          : `${posts.length} articles on the topic.`}
-      </p>
+  <main id="main">
+    {/* Navy head band, sand band for the tag cloud, tint band for the rows —
+        flush, no margin. */}
+    <header class="jnl-band jnl-tone-navy">
+      <div class="tds-shell">
+        <a href="/en/" class="btn-back">
+          <span aria-hidden="true">←</span> All posts
+        </a>
+        <p class="section-num mb-4 mt-6">Journal · Tag</p>
+        <h1 class="display page-title">
+          #<span class="accent-italic">{tag}</span>
+        </h1>
+        <p class="marginalia mt-3">
+          {posts.length === 1
+            ? "One article on the topic."
+            : `${posts.length} articles on the topic.`}
+        </p>
+      </div>
     </header>
 
-    <TagList posts={allPosts} lang="en" activeTag={tag} label="All tags" />
+    <section class="jnl-band jnl-tone-sand">
+      <div class="tds-shell">
+        <TagList posts={allPosts} lang="en" activeTag={tag} label="All tags" />
+      </div>
+    </section>
 
-    <ul class="list-none p-0 m-0">
-      {posts.map((p) => (
-        <BlogPostCard
-          slug={p.slug}
-          category={p.category}
-          title={p.title}
-          excerpt={p.excerpt}
-          publishedAt={p.publishedAt}
-          lang="en"
-        />
-      ))}
-    </ul>
+    <section class="jnl-band jnl-tone-tint">
+      <div class="tds-shell">
+        <ul class="jnl-stack">
+          {posts.map((p) => (
+            <BlogPostCard
+              slug={p.slug}
+              category={p.category}
+              title={p.title}
+              excerpt={p.excerpt}
+              publishedAt={p.publishedAt}
+              lang="en"
+            />
+          ))}
+        </ul>
+      </div>
+    </section>
   </main>
 </Layout>

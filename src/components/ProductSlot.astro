@@ -30,9 +30,11 @@ interface Props {
   category?: string;
   /** `strip` scrolls horizontally; `single` is one card in a sidebar. */
   layout?: "strip" | "single";
+  /** Classes for the panel (the article end passes `focus-hide`). */
+  class?: string;
 }
 
-const { slotKey, lang = "de", category, layout = "strip" } = Astro.props;
+const { slotKey, lang = "de", category, layout = "strip", class: className } = Astro.props;
 
 const placement = await getShopPlacement(slotKey, lang, category);
 const products = placement.products.map((product) =>
@@ -55,7 +57,7 @@ const products = placement.products.map((product) =>
 
 {
   products.length > 0 ? (
-    <aside class="tds-product-slot" aria-label={placement.label}>
+    <aside class:list={["tds-product-slot jnl-panel jnl-tone-sand", className]} aria-label={placement.label}>
       <p class="tds-product-slot__label">{placement.label}</p>
       {placement.heading ? <h2 class="tds-product-slot__title">{placement.heading}</h2> : null}
       <div class={layout === "strip" ? "tds-product-strip" : ""}>
@@ -72,9 +74,9 @@ const products = placement.products.map((product) =>
 }
 
 <style>
-  .tds-product-slot {
-    margin: 3rem 0;
-  }
+  /* No margin on the slot: it is a sand panel (`jnl-panel jnl-tone-sand`), and
+     its spacing is that panel's padding. Inside it the shared cards read
+     --color-card, which the tone maps to a tint tile instead of white. */
 
   /* Matches .tds-adslot__label in AdSlot.astro on purpose — one vocabulary. */
   .tds-product-slot__label {

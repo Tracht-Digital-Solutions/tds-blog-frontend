@@ -134,7 +134,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
                 className="btn-flat"
                 disabled={state === "submitting"}
                 aria-busy={state === "submitting"}
-                style={{ height: 48, background: "#fff", color: "var(--color-surface-ink)" }}
+                style={{ height: 48, background: "var(--color-accent-pink)", color: "var(--color-surface-ink)" }}
               >
                 {state === "submitting" ? (<><Spinner size="sm" /> {t.cta}</>) : t.cta}
               </button>

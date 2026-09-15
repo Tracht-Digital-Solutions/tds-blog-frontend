@@ -140,8 +140,10 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
             marginTop: 22,
             height: 48,
             padding: "0 24px",
-            background: "#fff",
-            color: "var(--color-surface-navy)",
+            // Coral with ink text (8:1) rather than a white block: the one
+            // white surface on the navy band is gone.
+            background: "var(--color-accent-pink)",
+            color: "var(--color-surface-ink)",
             textDecoration: "none",
             fontSize: 15,
             fontWeight: 600,

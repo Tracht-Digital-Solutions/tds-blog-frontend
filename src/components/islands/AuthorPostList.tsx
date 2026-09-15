@@ -70,7 +70,7 @@ export default function AuthorPostList({
       <div
         role="group"
         aria-label={labels.sortBy}
-        style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}
+        style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 24, flexWrap: "wrap" }}
       >
         <span className="eyebrow" style={{ color: "var(--color-muted)" }}>
           {labels.sortBy}
@@ -92,7 +92,7 @@ export default function AuthorPostList({
       {/* Was a hand-rolled auto-fill grid with an inline 260px floor and a
           20px gap. Same idea, but the shared class takes both from tokens, so
           this list widens with the page like every other grid on the site. */}
-      <ul className="tds-grid-auto list-none p-0 m-0">
+      <ul className="tds-grid-auto jnl-mosaic list-none p-0 m-0">
         {sorted.map((p) => (
           // No `display: flex` here — see the note in RelatedArticles.astro:
           // a flex item under size containment collapses to zero width.
