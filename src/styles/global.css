@@ -86,6 +86,155 @@
   --tds-rail: clamp(11rem, 13vw, 15rem);
 }
 
+/* === Farbbänder statt Abstände (2026-09-15) ==========================
+   The journal no longer sets coloured blocks on a white ground with gaps
+   between them. Every section is a full-bleed band in one of five tones,
+   bands sit flush against each other, and the blocks inside a band (cards,
+   rows, panels) take the band's counter-tone and meet at a 1px seam. Space is
+   padding inside a block, never margin between two.
+
+   Blog-only on purpose: surfaces/blog.css is also rendered by the tools site
+   and the shop, which keep their light ground.
+
+   Three measurements decided the tokens (WCAG, light / dark theme):
+   - --color-muted (#6b6b66) on the tint is 4.26:1, below AA. The body
+     therefore takes --jnl-muted (ink 72% into soft): ~5.8:1 on the tint,
+     6.0:1 on soft.
+   - The coral on bordeaux is 4.18 / 3.72:1, so in the accent tone links are
+     white and underlined, and secondary text is white at 0.8 (0.72 would be
+     4.15:1 on the dark theme's lifted bordeaux).
+   - 9% primary is indistinguishable from soft in the dark theme (1.02:1), so
+     the dark tint takes 20%.
+
+   The seam is a 1px gap, never a parent filled with --color-line: an
+   auto-fill grid leaves empty tracks in its last row, and those must show the
+   band, not a grey block. */
+:root {
+  --jnl-band-pad: clamp(2.5rem, 1.9rem + 2.4vw, 4.5rem);
+  --jnl-panel-pad: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  --jnl-tint: color-mix(in srgb, var(--color-primary) 9%, var(--color-paper));
+  --jnl-muted: color-mix(in srgb, var(--color-ink) 72%, var(--color-soft));
+  /* Outside a tone a tile is soft. A container that changes --jnl-tile must
+     re-declare --jnl-tile-hover as well: a custom property computes where it
+     is declared, not where it is read. */
+  --jnl-tile: var(--color-soft);
+  --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
+}
+:root[data-theme="dark"] {
+  --jnl-tint: color-mix(in srgb, var(--color-primary) 20%, var(--color-paper));
+}
+
+/* The ground is never paper. The print sheet keeps its own white. */
+body {
+  background-color: var(--color-soft);
+  --color-muted: var(--jnl-muted);
+}
+@media print {
+  body {
+    background-color: #fff;
+  }
+}
+
+.jnl-band {
+  padding-block: var(--jnl-band-pad);
+}
+.jnl-panel {
+  padding: var(--jnl-panel-pad);
+}
+
+/* A vertical run of tiles. Tailwind's preflight already strips list margins
+   and markers, so this only sets the seam. */
+.jnl-stack {
+  display: grid;
+  gap: 1px;
+}
+/* The intrinsic grid as a mosaic. The pair selector only narrows the shared
+   class's gutter to the seam; it does not re-declare .tds-grid-auto. */
+.tds-grid-auto.jnl-mosaic {
+  gap: 1px;
+}
+/* The panels that end an article. The seam shows the page ground, which also
+   keeps two tint panels apart when the sand one between them renders nothing. */
+.jnl-article-end {
+  display: grid;
+  gap: 1px;
+}
+
+/* A tile for content that has no component class of its own. */
+.jnl-tile {
+  background: var(--jnl-tile);
+  transition: background-color 180ms ease;
+}
+a.jnl-tile:hover,
+a.jnl-tile:focus-visible {
+  background: var(--jnl-tile-hover);
+}
+
+/* Light tones: sand and tint, each the other's tile. Shared cards
+   (ProductCard) read --color-card, so inside a band they become a tile
+   instead of a white card. */
+.jnl-tone-sand,
+.jnl-tone-tint {
+  color: var(--color-ink);
+}
+.jnl-tone-sand {
+  background-color: var(--color-soft);
+  --jnl-tile: var(--jnl-tint);
+  --jnl-tile-hover: color-mix(in srgb, var(--jnl-tint) 92%, var(--color-ink));
+  --color-card: var(--jnl-tint);
+}
+.jnl-tone-tint {
+  background-color: var(--jnl-tint);
+  --jnl-tile: var(--color-soft);
+  --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
+  --color-card: var(--color-soft);
+}
+
+/* Dark tones re-map the page tokens the way the shared .tds-tone-navy does, so
+   anything shared inside reads on the dark ground. --color-primary is left
+   alone on purpose: the slug covers draw with it. */
+.jnl-tone-navy,
+.jnl-tone-ink,
+.jnl-tone-accent {
+  color: #fff;
+  --color-ink: #ffffff;
+  --color-black: #ffffff;
+  --color-muted: rgb(255 255 255 / 0.8);
+  --color-line: rgb(255 255 255 / 0.18);
+  --color-border: rgb(255 255 255 / 0.18);
+  --color-soft: rgb(255 255 255 / 0.08);
+  --color-card: rgb(255 255 255 / 0.08);
+  --color-accent: var(--color-accent-pink);
+  --tds-eyebrow-color: var(--color-accent-pink);
+  --jnl-tile: rgb(255 255 255 / 0.08);
+  --jnl-tile-hover: rgb(255 255 255 / 0.16);
+}
+.jnl-tone-navy {
+  background-color: var(--color-surface-navy);
+}
+.jnl-tone-ink {
+  background-color: var(--color-surface-ink);
+}
+/* The coral fails on bordeaux (4.18:1), so the accent itself turns white. */
+.jnl-tone-accent {
+  background-color: var(--color-surface-accent);
+  --color-accent: #ffffff;
+  --tds-eyebrow-color: #ffffff;
+}
+
+/* The sticky bar on soft instead of paper. The shared rule mixes paper; the
+   journal changes only this property and only here, because the tools site and
+   the shop keep their light bar. Its search field and language switch become
+   tint tiles so they still read on it. */
+.brand-header {
+  background: color-mix(in oklab, var(--color-soft) 92%, transparent);
+  --jnl-tile: var(--jnl-tint);
+  --jnl-tile-hover: color-mix(in srgb, var(--jnl-tint) 92%, var(--color-ink));
+}
+.brand-header .tds-lang-toggle {
+  background: var(--jnl-tint);
+}
+
 /* ---- Brand logomark ----
    The rule itself now lives in primitives.css; only the ASSET URL is
    app-local, because tds-shared cannot serve a `public/`-rooted path.
@@ -137,20 +286,20 @@
   width: 10.5rem;
   padding: 0 0.75rem 0 2.125rem;
   border: 0;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: 0.8125rem;
   transition: width 180ms ease, background-color 180ms ease;
 }
 .nav-search input::placeholder { color: var(--color-muted); }
-.nav-search input:hover { background: var(--tds-flat-hover); }
+.nav-search input:hover { background: var(--jnl-tile-hover); }
 .nav-search input:focus {
   /* No `outline: none` here. It used to suppress the global focus ring, which
      left the width + background change as the only focus indicator — neither
      of which is a focus indicator under WCAG 2.4.11. Both stay as
      supplementary cues; the ring does the actual work. */
-  background: var(--tds-flat-tint);
+  background: var(--jnl-tile-hover);
 }
 /* The field grows on focus only where the row has room for it. The shared
    property bar holds five nav entries here; at 1024px, signed in, the extra
@@ -199,14 +348,14 @@
   padding: 0 0.875rem;
   border: 0;
   cursor: pointer;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 500;
   transition: background-color 180ms ease, color 180ms ease;
 }
-.chip-flat:hover { background: var(--tds-flat-hover); }
+.chip-flat:hover { background: var(--jnl-tile-hover); }
 .chip-flat.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -219,8 +368,9 @@
 }
 
 /* ---- Entdecken dropdown (desktop header) ----
-   Flat disclosure panel under the nav button. Card surface + hairline
-   border, no radius/shadow, so it works in both themes via the tokens. */
+   Flat disclosure panel under the nav button: a tint surface (never white)
+   with a hairline, because an overlay still needs its edge; no radius or
+   shadow. Its chips are soft tiles. */
 .jnav-dd {
   position: relative;
 }
@@ -250,7 +400,9 @@
   width: max-content;
   max-width: min(40rem, 92vw);
   padding: 1.125rem 1.25rem;
-  background: var(--color-card);
+  background: var(--jnl-tint);
+  --jnl-tile: var(--color-soft);
+  --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
   border: 1px solid var(--color-line);
   opacity: 0;
   visibility: hidden;
@@ -405,13 +557,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   transition: background-color 180ms ease;
 }
-.post-card:hover { background: var(--tds-flat-hover); }
+.post-card:hover { background: var(--jnl-tile-hover); }
 
 .post-card__cover {
   position: relative;
@@ -523,8 +675,7 @@
   gap: 0.75rem;
   align-items: baseline;
   padding: 1.25rem 1.5rem;
-  margin-bottom: 6px;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   text-decoration: none;
   color: inherit;
   transition: background-color 180ms ease;
@@ -539,7 +690,7 @@
     gap: 1.75rem;
   }
 }
-.post-row:hover { background: var(--tds-flat-hover); }
+.post-row:hover { background: var(--jnl-tile-hover); }
 .post-row .row-title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -573,7 +724,8 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
-  margin: 0 0 0.875rem;
+  margin: 0;
+  padding-bottom: 0.875rem;
 }
 .sidenav-toggle {
   display: inline-flex;
@@ -583,11 +735,11 @@
   height: 1.875rem;
   border: 0;
   cursor: pointer;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-muted);
   transition: background-color 180ms ease, color 180ms ease;
 }
-.sidenav-toggle:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
+.sidenav-toggle:hover { background: var(--jnl-tile-hover); color: var(--color-ink); }
 .sidenav button.sidenav-item {
   display: flex;
   align-items: center;
@@ -595,9 +747,8 @@
   gap: 0.75rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
-  margin: 0 0 4px;
   border: 0;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-muted);
   cursor: pointer;
   text-align: left;
@@ -607,7 +758,7 @@
   font-weight: 500;
   transition: color 180ms ease, background-color 180ms ease;
 }
-.sidenav button.sidenav-item:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
+.sidenav button.sidenav-item:hover { background: var(--jnl-tile-hover); color: var(--color-ink); }
 .sidenav button.sidenav-item.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -625,20 +776,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-ink);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
   transition: background-color 180ms ease;
 }
-.btn-back:hover { background: var(--tds-flat-hover); }
+.btn-back:hover { background: var(--jnl-tile-hover); }
 
 /* Author-page sort control (AuthorPostList island). Flat, angular to match the
    design-system blog kit; the active option inverts to the ink surface. */
 .author-sort-btn {
   padding: 0.375rem 0.75rem;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-muted);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -646,7 +797,7 @@
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease;
 }
-.author-sort-btn:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
+.author-sort-btn:hover { background: var(--jnl-tile-hover); color: var(--color-ink); }
 .author-sort-btn[data-active] {
   background: var(--color-ink);
   color: var(--color-paper);
@@ -663,12 +814,12 @@
   flex: none;
   width: 40px;
   height: 40px;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-ink);
   text-decoration: none;
   transition: background-color 180ms ease;
 }
-.back-rail:hover { background: var(--tds-flat-hover); }
+.back-rail:hover { background: var(--jnl-tile-hover); }
 .title-row {
   display: flex;
   align-items: flex-start;
@@ -692,7 +843,7 @@
   display: block;
   height: 100%;
   padding: 1.25rem 1.375rem;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   border-left: 2px solid var(--color-accent);
   text-decoration: none;
   color: inherit;
@@ -700,7 +851,7 @@
 }
 a.topic-card:hover,
 a.topic-card:focus-visible {
-  background: var(--tds-flat-hover);
+  background: var(--jnl-tile-hover);
 }
 .topic-title {
   font-family: var(--font-display);
@@ -844,8 +995,9 @@ a.topic-card:focus-visible {
     z-index: 30; /* below the blog sidebar (40) and progress bar (50) */
     width: var(--toc-w);
     max-height: min(72vh, 42rem);
-    background: var(--color-card);
-    border: 1px solid var(--color-line);
+    background: var(--jnl-tint);
+    --jnl-tile: var(--color-soft);
+    --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
     padding: 0.875rem;
     transition: opacity 200ms ease;
   }
@@ -862,7 +1014,6 @@ a.topic-card:focus-visible {
   .toc-collapsed .toc {
     width: auto;
     background: transparent;
-    border-color: transparent;
     padding: 0.25rem;
   }
   .toc-collapsed .toc .toc-list { overflow: visible; }
@@ -872,8 +1023,7 @@ a.topic-card:focus-visible {
 .toc a {
   display: block;
   padding: 0.5rem 0.75rem;
-  margin: 0 0 4px;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   font-size: 0.8125rem;
   line-height: 1.4;
   font-weight: 500;
@@ -881,7 +1031,7 @@ a.topic-card:focus-visible {
   text-decoration: none;
   transition: color 180ms ease, background-color 180ms ease;
 }
-.toc a:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
+.toc a:hover { background: var(--jnl-tile-hover); color: var(--color-ink); }
 .toc a.on {
   background: var(--color-surface-navy);
   color: #fff;
@@ -927,13 +1077,13 @@ a.topic-card:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-soft);
+  background: var(--jnl-tile);
   color: var(--color-muted);
   border: 0;
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
-.toc-toggle:hover { background: var(--tds-flat-hover); color: var(--color-ink); }
+.toc-toggle:hover { background: var(--jnl-tile-hover); color: var(--color-ink); }
 .toc-toggle svg { transition: transform 280ms ease; }
 .toc-list { list-style: none; margin: 0; padding: 0; }
 .toc-tick { display: none; }
@@ -1016,7 +1166,9 @@ a.topic-card:focus-visible {
   bottom: 0;
   width: 264px;
   z-index: 40;
-  background: var(--color-soft);
+  background: var(--jnl-tint);
+  --jnl-tile: var(--color-soft);
+  --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
   display: none;
   flex-direction: column;
   padding: 1.25rem 1rem;
@@ -1048,11 +1200,11 @@ a.topic-card:focus-visible {
   border: 0;
   cursor: pointer;
   flex-shrink: 0;
-  background: var(--color-paper);
+  background: var(--jnl-tile);
   color: var(--color-muted);
   transition: background-color 180ms ease, color 180ms ease;
 }
-.sidebar-toggle:hover { background: var(--tds-flat-tint); color: var(--color-primary); }
+.sidebar-toggle:hover { background: var(--jnl-tile-hover); color: var(--color-primary); }
 .sidebar-toggle svg { transition: transform 320ms ease; }
 .blog-sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 .blog-sidebar a.snav-item {
@@ -1077,7 +1229,7 @@ a.topic-card:focus-visible {
   font-weight: 600;
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
-.blog-sidebar .tds-lang-toggle { display: flex; width: 100%; background: var(--color-paper); }
+.blog-sidebar .tds-lang-toggle { display: flex; width: 100%; background: var(--jnl-tile); }
 .blog-sidebar .tds-lang-toggle a { flex: 1; justify-content: center; height: 1.875rem; }
 .blog-sidebar .btn-flat { width: 100%; justify-content: center; }
 
@@ -1606,16 +1758,11 @@ html.focus-mode #focus-toggle {
 }
 
 /* ---- Tools promo (blog index) ---- */
-/* Points at the sibling tools site and names what you unlock there. A plain
-   block on the page's own ground, not a card: this is an editorial index, and a
-   boxed advert under the article grid reads as bait. Separation comes from the
-   2px accent bar and the rhythm, the same device the rest of the flat kit uses.
-   Nothing here introduces a second accent colour or a second CTA. */
-.tools-promo {
-  margin: 3.5rem 0 1rem;
-  padding-top: 1.75rem;
-  border-top: 1px solid var(--color-line);
-}
+/* Points at the sibling tools site and names what you unlock there. Since the
+   colour-band rework it is the bordeaux band between the article grid and the
+   newsletter ("jnl-band jnl-tone-accent" on the element), so nothing here sets
+   a margin, a border or a ground; the rules below only set type. Nothing
+   introduces a second CTA. */
 .tools-promo__eyebrow {
   margin: 0 0 0.375rem;
   font-family: var(--font-mono);
@@ -1663,12 +1810,15 @@ html.focus-mode #focus-toggle {
    `@layer utilities`, so a `text-[color:…]` on a shared link class does nothing.
    `:focus-visible` rides along with `:hover` — the library's focus ring still
    does the real work, and `outline: none` is never written. */
+/* On bordeaux the coral is 4.18:1, so the accent resolves to white there and
+   the link is told apart by its underline, not by a colour. */
 .tools-promo__link {
   font-weight: 600;
   color: var(--color-accent);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 .tools-promo__link:hover,
 .tools-promo__link:focus-visible {
-  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }

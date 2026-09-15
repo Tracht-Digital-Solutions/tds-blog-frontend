@@ -11,9 +11,11 @@ interface Props {
   currentCategory: string;
   lang: "de" | "en";
   limit?: number;
+  /** Classes for the panel (the article end passes `focus-hide`). */
+  class?: string;
 }
 
-const { posts, currentSlug, currentCategory, lang, limit = 3 } = Astro.props;
+const { posts, currentSlug, currentCategory, lang, limit = 3, class: className } = Astro.props;
 
 /**
  * Pick the top-N most recent posts in the same category, excluding
@@ -46,13 +48,13 @@ const labels = {
 ---
 
 {picks.length > 0 && (
-  <aside class="mt-16 pt-2" aria-labelledby="related-heading">
+  <aside class:list={["jnl-panel jnl-tone-tint", className]} aria-labelledby="related-heading">
     <p class="section-num mb-3">{labels.eyebrow}</p>
     <h2 id="related-heading" class="display-tight text-3xl mb-6">
       {lang === "de" ? "Ähnliche Artikel." : "Adjacent articles."}
     </h2>
 
-    <ul class="tds-grid-auto list-none p-0 m-0">
+    <ul class="tds-grid-auto jnl-mosaic list-none p-0 m-0">
       {picks.map((p) => (
         // `post-card-slot`, and NOT `class="flex"`. The slot is the container
         // query container (a container styles its descendants, so the card

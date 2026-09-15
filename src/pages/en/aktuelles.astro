@@ -57,7 +57,7 @@ const jsonLd = asGraph(
   <main id="main">
     {/* Navy hero band — mirrors the index hero so /en/aktuelles reads as part
         of the same journal, just statically (no slider). */}
-    <section style="background: var(--color-surface-navy); color: #fff;">
+    <section class="jnl-tone-navy">
       <div class="tds-shell py-14 md:py-20">
         <p class="eyebrow" style="color: var(--color-accent-pink);">Journal · Latest</p>
         <h1 class="display page-title mt-3">
@@ -69,48 +69,51 @@ const jsonLd = asGraph(
       </div>
     </section>
 
-    <div class="tds-shell py-16 lg:py-20">
+    {/* Sand band for the topics, tint band for the posts — see the DE page. */}
     {topics && topics.items.length > 0 && (
-      <section class="mb-16" aria-labelledby="topics-heading">
-        <h2 id="topics-heading" class="display text-2xl md:text-3xl mb-2">{topics.headline}</h2>
-        {topics.intro && <p class="marginalia mb-6 max-w-prose">{topics.intro}</p>}
-        <ul class="list-none p-0 m-0 tds-grid-auto tds-grid-roomy">
-          {topics.items.map((t) => (
-            <li class="list-none">
-              {t.href ? (
-                <a href={t.href} class="topic-card">
-                  <h3 class="topic-title">{t.title}</h3>
-                  {t.description && <p class="topic-desc">{t.description}</p>}
-                </a>
-              ) : (
-                <div class="topic-card topic-card--static">
-                  <h3 class="topic-title">{t.title}</h3>
-                  {t.description && <p class="topic-desc">{t.description}</p>}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+      <section class="jnl-band jnl-tone-sand" aria-labelledby="topics-heading">
+        <div class="tds-shell">
+          <h2 id="topics-heading" class="display text-2xl md:text-3xl mb-2">{topics.headline}</h2>
+          {topics.intro && <p class="marginalia mb-6 max-w-prose">{topics.intro}</p>}
+          <ul class="list-none p-0 m-0 tds-grid-auto tds-grid-roomy jnl-mosaic">
+            {topics.items.map((t) => (
+              <li class="list-none">
+                {t.href ? (
+                  <a href={t.href} class="topic-card">
+                    <h3 class="topic-title">{t.title}</h3>
+                    {t.description && <p class="topic-desc">{t.description}</p>}
+                  </a>
+                ) : (
+                  <div class="topic-card topic-card--static">
+                    <h3 class="topic-title">{t.title}</h3>
+                    {t.description && <p class="topic-desc">{t.description}</p>}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
     )}
 
-    <section aria-labelledby="latest-heading">
-      <h2 id="latest-heading" class="display text-2xl md:text-3xl mb-6">Latest posts</h2>
-      {latest.length === 0 ? (
-        <p class="marginalia">No posts yet.</p>
-      ) : (
-        <ul class="tds-grid-auto list-none p-0 m-0">
-          {latest.map((p, i) => (
-            /* See the DE page: no flex wrapper (containment collapse), and the
-               lead spans all tracks rather than a fixed 2/3. */
-            <li class={`post-card-slot${i === 0 ? " grid-span-all" : ""}`}>
-              {/* Static flat card — same component as the index grid. */}
-              <PostCard post={p} lang="en" large={i === 0} />
-            </li>
-          ))}
-        </ul>
-      )}
+    <section class="jnl-band jnl-tone-tint" aria-labelledby="latest-heading">
+      <div class="tds-shell">
+        <h2 id="latest-heading" class="display text-2xl md:text-3xl mb-6">Latest posts</h2>
+        {latest.length === 0 ? (
+          <p class="marginalia">No posts yet.</p>
+        ) : (
+          <ul class="tds-grid-auto jnl-mosaic list-none p-0 m-0">
+            {latest.map((p, i) => (
+              /* See the DE page: no flex wrapper (containment collapse), and the
+                 lead spans all tracks rather than a fixed 2/3. */
+              <li class={`post-card-slot${i === 0 ? " grid-span-all" : ""}`}>
+                {/* Static flat card — same component as the index grid. */}
+                <PostCard post={p} lang="en" large={i === 0} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
-    </div>
   </main>
 </Layout>

@@ -162,18 +162,21 @@ function CategorySidebar({
           selected category exists. The mobile chip strip below has carried it
           all along, so the same filter reported its state on a phone and said
           nothing on a desktop — the wider screen is the one with the rail. */}
-      {["all", ...cats].map((c) => (
-        <button
-          type="button"
-          key={c}
-          className={`sidenav-item${value === c ? " on" : ""}`}
-          aria-pressed={value === c}
-          onClick={() => onChange(c)}
-        >
-          <span>{c === "all" ? t.all : c}</span>
-          <span className="cnt">{count(c)}</span>
-        </button>
-      ))}
+      {/* One run of tiles with 1px seams; the buttons carry no margin. */}
+      <div className="jnl-stack">
+        {["all", ...cats].map((c) => (
+          <button
+            type="button"
+            key={c}
+            className={`sidenav-item${value === c ? " on" : ""}`}
+            aria-pressed={value === c}
+            onClick={() => onChange(c)}
+          >
+            <span>{c === "all" ? t.all : c}</span>
+            <span className="cnt">{count(c)}</span>
+          </button>
+        ))}
+      </div>
     </nav>
   );
 }
@@ -258,7 +261,11 @@ export default function BlogIndex({
   const GridHeading = searching ? "h1" : "h2";
 
   if (posts.length === 0) {
-    return <p className="tds-shell py-16 text-[var(--color-muted)] italic">{t.empty}</p>;
+    return (
+      <div className="jnl-band jnl-tone-tint">
+        <p className="tds-shell text-[var(--color-muted)] italic">{t.empty}</p>
+      </div>
+    );
   }
 
   return (
@@ -267,128 +274,133 @@ export default function BlogIndex({
         <HeroSlider latest={posts} popular={popular} lang={lang} />
       )}
 
-      <section
-        className="tds-shell lg:flex lg:items-start lg:gap-8"
-        style={{ paddingTop: 40, paddingBottom: 56 }}
-      >
-        <div
-          // Width changes instantly. Animating `width` reflows the article
-          // grid beside it on every frame, so the 320ms transition made the
-          // whole listing judder for the sake of a decorative slide.
-          //
-          // The two widths used to be inline pixels (216 / 30). They are CSS
-          // now because the expanded rail is fluid — var(--tds-rail) is a
-          // clamp() that grows with the screen, and an inline style cannot be
-          // a clamp of the viewport.
-          className={`hidden lg:block shrink-0 blog-cat-rail${catsCollapsed ? " is-collapsed" : ""}`}
-        >
-          <CategorySidebar
-            posts={posts}
-            cats={cats}
-            value={cat}
-            onChange={setCat}
-            collapsed={catsCollapsed}
-            onToggle={() => setCatsCollapsed((v) => !v)}
-            t={t}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          {/* Mobile + tablet category filter — the sidebar is lg-only, so
-              small screens get a horizontally scrollable chip strip. */}
-          <div className="lg:hidden mb-6 overflow-x-auto blog-cat-strip">
-            <div className="flex gap-2 w-max">
-              {["all", ...cats].map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  className={`chip-flat${cat === c ? " on" : ""}`}
-                  onClick={() => setCat(c)}
-                  aria-pressed={cat === c}
-                >
-                  {c === "all" ? t.all : c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <p className="sr-only" role="status">
-            {statusMessage}
-          </p>
-
-          {searching && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>
-                {matches.length} {plural(t.results, matches.length)} {quoted}
-              </span>
-              <button type="button" className="chip-flat" onClick={() => setQ("")}>
-                {t.clear}
-              </button>
-            </div>
-          )}
-
-          {/* The page's only <h1> lives in HeroSlider — and the hero is not
-              rendered while a search is running, so the results view shipped
-              with no top-level heading at all. This heading takes the rank
-              over in exactly that state. Nothing moves: no shared rule
-              targets a bare h1/h2, Tailwind's preflight normalises both, and
-              the size is set inline either way. */}
-          <GridHeading
-            className="display-tight"
-            style={{ fontSize: "1.625rem", margin: "0 0 18px", display: "flex", alignItems: "center", gap: 10 }}
-          >
-            <svg
-              className="head-ico"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-            </svg>
-            {cat === "all" ? t.all : cat}
-          </GridHeading>
-
-          {gridPosts.length === 0 ? (
-            <p style={{ padding: "48px 0", color: "var(--color-muted)" }}>
-              {searching ? t.noResults : t.empty}
-            </p>
-          ) : (
-            // Intrinsic grid: no breakpoint at any width. `auto-fill` derives
-            // the column count from the space actually left beside the rail,
-            // so collapsing the rail adds a column without either component
-            // knowing about the other. The old `sm:grid-cols-2` capped the
-            // listing at two columns on every screen up to 2560px.
+      {/* A tint band flush under the navy hero. Its spacing is the band's own
+          padding; the rail, the cards and the "older" link meet at 1px seams
+          that show the band, with no margin between any of them. */}
+      <section className="jnl-band jnl-tone-tint">
+        <div className="tds-shell lg:flex lg:items-start lg:gap-px">
+          <div
+            // Width changes instantly. Animating `width` reflows the article
+            // grid beside it on every frame, so the 320ms transition made the
+            // whole listing judder for the sake of a decorative slide.
             //
-            // No inline `gap` here on purpose: an inline style outranks the
-            // unlayered .tds-grid-auto class, so a leftover `style={{gap:20}}`
-            // would silently pin the gutter and the token would do nothing.
-            <div className="tds-grid-auto">
-              {gridPosts.map((p) => (
-                // The SLOT is the container query container, never the card:
-                // a container styles its descendants, so a card can never
-                // respond to its own container-type.
-                <div className="post-card-slot" key={p.slug}>
-                  <PostCard post={p} lang={lang} />
-                </div>
-              ))}
+            // The two widths used to be inline pixels (216 / 30). They are CSS
+            // now because the expanded rail is fluid — var(--tds-rail) is a
+            // clamp() that grows with the screen, and an inline style cannot be
+            // a clamp of the viewport.
+            className={`hidden lg:block shrink-0 blog-cat-rail${catsCollapsed ? " is-collapsed" : ""}`}
+          >
+            <CategorySidebar
+              posts={posts}
+              cats={cats}
+              value={cat}
+              onChange={setCat}
+              collapsed={catsCollapsed}
+              onToggle={() => setCatsCollapsed((v) => !v)}
+              t={t}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            {/* Mobile + tablet category filter — the sidebar is lg-only, so
+                small screens get a horizontally scrollable chip strip. */}
+            <div className="lg:hidden pb-6 overflow-x-auto blog-cat-strip">
+              <div className="flex gap-2 w-max">
+                {["all", ...cats].map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    className={`chip-flat${cat === c ? " on" : ""}`}
+                    onClick={() => setCat(c)}
+                    aria-pressed={cat === c}
+                  >
+                    {c === "all" ? t.all : c}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {hasOlder && (
-            <nav style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
-              <a className="btn-back" href={lang === "de" ? "/page/2" : "/en/page/2"}>
-                {t.older} <span aria-hidden="true">→</span>
-              </a>
-            </nav>
-          )}
+            <p className="sr-only" role="status">
+              {statusMessage}
+            </p>
+
+            {searching && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 16 }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>
+                  {matches.length} {plural(t.results, matches.length)} {quoted}
+                </span>
+                <button type="button" className="chip-flat" onClick={() => setQ("")}>
+                  {t.clear}
+                </button>
+              </div>
+            )}
+
+            {/* The page's only <h1> lives in HeroSlider — and the hero is not
+                rendered while a search is running, so the results view shipped
+                with no top-level heading at all. This heading takes the rank
+                over in exactly that state. Nothing moves: no shared rule
+                targets a bare h1/h2, Tailwind's preflight normalises both, and
+                the size is set inline either way. */}
+            <GridHeading
+              className="display-tight"
+              style={{ fontSize: "1.625rem", margin: 0, paddingBottom: 18, display: "flex", alignItems: "center", gap: 10 }}
+            >
+              <svg
+                className="head-ico"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg>
+              {cat === "all" ? t.all : cat}
+            </GridHeading>
+
+            {gridPosts.length === 0 ? (
+              <p style={{ padding: "48px 0", color: "var(--color-muted)" }}>
+                {searching ? t.noResults : t.empty}
+              </p>
+            ) : (
+              // Intrinsic grid: no breakpoint at any width. `auto-fill` derives
+              // the column count from the space actually left beside the rail,
+              // so collapsing the rail adds a column without either component
+              // knowing about the other. The old `sm:grid-cols-2` capped the
+              // listing at two columns on every screen up to 2560px.
+              //
+              // No inline `gap` here on purpose: an inline style outranks the
+              // unlayered .tds-grid-auto class, so a leftover `style={{gap:20}}`
+              // would silently pin the gutter and the token would do nothing.
+              // `jnl-mosaic` narrows it to the 1px seam.
+              <div className="tds-grid-auto jnl-mosaic">
+                {gridPosts.map((p) => (
+                  // The SLOT is the container query container, never the card:
+                  // a container styles its descendants, so a card can never
+                  // respond to its own container-type.
+                  <div className="post-card-slot" key={p.slug}>
+                    <PostCard post={p} lang={lang} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {hasOlder && (
+              // Hangs under the grid on the same 1px seam instead of floating
+              // 28px below it.
+              <nav style={{ paddingTop: 1, display: "flex", justifyContent: "flex-end" }}>
+                <a className="btn-back" href={lang === "de" ? "/page/2" : "/en/page/2"}>
+                  {t.older} <span aria-hidden="true">→</span>
+                </a>
+              </nav>
+            )}
+          </div>
         </div>
       </section>
     </div>

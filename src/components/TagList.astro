@@ -30,9 +30,11 @@ interface Props {
   activeTag?: string | null;
   /** Optional eyebrow above the strip. */
   label?: string | null;
+  /** Classes for the wrapper (the article end passes its panel tone). */
+  class?: string;
 }
 
-const { posts, tags, lang = "de", activeTag = null, label = null } = Astro.props;
+const { posts, tags, lang = "de", activeTag = null, label = null, class: className } = Astro.props;
 
 function explode(raw: string | null | undefined): string[] {
   if (!raw) return [];
@@ -61,7 +63,7 @@ if (Array.isArray(posts)) {
 ---
 
 {tagList.length > 0 && (
-  <div class="mb-8">
+  <div class={className}>
     {label && <p class="eyebrow mb-3">{label}</p>}
     <div class="flex flex-wrap gap-2">
       {tagList.map((t) => (

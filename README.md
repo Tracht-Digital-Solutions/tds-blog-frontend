@@ -11,9 +11,10 @@
 Public blog at `blog.tracht-digital.de`. **Astro** SSG + **Tailwind v4**
 with self-hosted **Lato + Plus Jakarta Sans + JetBrains Mono** on the shared token
 system from **tds-shared-pkg**. The surface design is the **flat/"kantig"
-blog design** from the Tracht design-system handoff: no border radii,
-colour blocks instead of hairlines, compact spacing, fixed dark frontends
-(hero, newsletter, footer) on the `--color-surface-*` tokens. Every
+blog design** from the Tracht design-system handoff: no border radii and no
+white ground — full-bleed colour bands whose blocks meet at 1px seams, spaced
+by padding rather than margins — and fixed dark frontends (hero, newsletter,
+footer) on the `--color-surface-*` tokens. Every
 post is fetched from **`tds-content-api`** at build time and rendered
 to static HTML — no runtime API calls for content; the only
 client-side work is filtering (search/categories) over data baked into

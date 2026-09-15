@@ -50,33 +50,40 @@ const jsonLd = asGraph(
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
-  <main id="main" class="tds-shell py-16 lg:py-24">
-    <header class="mb-10">
-      <a href="/" class="btn-back mb-6">
-        <span aria-hidden="true">←</span> Alle Beiträge
-      </a>
-      <p class="section-num mb-4 mt-6">Journal · Kategorie</p>
-      <h1 class="display page-title">
-        <span class="accent-italic">{name}</span>
-      </h1>
-      <p class="marginalia mt-3">
-        {posts.length === 1
-          ? "Ein Artikel in dieser Kategorie."
-          : `${posts.length} Artikel in dieser Kategorie.`}
-      </p>
+  <main id="main">
+    {/* Navy head band, then the rows on a tint band — flush, no margin. */}
+    <header class="jnl-band jnl-tone-navy">
+      <div class="tds-shell">
+        <a href="/" class="btn-back">
+          <span aria-hidden="true">←</span> Alle Beiträge
+        </a>
+        <p class="section-num mb-4 mt-6">Journal · Kategorie</p>
+        <h1 class="display page-title">
+          <span class="accent-italic">{name}</span>
+        </h1>
+        <p class="marginalia mt-3">
+          {posts.length === 1
+            ? "Ein Artikel in dieser Kategorie."
+            : `${posts.length} Artikel in dieser Kategorie.`}
+        </p>
+      </div>
     </header>
 
-    <ul class="list-none p-0 m-0">
-      {posts.map((p) => (
-        <BlogPostCard
-          slug={p.slug}
-          category={p.category}
-          title={p.title}
-          excerpt={p.excerpt}
-          publishedAt={p.publishedAt}
-          lang="de"
-        />
-      ))}
-    </ul>
+    <section class="jnl-band jnl-tone-tint">
+      <div class="tds-shell">
+        <ul class="jnl-stack">
+          {posts.map((p) => (
+            <BlogPostCard
+              slug={p.slug}
+              category={p.category}
+              title={p.title}
+              excerpt={p.excerpt}
+              publishedAt={p.publishedAt}
+              lang="de"
+            />
+          ))}
+        </ul>
+      </div>
+    </section>
   </main>
 </Layout>

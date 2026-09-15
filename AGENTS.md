@@ -22,11 +22,13 @@ Self-hosted **Lato** (display) + **Plus Jakarta Sans** (body) +
 is Hanken Grotesk is stale — that was retired, as was Instrument Serif
 before it.
 
-**Surface design: flat/"kantig"** (from the Tracht design-system
-handoff, 2026-06): no border radii or hairline cards — separation via
-colour blocks (`--color-soft`, `--tds-flat-tint`), fixed dark surfaces
-(hero, newsletter, footer) on the `--color-surface-*` tokens so dark mode
-never inverts them.
+**Surface design: flat/"kantig", in colour bands** (from the Tracht
+design-system handoff, 2026-06; bands since 2026-09-15): no border radii or
+hairline cards, and no white ground — every section is a full-bleed colour
+band (sand, tint, bordeaux, navy, ink) and the blocks inside meet at 1px
+seams, spaced by padding rather than margin. Fixed dark surfaces (hero,
+newsletter, footer) stay on the `--color-surface-*` tokens so dark mode
+never inverts them. See "Farbbänder statt Abstände" below.
 
 **This app is the `blog` surface of the shared design library.**
 `<html data-surface="blog">` in `Layout.astro` activates
@@ -59,7 +61,8 @@ on this surface) and `.tds-tone-navy` on the footer instead of the inline
 hairlines inside it read on the dark ground. The warm `--color-line` and
 the rest of the palette arrive through the token layer with no work here.
 That is a decision, not an omission — don't "finish the job" by adding
-washes to the blog.
+washes to the blog. The colour bands (2026-09-15) are layout, not
+decoration: flat palette fills, no wash, gradient or shape.
 
 The long-form class is **`.tds-prose`**, promoted out of this repo into
 `tds-shared/styles/prose.css`: it was the only long-form typography
@@ -271,8 +274,12 @@ only as a bare destination: a reader had no idea the site does PDFs, labels,
 timesheets or OCR, and nothing said the paid tools are a one-off rather than a
 subscription.
 
-- It is a plain block on the page's own ground, not a card. This is an editorial
-  index, and a boxed advert under the article grid reads as bait.
+- It is the bordeaux band between the post grid and `ForYou` (since 2026-09-15;
+  before that a plain block on the page's own ground). Still no card and no
+  second CTA: a boxed advert under the article grid reads as bait, a band reads
+  as a section. It renders its own band and shell, so the index places it
+  without a wrapper. Its links are white and underlined — the coral measures
+  4.18:1 on bordeaux.
 - The origin comes from `TOOLS_URL` (`lib/nav.ts`) and is never retyped; the
   English tree is the same slugs under `/en`, so only the base changes.
 - The footer label was **"Kostenlose Tools" / "Free tools"** and is now
@@ -343,6 +350,63 @@ not occur once, and the card grid stopped at two columns on every screen up to
   They are **not** in `surfaces/blog.css`: `tds-tools-frontend` renders the
   same blog surface, so a shell width there would silently widen the public
   tools site too.
+
+## Farbbänder statt Abstände (2026-09-15)
+
+The journal used to set soft blocks on the near-white `--color-paper` with
+margins between them — 6px under each row, 4px between category buttons and
+TOC rows, the `--tds-gutter` between cards, `mt-6…mt-16` between the boxes at
+the end of an article — and the white showed in every one of those gaps. Now
+nothing sits on white:
+
+* **The ground is soft.** `body` paints `--color-soft`; the sticky bar mixes
+  soft instead of paper (a one-property override on `.brand-header` in
+  `global.css`, blog-only — the tools site and the shop keep their light bar).
+  None of this is in `surfaces/blog.css`, for the same reason as the shell
+  width above.
+* **Every section is a band** (`.jnl-band` = `padding-block`) in one tone:
+  `.jnl-tone-sand`, `-tint`, `-accent` (bordeaux), `-navy`, `-ink`. Bands sit
+  flush and alternate. The index runs navy hero → tint grid → bordeaux tools
+  promo → sand "Für Sie" → ink newsletter → navy footer; listing pages run a
+  navy head band into a tint list band (tag pages put a sand tag band between);
+  `/aktuelles` and `/rss` alternate sand and tint below their navy hero.
+* **Blocks inside a band take its counter-tone** through `--jnl-tile` /
+  `--jnl-tile-hover`, which every tone sets (and so do the header, the article
+  sidebar, the TOC and the Entdecken dropdown). The local tile classes read
+  those tokens instead of `--color-soft` / `--tds-flat-hover`. **A container
+  that changes `--jnl-tile` must re-declare `--jnl-tile-hover` too**: a custom
+  property computes where it is declared, so a hover mixed at `:root` keeps the
+  root's tile colour everywhere below it.
+* **Blocks meet at a 1px seam**: `.jnl-stack` for vertical runs,
+  `.tds-grid-auto.jnl-mosaic` on every intrinsic grid, `.jnl-article-end` for
+  the panel stack after an article (contact bordeaux → author tint → products
+  sand → related tint → tags sand → prev/next tint → links sand). The seam is a
+  `gap`, never a parent filled with `--color-line`: `auto-fill` leaves empty
+  tracks in the last row, and those must show the band, not a grey block.
+  Components that can render nothing (`ProductSlot`, `RelatedArticles`,
+  `TagList`) take a `class` prop instead of a wrapper, because an empty wrapper
+  is still a grid item and doubles the seam.
+* **The tokens are measured, not picked.** `--color-muted` (#6b6b66) is 4.26:1
+  on the tint, so `body` re-maps it to `--jnl-muted` (ink 72% into soft: ~5.8:1
+  on the tint, 6.0:1 on soft). The coral is 4.18:1 on bordeaux (3.72:1 dark),
+  so the accent tone maps `--color-accent` and the eyebrow to white. Secondary
+  text in the dark tones is white at 0.8 — 0.72 is 4.15:1 on the dark theme's
+  lifted bordeaux. At 9% primary the tint is 1.02:1 against soft in the dark
+  theme, so there it takes 20%. The white buttons on navy/ink (hero CTA,
+  newsletter submit) are coral with `--color-surface-ink` text (8:1).
+* **The dark tones never re-map `--color-primary`.** The slug covers draw with
+  it, and white inside a navy band would blank one. It is also why prev/next at
+  the end of an article is a tint panel and not navy: its hover colour is
+  primary.
+* **White that stays, on purpose:** the print/PDF sheet (paper, with hard-coded
+  neutrals) and the shared floating overlays that read `--color-card` at body
+  level — the mobile menu sheet, the account dropdown, the consent banner, the
+  live-chat widget. Inside a band `--color-card` maps to the tile, which is what
+  keeps a shared `ProductCard` from rendering as a white card.
+* **`src/__tests__/bands.test.ts` pins it**: the soft ground, the dark tint, the
+  untouched primary, the margin-free rows, the mosaic on every grid, the
+  margin-free `<main>` of every page, the article-end stack and the absence of
+  white fills.
 
 ## How a published article reaches a reader (2026-08-24)
 

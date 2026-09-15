@@ -90,51 +90,60 @@ const cards = posts.map((p) => ({
   jsonLd={jsonLd}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
-  <main id="main" class="tds-shell py-16 lg:py-24">
-    <header class="mb-10">
-      <a href="/" class="btn-back mb-6">
-        <span aria-hidden="true">←</span> Alle Beiträge
-      </a>
-      <p class="section-num mb-4 mt-6">Journal · Autor</p>
-      <div class="flex items-center gap-5">
-        {author.avatarUrl ? (
-          <img
-            src={author.avatarUrl}
-            alt=""
-            width="80"
-            height="80"
-            class="w-20 h-20 rounded-full object-cover shrink-0"
-            loading="eager"
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            class="w-20 h-20 inline-flex items-center justify-center text-2xl font-semibold text-white shrink-0"
-            style="background: var(--color-surface-navy); font-family: var(--font-display); border-radius: 9999px;"
-          >
-            {author.name.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase()}
-          </span>
-        )}
-        <div>
-          <h1 class="display page-title">{author.name}</h1>
-          <p class="marginalia mt-2">
-            {posts.length === 1 ? "Ein Artikel" : `${posts.length} Artikel`}
-          </p>
+  <main id="main">
+    {/* Navy head band, then the author's cards on a tint band — flush, no
+        margin. The initials disc is coral here: navy on the navy band would
+        be invisible. */}
+    <header class="jnl-band jnl-tone-navy">
+      <div class="tds-shell">
+        <a href="/" class="btn-back">
+          <span aria-hidden="true">←</span> Alle Beiträge
+        </a>
+        <p class="section-num mb-4 mt-6">Journal · Autor</p>
+        <div class="flex items-center gap-5">
+          {author.avatarUrl ? (
+            <img
+              src={author.avatarUrl}
+              alt=""
+              width="80"
+              height="80"
+              class="w-20 h-20 rounded-full object-cover shrink-0"
+              loading="eager"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              class="w-20 h-20 inline-flex items-center justify-center text-2xl font-semibold shrink-0"
+              style="background: var(--color-accent-pink); color: var(--color-surface-ink); font-family: var(--font-display); border-radius: 9999px;"
+            >
+              {author.name.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase()}
+            </span>
+          )}
+          <div>
+            <h1 class="display page-title">{author.name}</h1>
+            <p class="marginalia mt-2">
+              {posts.length === 1 ? "Ein Artikel" : `${posts.length} Artikel`}
+            </p>
+          </div>
         </div>
+        {author.bio && (
+          <p class="lead mt-5 text-[var(--color-muted)] max-w-2xl" style="text-wrap: pretty;">
+            {author.bio}
+          </p>
+        )}
       </div>
-      {author.bio && (
-        <p class="lead mt-5 text-[var(--color-muted)] max-w-2xl" style="text-wrap: pretty;">
-          {author.bio}
-        </p>
-      )}
     </header>
 
-    {/* The list jumped from the <h1> straight to the cards’ <h3>: the one
-        template on the site whose post list carries no heading of its own
-        (the index has “Alle Beiträge”, a category page has its name). Visually
-        hidden, because the page already says whose articles these are — the
-        heading is here to close the level skip, not to add a line. */}
-    <h2 class="sr-only">Artikel von {author.name}</h2>
-    <AuthorPostList posts={cards} lang="de" client:load />
+    <section class="jnl-band jnl-tone-tint">
+      <div class="tds-shell">
+        {/* The list jumped from the <h1> straight to the cards’ <h3>: the one
+            template on the site whose post list carries no heading of its own
+            (the index has “Alle Beiträge”, a category page has its name). Visually
+            hidden, because the page already says whose articles these are — the
+            heading is here to close the level skip, not to add a line. */}
+        <h2 class="sr-only">Artikel von {author.name}</h2>
+        <AuthorPostList posts={cards} lang="de" client:load />
+      </div>
+    </section>
   </main>
 </Layout>
