@@ -14,7 +14,7 @@ import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import JsonLd from "~/components/JsonLd.astro";
 import { LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
 import { ConsentBanner } from "@tracht-digital-solutions/tds-shared/consent";
-import { themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
+import { pageTransitionOptIn, themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
 import { siteConfig } from "~/lib/seo";
 import { isExcluded } from "~/lib/sitemapExclusions";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
@@ -157,6 +157,10 @@ const showConsent =
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The cross-page transition switch, as early as it can be: Chrome decides the
+         incoming page's opt-in at its first render, and the stylesheet linked at the
+         end of this head often arrives later (tds-shared pageTransitionOptIn). -->
+    <style is:inline set:html={pageTransitionOptIn} />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#050f68" />
     {hidden && <meta name="robots" content="noindex,nofollow" />}
