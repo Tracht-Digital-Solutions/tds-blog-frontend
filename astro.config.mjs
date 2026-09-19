@@ -3,7 +3,7 @@ import node from "@astrojs/node";
 import react from "@astrojs/react";
 // Shared CSS minify settings (incl. the cssTarget that keeps lightningcss
 // from dropping the .brand-header backdrop-filter prefix). See tds-shared#10.
-import { tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
+import { motionSsrNoExternal, tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
 
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
@@ -60,6 +60,9 @@ export default defineConfig({
         // every grammar would add megabytes to the server chunk.
         "shiki",
         "zod",
+        // tds-shared's panel components import `motion` lazily; bundled so the
+        // release tree never needs a copy. tds-shared owns the list.
+        ...motionSsrNoExternal,
       ],
       // Native addons cannot be bundled.
       external: ["sharp", "@resvg/resvg-js", "satori"],

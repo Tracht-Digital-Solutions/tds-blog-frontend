@@ -869,6 +869,8 @@ The blog does not animate for effect. What used to be here and is now gone:
 | disclosure `grid-template-rows` | ties the expanded panel to the control that opened it |
 | the carousel track transform | a response to a deliberate action; `prefers-reduced-motion` drops it |
 | `tds-spin`, `tds-skeleton-pulse`, `tds-toast-in`, `tds-modal-in` | from tds-shared; all report loading or an outcome |
+| the cross-page fade (`page-transitions.css`, `tds-page-in/out`) | replaces the white flash between two pages with a 160/200 ms opacity step; no movement, off under reduced motion |
+| the index filter and the newsletter confirmation (`transitionUpdate`) | they report a RESULT: cards that stay glide to their slot, the rest fade, the form hands over to its confirmation. Native View Transitions — the blog loads no animation library; card names are live only during the transition |
 
 The cheap regression check is the built bundle, not the source:
 

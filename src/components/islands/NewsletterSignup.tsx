@@ -1,4 +1,6 @@
-import { useState, type SubmitEvent } from "react";
+import { useState, type CSSProperties, type SubmitEvent } from "react";
+import { flushSync } from "react-dom";
+import { transitionUpdate } from "@tracht-digital-solutions/tds-shared/motion";
 import { Spinner } from "@tracht-digital-solutions/tds-shared/components";
 import { runtimeSetting } from "@tracht-digital-solutions/tds-shared/api";
 
@@ -66,7 +68,10 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
           consent: true,
         }),
       });
-      setState(res.ok ? "done" : "error");
+      // The confirmation cross-fades over the form (native View Transition on
+      // the named box below) instead of replacing it in one frame.
+      if (res.ok) transitionUpdate(() => flushSync(() => setState("done")));
+      else setState("error");
     } catch {
       setState("error");
     }
@@ -97,7 +102,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
             {t.body}
           </p>
         </div>
-        <div>
+        <div className="tds-vt-item" style={{ "--tds-vt-name": "newsletter-signup" } as CSSProperties}>
           {state === "done" ? (
             /* The success case replaces the form outright. Without a live
                region that is a submit followed by silence: the control the

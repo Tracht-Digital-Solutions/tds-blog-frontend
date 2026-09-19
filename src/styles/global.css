@@ -38,6 +38,10 @@
 @import "@tracht-digital-solutions/tds-shared/styles/base.css";
 @import "@tracht-digital-solutions/tds-shared/styles/primitives.css";
 @import "@tracht-digital-solutions/tds-shared/styles/prose.css";
+/* Cross-page fade between two pages of the blog — no script, opacity only,
+   off under reduced motion. See "No decorative motion" in AGENTS.md for why
+   it is kept. */
+@import "@tracht-digital-solutions/tds-shared/styles/page-transitions.css";
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
 @import "@tracht-digital-solutions/tds-shared/styles/surfaces/blog.css";
 
