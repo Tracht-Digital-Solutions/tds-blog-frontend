@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { flushSync } from "react-dom";
+import { transitionUpdate } from "@tracht-digital-solutions/tds-shared/motion";
 import PostCard, { type CardPost } from "../PostCard";
 import HeroSlider from "./HeroSlider";
 
@@ -197,6 +199,14 @@ export default function BlogIndex({
   const [catsCollapsed, setCatsCollapsed] = useState(false);
   const [q, setQ] = useState("");
 
+  // A deliberate filter change (a category, "clear search") runs as a native
+  // View Transition: cards that stay glide to their new slot, the rest fade.
+  // Not typing — a transition per keystroke would freeze the page each time.
+  // tds-shared's transitionUpdate, not motion: this island is client:load on
+  // the index, and an animation runtime there would sit on the first load.
+  const pickCat = (next: string) => transitionUpdate(() => flushSync(() => setCat(next)));
+  const clearSearch = () => transitionUpdate(() => flushSync(() => setQ("")));
+
   // Category list — shared by the desktop sidebar and the mobile/tablet
   // chip strip (the sidebar is lg-only, so small screens need their own).
   const cats = useMemo(
@@ -294,7 +304,7 @@ export default function BlogIndex({
               posts={posts}
               cats={cats}
               value={cat}
-              onChange={setCat}
+              onChange={pickCat}
               collapsed={catsCollapsed}
               onToggle={() => setCatsCollapsed((v) => !v)}
               t={t}
@@ -310,7 +320,7 @@ export default function BlogIndex({
                     type="button"
                     key={c}
                     className={`chip-flat${cat === c ? " on" : ""}`}
-                    onClick={() => setCat(c)}
+                    onClick={() => pickCat(c)}
                     aria-pressed={cat === c}
                   >
                     {c === "all" ? t.all : c}
@@ -328,7 +338,7 @@ export default function BlogIndex({
                 <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-muted)" }}>
                   {matches.length} {plural(t.results, matches.length)} {quoted}
                 </span>
-                <button type="button" className="chip-flat" onClick={() => setQ("")}>
+                <button type="button" className="chip-flat" onClick={clearSearch}>
                   {t.clear}
                 </button>
               </div>
@@ -384,7 +394,11 @@ export default function BlogIndex({
                   // The SLOT is the container query container, never the card:
                   // a container styles its descendants, so a card can never
                   // respond to its own container-type.
-                  <div className="post-card-slot" key={p.slug}>
+                  <div
+                    className="post-card-slot tds-vt-item"
+                    key={p.slug}
+                    style={{ "--tds-vt-name": `post-${p.slug}` } as CSSProperties}
+                  >
                     <PostCard post={p} lang={lang} />
                   </div>
                 ))}
