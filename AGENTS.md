@@ -33,10 +33,23 @@ never inverts them. See "Farbbänder statt Abstände" below.
 **This app is the `blog` surface of the shared design library.**
 `<html data-surface="blog">` in `Layout.astro` activates
 `tds-shared/styles/surfaces/blog.css`, which owns the flat kit: every
-radius collapses to 0, no elevation, the 800 display voice, the
+radius collapses to 0, no blurred elevation, the 800 display voice, the
 display-face eyebrow, and `--tds-flat-tint` / `--tds-flat-hover`.
 `global.css` imports `base.css` → `primitives.css` → `prose.css` →
 `app.css` → `surfaces/blog.css`.
+
+**Hard 2D shadows** (2026-09-22, tds-shared ≥ 0.42): every box and control
+of the public sites carries a fixed, unblurred offset (`--tds-shadow-hard*`,
+set by the blog surface; the shared buttons, cookie notice and dropdowns
+take it in tds-shared). Here, the tiles keep their 1px seams — a MOSAIC
+(`.jnl-mosaic`, `.jnl-stack`, `.jnl-article-end`) takes ONE shadow as
+`filter: drop-shadow(...)` on its container, which follows the tiles and
+ignores empty grid tracks; a box-shadow on the container would outline
+them. Single boxes and controls (`.btn-flat`, `.hero-cta`, `.hero-arrow`,
+`.chip-flat`, `.topic-card`) take the tokens and press into them. The dark
+bands (`.jnl-tone-navy/-ink/-accent`, `.hero-stage`) re-declare the shadows
+with a black ink. Print and the print controls stay flat. The block is the
+last section of `global.css`.
 
 > **The rule here used to say the opposite** — *"geometry is app-local per
 > repo convention — don't 'fix' this in tds-shared-pkg"* — and that is
