@@ -132,6 +132,7 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           )}
         </div>
         <a
+          className="hero-cta"
           href={hrefFor(lang, lead.slug)}
           style={{
             display: "inline-flex",

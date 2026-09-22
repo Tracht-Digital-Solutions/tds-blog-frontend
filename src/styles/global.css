@@ -1279,7 +1279,8 @@ a.topic-card:focus-visible {
 .article-sec h2 { font-weight: 700; }
 
 /* === Motion & interactivity (flat-safe) ============================
-   Keep the kit angular: no radii, no drop-shadows. Interactivity is
+   Keep the kit angular: no radii, no BLURRED shadows (the fixed hard 2D
+   offset at the end of this file is the one shadow). Interactivity is
    expressed through accent bars/underlines, colour shifts and small
    translates only. Everything here collapses under reduced-motion. */
 
@@ -1825,4 +1826,77 @@ html.focus-mode #focus-toggle {
 .tools-promo__link:hover,
 .tools-promo__link:focus-visible {
   text-decoration-thickness: 2px;
+}
+
+/* === Hard 2D shadows (2026-09-22, tds-shared >= 0.42) =====================
+   The public sites carry a fixed, unblurred offset on every box and control
+   (`--tds-shadow-hard*`, set by the blog surface). The journal keeps its own
+   rule — tiles inside a band with 1px seams, see "Farbbänder statt Abstände"
+   in AGENTS.md — so a MOSAIC takes the shadow as one shape: `drop-shadow`
+   on the container follows the tiles it paints and ignores empty grid
+   tracks, where a box-shadow on the container would outline them. Single
+   boxes and controls take the token directly; controls press into it. */
+
+/* The dark bands flip the ink: a navy offset vanishes on navy. `var()` in a
+   custom property resolves where it is declared, hence the re-declaration. */
+.hero-stage,
+.jnl-tone-navy,
+.jnl-tone-ink,
+.jnl-tone-accent {
+  --tds-shadow-ink: rgb(0 0 0 / 0.5);
+  --tds-shadow-hard: 6px 6px 0 0 var(--tds-shadow-ink);
+  --tds-shadow-hard-sm: 3px 3px 0 0 var(--tds-shadow-ink);
+  --tds-shadow-hard-press: 1px 1px 0 0 var(--tds-shadow-ink);
+}
+
+.tds-grid-auto.jnl-mosaic,
+.jnl-stack,
+.jnl-article-end {
+  filter: drop-shadow(6px 6px 0 var(--tds-shadow-ink));
+}
+.topic-card,
+.newsletter-form .newsletter-input {
+  box-shadow: var(--tds-shadow-hard-sm);
+}
+.btn-flat,
+.hero-cta,
+.hero-arrow {
+  box-shadow: var(--tds-shadow-hard-sm);
+  transition-property: background-color, border-color, color, translate;
+}
+.chip-flat {
+  box-shadow: var(--tds-shadow-hard-press);
+}
+.btn-flat:active,
+.hero-cta:active,
+.hero-arrow:active,
+.chip-flat:active {
+  translate: 2px 2px;
+  box-shadow: var(--tds-shadow-hard-press);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-flat:active,
+  .hero-arrow:active,
+  .chip-flat:active {
+    translate: none;
+  }
+}
+/* A mosaic nested in another keeps one shadow — the outer one. */
+:is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) :is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) {
+  filter: none;
+}
+/* Paper has no depth: the print view and the print controls stay flat.
+   Only shadows are cleared — the print sheet's own filters (the greyscale
+   cover) stay. */
+.print-controls,
+.print-controls * {
+  box-shadow: none !important;
+}
+@media print {
+  * {
+    box-shadow: none !important;
+  }
+  :is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) {
+    filter: none !important;
+  }
 }
