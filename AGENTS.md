@@ -48,7 +48,10 @@ ignores empty grid tracks; a box-shadow on the container would outline
 them. Single boxes and controls (`.btn-flat`, `.hero-cta`, `.hero-arrow`,
 `.chip-flat`, `.topic-card`) take the tokens and press into them. The dark
 bands (`.jnl-tone-navy/-ink/-accent`, `.hero-stage`) re-declare the shadows
-with a black ink. Print and the print controls stay flat. The block is the
+with a black ink. Hover and keyboard focus LIFT an interactive element 2px
+up-left while its offset grows by 2px (`--tds-shadow-hard(-sm)-hover`); a
+tile leaves the mosaic's shared drop-shadow for its own with `z-index: 2`.
+Print and the print controls stay flat. The block is the
 last section of `global.css`.
 
 > **The rule here used to say the opposite** — *"geometry is app-local per

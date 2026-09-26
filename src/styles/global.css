@@ -1847,6 +1847,8 @@ html.focus-mode #focus-toggle {
   --tds-shadow-hard: 6px 6px 0 0 var(--tds-shadow-ink);
   --tds-shadow-hard-sm: 3px 3px 0 0 var(--tds-shadow-ink);
   --tds-shadow-hard-press: 1px 1px 0 0 var(--tds-shadow-ink);
+  --tds-shadow-hard-hover: 8px 8px 0 0 var(--tds-shadow-ink);
+  --tds-shadow-hard-sm-hover: 5px 5px 0 0 var(--tds-shadow-ink);
 }
 
 .tds-grid-auto.jnl-mosaic,
@@ -1898,5 +1900,38 @@ html.focus-mode #focus-toggle {
   }
   :is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) {
     filter: none !important;
+  }
+}
+
+/* Hover LIFTS an interactive element toward the pointer (2026-09-26): 2px
+   up-left while its offset grows by the same 2px. A tile inside a mosaic
+   leaves the shared drop-shadow for its own — it needs a fill and a stacking
+   level of its own to do that, which `.jnl-tile`/`.post-card` already have. */
+.btn-flat:is(:hover, :focus-visible),
+.hero-cta:is(:hover, :focus-visible),
+.hero-arrow:is(:hover, :focus-visible),
+.topic-card:is(:hover, :focus-visible) {
+  translate: -2px -2px;
+  box-shadow: var(--tds-shadow-hard-sm-hover);
+}
+.chip-flat:is(:hover, :focus-visible) {
+  translate: -1px -1px;
+  box-shadow: var(--tds-shadow-hard-sm);
+}
+.post-card,
+a.jnl-tile {
+  transition-property: background-color, color, translate;
+  transition-duration: 180ms;
+}
+.post-card:is(:hover, :focus-visible),
+a.jnl-tile:is(:hover, :focus-visible) {
+  position: relative;
+  z-index: 2;
+  translate: -2px -2px;
+  box-shadow: var(--tds-shadow-hard-hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.btn-flat, .hero-cta, .hero-arrow, .topic-card, .chip-flat, .post-card, a.jnl-tile):is(:hover, :focus-visible) {
+    translate: none;
   }
 }
