@@ -1,0 +1,55 @@
+# Every group below is INDEPENDENT: a crawler obeys only the group that names
+# it, and ignores the "*" group entirely. So every Disallow has to be repeated
+# in each group — that is why this file is more verbose than it looks like it
+# needs to be.
+#
+# /og/ is deliberately NOT disallowed. It used to be, in every group, which
+# blocked the site's own social images: `/og/{lang}/{slug}.png` is the
+# `og:image` of every article and the `image` of its BlogPosting. A crawler
+# honouring robots.txt could not fetch the picture the page told it to use, so
+# shares rendered without a preview and the article image was unusable as a
+# rich result. The endpoint renders public article metadata only — there is
+# nothing behind it to keep out of an index.
+
+User-agent: *
+Allow: /
+Disallow: /install/
+
+# AI search crawlers are welcome — articles are meant to be cited.
+User-agent: GPTBot
+Allow: /
+Disallow: /install/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /install/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /install/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /install/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /install/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /install/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /install/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /install/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /install/
+
+Sitemap: https://blog.tracht-digital.de/sitemap-index.xml
