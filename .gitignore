@@ -33,3 +33,6 @@ release/
 # Local page-cache store. On the host this lives outside the checkout
 # (TDS_CACHE_DIR); locally it defaults to <root>/var/page-cache.
 var/
+
+# Active Git worktrees — working material, never repository content.
+.claude/worktrees/
