@@ -73,6 +73,22 @@ export default defineConfig({
   image: {
     service: { entrypoint: "astro/assets/services/sharp" },
   },
+  /**
+   * Prefetch the page under the pointer (2026-09-29).
+   *
+   * Astro's own prefetch, NOT `<ClientRouter>`: it only fetches the document
+   * into the browser's cache, and the click that follows stays an ordinary
+   * navigation. So the SSR page cache, the theme bootstrap and the cross-page
+   * view transitions all keep working exactly as they do.
+   *
+   * `hover`, not `viewport`: an article index is mostly links, and `viewport`
+   * would pull every post on the page to show one screen of cards.
+   */
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: "hover",
+  },
+
   trailingSlash: "ignore",
   build: {
     format: "directory",
