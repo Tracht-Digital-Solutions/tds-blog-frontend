@@ -101,7 +101,8 @@ const ogImageAbs = resolvedOgImage.startsWith("http")
 const autoAltPath =
   lang === "de"
     ? Astro.url.pathname.replace(/^\//, "/en/")
-    : Astro.url.pathname.replace(/^\/en\//, "/");
+    // `(\/|$)`: a bare `/en` used to keep itself as its own alternate.
+    : Astro.url.pathname.replace(/^\/en(\/|$)/, "/");
 // A page the panel excluded from the sitemap is also served `noindex`, and
 // loses its alternates with it. Both halves are required: a sitemap omission is
 // a hint a crawler may ignore, while `noindex` beside an alternate tells it to

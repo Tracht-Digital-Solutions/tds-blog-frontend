@@ -14,7 +14,7 @@ import { tagDescription } from "~/lib/metaDescription";
 // something nobody wrote is worse than nothing.
 const tag = Astro.params.tag as string;
 const group = await byTag("de", tag);
-if (!group) return new Response("Not found", { status: 404 });
+if (!group) return new Response(null, { status: 404 });
 const { posts, allPosts } = group;
 
 // Only when the English tree really carries this tag — DE and EN tag tokens

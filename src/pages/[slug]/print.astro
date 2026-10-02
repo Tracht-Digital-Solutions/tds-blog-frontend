@@ -6,7 +6,7 @@ import { resolveLocalizedPost } from "~/lib/localizedPost";
 const { slug } = Astro.params;
 const localized = await resolveLocalizedPost(slug as string, "de");
 if (!localized) {
-  return new Response("Not found", { status: 404 });
+  return new Response(null, { status: 404 });
 }
 ---
 

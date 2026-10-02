@@ -22,12 +22,10 @@ import { siteKeyRejectionCount } from "./lib/siteKey";
 /**
  * Refuse to STORE a page that was rendered while the API rejected our site key.
  *
- * `siteKeyGuard()` in `astro.config.mjs` covers the build, and it cannot cover
- * this: every content fetch is deliberately fail-soft, so at request time a
- * rejected key produces a perfectly valid page full of baked fallbacks. Cached,
- * that page would outlive the misconfiguration and there would be nothing to
- * see — a site quietly serving its own placeholder copy is exactly the failure
- * the build-time guard exists to prevent.
+ * Every content fetch is deliberately fail-soft, so a rejected key produces a
+ * perfectly valid page full of baked fallbacks. Cached, that page would
+ * outlive the misconfiguration and there would be nothing to see — a site
+ * quietly serving its own placeholder copy.
  *
  * Comparing the rejection counter around the render is enough. Two requests
  * racing can only make this refuse to store a page that was fine; it can never

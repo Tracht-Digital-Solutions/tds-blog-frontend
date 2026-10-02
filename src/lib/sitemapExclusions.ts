@@ -35,11 +35,10 @@
  * too, neither end would go red.
  */
 
-import { contentCache } from "./cache";
+import { memoisedOr, readContentJson } from "./contentFetch";
 import { contentApiBase } from "./connection";
 import { DEMO_MODE } from "./demoContent";
 import type { Lang } from "./routes";
-import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
 
 /** This site's id in the panel's site registry. */
 export const SITE_ID = "blog";
@@ -122,27 +121,12 @@ export function hreflangGroup(pathname: string): string[] {
 }
 
 async function load(): Promise<string[]> {
-  if (DEMO_MODE) return [];
-
-  try {
-    const url = new URL(`${contentApiBase()}/sitemap-exclusions`);
-    url.searchParams.set("site", SITE_ID);
-    const res = await fetch(url, {
-      headers: siteKeyHeaders(),
-      // A HANGING api host would otherwise block a render until the job
-      // timeout, and this one sits in the Layout — it would hang every page.
-      signal: AbortSignal.timeout(10_000),
-    });
-    assertKeyAccepted(res, url);
-    if (!res.ok) return [];
-
-    const data = (await res.json()) as ExclusionsResponse;
-    if (!Array.isArray(data.paths)) return [];
-    return data.paths.filter((p): p is string => typeof p === "string" && p.trim() !== "");
-  } catch (err) {
-    console.warn("[tds-blog] sitemap exclusions unreachable — nothing excluded:", err);
-    return [];
-  }
+  const url = new URL(`${contentApiBase()}/sitemap-exclusions`);
+  url.searchParams.set("site", SITE_ID);
+  // Throws on failure — `exclusionPatterns` decides what that renders as.
+  const data = await readContentJson<ExclusionsResponse>(url);
+  if (!Array.isArray(data.paths)) return [];
+  return data.paths.filter((p): p is string => typeof p === "string" && p.trim() !== "");
 }
 
 /**
@@ -153,7 +137,8 @@ async function load(): Promise<string[]> {
  * would never reach a visitor and nothing would log.
  */
 export function exclusionPatterns(): Promise<string[]> {
-  return contentCache.get("sitemap:exclusions", load);
+  if (DEMO_MODE) return Promise.resolve([]);
+  return memoisedOr("sitemap:exclusions", load, [], "sitemap exclusions (nothing excluded)");
 }
 
 /** Is this page excluded — counting its twin in the other tree as the same page? */

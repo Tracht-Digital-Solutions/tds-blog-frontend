@@ -804,7 +804,9 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         if (navigator.sendBeacon) {
           navigator.sendBeacon(url);
         } else {
-          fetch(url, { method: "POST", keepalive: true, mode: "no-cors" });
+          // The try above only catches synchronous throws; a rejected fetch
+          // would surface as an unhandled rejection in the console.
+          fetch(url, { method: "POST", keepalive: true, mode: "no-cors" }).catch(function () {});
         }
       } catch (e) {
         /* best-effort analytics — ignore failures */

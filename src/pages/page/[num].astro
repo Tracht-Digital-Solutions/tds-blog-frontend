@@ -15,7 +15,7 @@ import { PAGE_SIZE } from "~/lib/pagination";
 // a 404 rather than an empty listing: an indexable, permanently-200 page for
 // something nobody wrote is worse than nothing.
 const archive = await archivePage("de", String(Astro.params.num ?? ""));
-if (!archive) return new Response("Not found", { status: 404 });
+if (!archive) return new Response(null, { status: 404 });
 const { allPosts, page } = archive;
 const t = translations.de;
 const { items, hasOlder, hasNewer, pageCount } = paginate(allPosts, page);

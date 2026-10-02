@@ -9,16 +9,20 @@
  * content — the build never breaks on a translation hiccup.
  */
 
-const KEY = import.meta.env.DEEPL_API_KEY as string | undefined;
+/**
+ * The key, read at REQUEST time from the host's environment first.
+ *
+ * `import.meta.env` of a non-`PUBLIC_` name is replaced at build time, so it
+ * only ever held what the CI build saw; a key set on the host was invisible.
+ * The build value stays as the fallback.
+ */
+function deeplKey(): string | undefined {
+  return process.env.DEEPL_API_KEY || (import.meta.env.DEEPL_API_KEY as string | undefined) || undefined;
+}
 
 /** Free-tier keys end with `:fx` and use the api-free host. */
-const ENDPOINT =
-  KEY && KEY.endsWith(":fx")
-    ? "https://api-free.deepl.com/v2/translate"
-    : "https://api.deepl.com/v2/translate";
-
-/** True when a key is configured — lets callers flag machine output. */
-export const translationConfigured = Boolean(KEY);
+const endpoint = (key: string): string =>
+  key.endsWith(":fx") ? "https://api-free.deepl.com/v2/translate" : "https://api.deepl.com/v2/translate";
 
 type Lang = "de" | "en";
 
@@ -39,6 +43,7 @@ type Lang = "de" | "en";
 const CACHE_LIMIT = 500;
 const cache = new Map<string, string | null>();
 
+/** Only answers are remembered — a translation, or DeepL's own empty result. */
 function remember(key: string, value: string | null): void {
   if (cache.size >= CACHE_LIMIT) {
     const oldest = cache.keys().next();
@@ -57,15 +62,16 @@ async function call(
   from: Lang,
   html: boolean,
 ): Promise<string | null> {
-  if (!KEY || !text.trim()) return null;
+  const key = deeplKey();
+  if (!key || !text.trim()) return null;
   const cacheKey = `${to}|${from}|${html ? "h" : "t"}|${text}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey) ?? null;
 
   try {
-    const res = await fetch(ENDPOINT, {
+    const res = await fetch(endpoint(key), {
       method: "POST",
       headers: {
-        Authorization: `DeepL-Auth-Key ${KEY}`,
+        Authorization: `DeepL-Auth-Key ${key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -79,8 +85,9 @@ async function call(
       signal: AbortSignal.timeout(30_000),
     });
     if (!res.ok) {
+      // NOT remembered: a 429 or 5xx is transient, and caching the null pinned
+      // the untranslated text for as long as the entry lived.
       console.warn(`[tds-blog] DeepL ${res.status} — falling back to source text`);
-      remember(cacheKey, null);
       return null;
     }
     const data = (await res.json()) as { translations?: Array<{ text: string }> };
@@ -89,7 +96,6 @@ async function call(
     return out;
   } catch (err) {
     console.warn("[tds-blog] DeepL request failed — falling back to source:", err);
-    remember(cacheKey, null);
     return null;
   }
 }
