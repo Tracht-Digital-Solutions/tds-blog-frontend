@@ -116,10 +116,25 @@ export function authorDescription(name: string, lang: Lang): string {
  * reports what it has; `metaDescription.test.ts` holds the committed corpus to
  * the lower bound instead.
  */
+/** Below this a description is too short for a search result to use. */
+export const MIN_META_LENGTH = 80;
+
 export function postDescription(
   metaDescription: string | null | undefined,
   excerpt: string,
+  lang: Lang = "de",
 ): string {
   const chosen = (metaDescription ?? "").trim() || (excerpt ?? "").trim();
-  return clampToWord(chosen);
+  // Only a MAXIMUM was enforced, so a short excerpt went out as the whole
+  // description — one article shipped 79 characters, which a result page pads
+  // with text of its own choosing rather than the author's. Topping up with
+  // the journal's own line keeps the editor's sentence first and makes the
+  // result say what the site is.
+  if (chosen.length >= MIN_META_LENGTH) return clampToWord(chosen);
+  // Long enough that the result clears the floor even from nothing at all.
+  const topUp =
+    lang === "de"
+      ? "Aus dem TDS Journal von Tracht Digital Solutions — Artikel über Digitalisierung für Unternehmen."
+      : "From the TDS Journal by Tracht Digital Solutions — articles on digitalization for businesses.";
+  return clampToWord(chosen ? `${chosen} ${topUp}` : topUp);
 }

@@ -172,6 +172,19 @@ interface BlogPostingInput {
   author?: { name: string; url?: string | null } | null;
   /** Comma-separated tag string as stored; empty or absent emits no keywords. */
   tags?: string | null;
+  /**
+   * The reading estimate the page shows, in whole minutes. Computed by the
+   * caller from the same word count, so the two cannot disagree.
+   */
+  readingMinutes?: number;
+  /**
+   * Absolute URLs the article's own body links to, outside this site.
+   *
+   * Collected from the RENDERED body by the caller, so every entry is a link a
+   * reader can see and follow. An article that cites nothing gets no
+   * `citation` — an empty one would claim sourcing that is not there.
+   */
+  citations?: string[];
 }
 
 export function blogPostingSchema(post: BlogPostingInput): WithContext {
@@ -216,6 +229,20 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
     datePublished,
     dateModified,
     wordCount: post.wordCount,
+    // The reading estimate the page has shown all along and the graph never
+    // carried. An answer engine deciding whether to point somebody at a long
+    // read has no other way to know.
+    ...(post.readingMinutes ? { timeRequired: `PT${post.readingMinutes}M` } : {}),
+    // No paywall, no registration. Worth stating rather than leaving open:
+    // the assumption otherwise runs the other way for a publisher.
+    isAccessibleForFree: true,
+    // What the article is about, as an entity rather than only as a section
+    // string. Same value the page shows as its category.
+    ...(post.category ? { about: { "@type": "Thing", name: post.category } } : {}),
+    // Sources the article itself links to. Derived from the rendered body, so
+    // it can only ever name something a reader can see and follow — there is
+    // nothing here to invent.
+    ...(post.citations && post.citations.length > 0 ? { citation: post.citations } : {}),
     image: {
       "@type": "ImageObject",
       url: post.imageUrl,

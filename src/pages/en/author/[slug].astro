@@ -27,10 +27,13 @@ const { author, posts } = group as { author: BlogAuthor; posts: typeof group.pos
 const pageUrl = `${siteConfig.url}/en/author/${author.slug}`;
 // A real bio is CMS-authored and is the better description whenever it
 // exists; the fallback only has to work for an author who has not written one.
+// See the German page: without a language-specific lead the CMS bio made the
+// two author pages duplicates of each other rather than a locale pair.
+const roleLead = "Author at the TDS Journal.";
 const description = author.bio
   ? // A CMS bio is the better description, but it is written as a biography,
     // not to a length limit — clamp it the same way every generated one is.
-    clampToWord(author.bio.trim())
+    clampToWord(`${roleLead} ${author.bio.trim()}`)
   : authorDescription(author.name, "en");
 
 // The @id comes from the same helper `blogPostingSchema` uses for a byline,
@@ -45,11 +48,17 @@ const personSchema = {
   ...(author.avatarUrl ? { image: author.avatarUrl } : {}),
 };
 
-// dateModified for the profile: the newest article it lists. The list read
-// carries publishedAt only, so an edited post understates it — the harmless
-// direction, and the same source the sitemap uses.
-const newestPublished =
-  posts.map((p) => p.publishedAt).filter(Boolean).sort().at(-1) ?? null;
+// No `dateModified` on this profile any more.
+//
+// It was the newest article the page lists, which sounded reasonable and was
+// a freshness claim with nothing on the page behind it: the post list renders
+// its dates as formatted text, not as the ISO value the graph published, so
+// no reader and no crawler could check the claim against the page. The house
+// rule is that structured data says what the page says; `audit:geo` fails a
+// `dateModified` with no matching `<time datetime>` beside it.
+//
+// `ProfilePage` + `mainEntity` still says what this page IS and who it is
+// about, which is the part Google documents and the part that was missing.
 
 const altPath = await authorAlternate("en", author.slug);
 
@@ -63,7 +72,6 @@ const jsonLd = asGraph(
     url: pageUrl,
     lang: "en",
     person: personSchema,
-    dateModified: newestPublished,
   }),
   itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
   breadcrumbSchema([
@@ -85,7 +93,7 @@ const cards = posts.map((p) => ({
 ---
 
 <Layout
-  title={pageTitle(author.name)}
+  title={pageTitle(`${author.name} — author`)}
   description={description}
   lang="en"
   jsonLd={jsonLd}
