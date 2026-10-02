@@ -13,6 +13,7 @@ vi.mock("./routes", () => ({
   byCategory: vi.fn(),
   byAuthor: vi.fn(),
   archivePage: vi.fn(),
+  corpus: vi.fn(),
 }));
 
 const routes = await import("./routes");
@@ -75,6 +76,35 @@ describe("categoryAlternate", () => {
     await expect(categoryAlternate("en", "webshop")).resolves.toBe(
       "/kategorie/webshop",
     );
+  });
+
+  it("derives the counterpart from the articles when the slug does not match", async () => {
+    // The realistic case, and the one this used to give up on: DE
+    // "Webshop" is filed as EN "Online shop", so no slug matches. An article
+    // and its translation share a slug, so the category the translations sit
+    // in IS this category in English.
+    vi.mocked(routes.byCategory).mockImplementation(async (lang) =>
+      lang === "de" ? { name: "Webshop", posts: [{ slug: "lohnt-sich-ein-webshop" }] as never } : null,
+    );
+    vi.mocked(routes.corpus).mockResolvedValue([
+      { slug: "lohnt-sich-ein-webshop", category: "Online shop" },
+    ] as never);
+    await expect(categoryAlternate("de", "webshop")).resolves.toBe("/en/category/online-shop");
+  });
+
+  it("stays silent when the translated articles disagree", async () => {
+    // Two English categories for one German one is not one page in two
+    // languages, so there is nothing truthful to link.
+    vi.mocked(routes.byCategory).mockImplementation(async (lang) =>
+      lang === "de"
+        ? { name: "Webshop", posts: [{ slug: "a" }, { slug: "b" }] as never }
+        : null,
+    );
+    vi.mocked(routes.corpus).mockResolvedValue([
+      { slug: "a", category: "Online shop" },
+      { slug: "b", category: "Tools" },
+    ] as never);
+    await expect(categoryAlternate("de", "webshop")).resolves.toBeNull();
   });
 
   it("stays silent when the counterpart is filed under another slug", async () => {

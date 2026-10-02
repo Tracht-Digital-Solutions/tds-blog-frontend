@@ -1,6 +1,6 @@
 {
   "name": "tds-blog-frontend",
-  "version": "0.37.0",
+  "version": "0.38.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,7 @@
     "type-check": "astro check",
     "og:smoke": "tsx scripts/og-smoke.ts",
     "og:default": "tsx scripts/og-default.ts",
+    "audit:geo": "node scripts/geo-audit.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "postbuild": "node scripts/pack-release.mjs",
