@@ -1,7 +1,7 @@
 import { defineMiddleware, sequence } from "astro:middleware";
 
 import { siteCache } from "./lib/pageCache";
-import { siteKeyRejectionCount } from "./lib/siteKey";
+import { guardSiteKey } from "@tracht-digital-solutions/tds-shared/site";
 
 /**
  * Serve cached pages and store rendered ones.
@@ -31,17 +31,7 @@ import { siteKeyRejectionCount } from "./lib/siteKey";
  * racing can only make this refuse to store a page that was fine; it can never
  * make it store one that was not, and a needless miss costs one render.
  */
-const refuseStaleKey = defineMiddleware(async (_context, next) => {
-  const before = siteKeyRejectionCount();
-  const response = await next();
-
-  if (siteKeyRejectionCount() > before) {
-    const guarded = new Response(response.body, response);
-    guarded.headers.set("cache-control", "no-store");
-    return guarded;
-  }
-  return response;
-});
+const refuseStaleKey = defineMiddleware((_context, next) => guardSiteKey(next as () => Promise<Response>));
 
 /**
  * `sequence` runs these outside-in, so the cache wraps the guard: the guard's

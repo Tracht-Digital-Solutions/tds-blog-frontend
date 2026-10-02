@@ -1,6 +1,6 @@
 {
   "name": "tds-blog-frontend",
-  "version": "0.39.0",
+  "version": "0.39.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "audit:geo": "node scripts/geo-audit.mjs",
     "test": "vitest",
     "test:run": "vitest run",
-    "postbuild": "node scripts/pack-release.mjs",
+    "postbuild": "node node_modules/@tracht-digital-solutions/tds-shared/scripts/pack-release.mjs",
     "start": "node app.cjs"
   },
   "dependencies": {
@@ -25,7 +25,7 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@fontsource/lato": "^5.2.7",
     "@tailwindcss/postcss": "~4.3.3",
-    "@tracht-digital-solutions/tds-shared": "^0.45.4",
+    "@tracht-digital-solutions/tds-shared": "^0.46.0",
     "astro": "^7.2.5",
     "marked": "^18.0.0",
     "react": "^19.0.0",

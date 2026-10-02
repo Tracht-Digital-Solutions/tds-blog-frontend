@@ -118,7 +118,7 @@ jobs:
           # `release/`, not `dist/`: this site is server-rendered now, so the
           # host needs the SSR bundle, the Passenger startup file and a
           # prebuilt node_modules alongside the document root. The tree is
-          # assembled by scripts/pack-release.mjs, which runs as postbuild and
+          # assembled by tds-shared's scripts/pack-release.mjs, which runs as postbuild and
           # refuses to produce one that could not start on the host.
           publish_dir: ./release
           publish_branch: ${{ inputs.publish_branch }}

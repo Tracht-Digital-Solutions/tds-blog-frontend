@@ -24,6 +24,7 @@ import { PAGE_SIZE } from "./pagination";
 import { categorySlug } from "./taxonomy";
 import { siteConfig } from "./seo";
 import { exclusionPatterns, groupExcluded, hreflangGroup } from "./sitemapExclusions";
+import { escapeXml } from "@tracht-digital-solutions/tds-shared/site";
 
 const PREFIX: Record<Lang, string> = { de: "", en: "/en" };
 const SEGMENTS: Record<Lang, { category: string; author: string }> = {
@@ -65,13 +66,6 @@ function newestDate(posts: ReadonlyArray<{ publishedAt?: string | null }>): stri
   return newest;
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 /** Absolute URL for a path on this site. */
 export function absolute(path: string): string {

@@ -42,7 +42,7 @@ describe("site key", () => {
     const connection = read("connection.ts");
     expect(connection).toMatch(/fallbackSiteKey:[\s\S]*process\.env\.TDS_SITE_KEY/);
     expect(connection).not.toMatch(/import\.meta\.env\.TDS_SITE_KEY/);
-    expect(read("siteKey.ts")).toMatch(/connection\.siteKey\(\)/);
+    expect(read("siteKey.ts")).toMatch(/createSiteKeyGuard\(connection,/);
   });
 
   it("is not PUBLIC_-prefixed anywhere", () => {
@@ -105,14 +105,16 @@ describe("site key", () => {
     // guard reads zero while the pages record several. That was the SECOND
     // version, and it failed exactly like the first: build green, message
     // printed, nothing stopped.
-    expect(read("siteKey.ts")).toMatch(/globalThis/);
+    // The counter on globalThis lives in tds-shared/site now (and is tested
+    // there); what this site must do is use that guard, not a copy.
+    expect(read("siteKey.ts")).toMatch(/from "@tracht-digital-solutions\/tds-shared\/site"/);
   });
 
   it("throws only on 401/403, and only when a key is configured", () => {
     // A 500 or a timeout must stay fail-soft: an API hiccup should not fail a
     // deploy, and a site with no key must behave exactly as it always has.
-    const src = read("siteKey.ts");
-    expect(src).toMatch(/res\.status !== 401 && res\.status !== 403/);
-    expect(src).toMatch(/currentSiteKey\(\) === ""\) return/);
+    // The 401/403-only rule is tds-shared's and tested there; this site
+    // must not re-implement it.
+    expect(read("siteKey.ts")).not.toMatch(/res\.status !== 401/);
   });
 });

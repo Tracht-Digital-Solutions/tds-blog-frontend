@@ -450,7 +450,7 @@ DeepL translations and re-renders one OG card per post.
 | `src/lib/sitemap.ts` | The sitemap, built from the corpus |
 | `src/lib/sitemapExclusions.ts` | Paths the panel took out of the index, and the tree-pairing an exclusion follows |
 | `public/.htaccess` | Cache-first rewrite; ships to `dist/client/.htaccess`, the document root |
-| `app.cjs`, `scripts/pack-release.mjs` | Passenger startup file + the release tree it starts from |
+| `app.cjs`, tds-shared's `scripts/pack-release.mjs` (postbuild) | Passenger startup file + the release tree it starts from |
 
 ### What changed in the routes, and why it had to
 
