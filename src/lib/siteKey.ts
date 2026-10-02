@@ -1,49 +1,27 @@
+import { createContentReader, createSiteKeyGuard } from "@tracht-digital-solutions/tds-shared/site";
+
 import { connection } from "./connection";
 
 /**
- * Request-time protection for paired API reads.
+ * Request-time protection for paired API reads — tds-shared's guard, bound to
+ * this site's connection.
  *
  * The private key is loaded dynamically from the server-side connection file.
  * `connection.ts` retains `TDS_SITE_KEY` only as a one-release host fallback;
  * builds and GitHub workflows no longer receive it.
+ *
+ * Every public site used to keep a byte-identical copy of the guard (only this
+ * label differed). `assertKeyAccepted` counts a 401/403 on `globalThis` before
+ * it throws; `src/middleware.ts` refuses to store a render that grew the count.
  */
-export function currentSiteKey(): string {
-  return connection.siteKey();
-}
+const guard = createSiteKeyGuard(connection, {
+  label: "tds-blog",
+  reconnectHint: "Bitte den Blog in seinen CMS-Einstellungen neu verbinden.",
+});
 
-export class SiteKeyRejectedError extends Error {
-  readonly status: number;
+export const { currentSiteKey, siteKeyHeaders, assertKeyAccepted } = guard;
 
-  constructor(status: number, url: string) {
-    super(
-      `[tds-blog] Der gekoppelte API-Zugang wurde abgelehnt (HTTP ${status}) von ${url}. ` +
-        "Bitte den Blog in seinen CMS-Einstellungen neu verbinden.",
-    );
-    this.name = "SiteKeyRejectedError";
-    this.status = status;
-  }
-}
+/** Key, 10s timeout, key check, throw on non-2xx. See tds-shared/site. */
+export const readContentJson = createContentReader(guard);
 
-const BUCKET = "__tdsSiteKeyRejections__" as const;
-export const siteKeyRejections: string[] = ((globalThis as Record<string, unknown>)[BUCKET] ??=
-  []) as string[];
-
-const COUNTER = "__tdsSiteKeyRejectionCount__" as const;
-export function siteKeyRejectionCount(): number {
-  return ((globalThis as Record<string, unknown>)[COUNTER] as number | undefined) ?? 0;
-}
-
-export function siteKeyHeaders(): Record<string, string> | undefined {
-  return connection.siteKeyHeaders();
-}
-
-export function assertKeyAccepted(res: Response, url: string | URL): void {
-  if (currentSiteKey() === "") return;
-  if (res.status !== 401 && res.status !== 403) return;
-
-  const where = String(url);
-  if (!siteKeyRejections.includes(where)) siteKeyRejections.push(where);
-  const store = globalThis as Record<string, unknown>;
-  store[COUNTER] = ((store[COUNTER] as number | undefined) ?? 0) + 1;
-  throw new SiteKeyRejectedError(res.status, where);
-}
+export { SiteKeyRejectedError, siteKeyRejectionCount } from "@tracht-digital-solutions/tds-shared/site";
