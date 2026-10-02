@@ -127,8 +127,7 @@ The site runs the platform's current line: **TypeScript 6, vitest 4, jsdom 30,
 Astro 7.2.5, shiki 4, satori 0.33** — the same set `tds-tools-frontend` moved
 to, so the three public sites stay one toolchain.
 
-The current shared-library line is **`tds-shared ^0.37.4`** (site pairing
-behind the host's TLS proxy — below it `/tds/connect` refuses every pairing). A caret on a
+The current shared-library line is **`tds-shared ^0.45.4`**. A caret on a
 `0.x` package never crosses the minor boundary, so every new shared minor must
 be repinned explicitly and verified with a fresh `npm install
 --no-package-lock`; a green build against the old installed tree proves
@@ -149,9 +148,7 @@ nothing about the released line.
   both exist locally and in CI after a build, and nothing stopped `astro check`
   from type-checking the *minified server and client bundles* in there: 159
   files instead of 91, four genuine unused-import hints buried under 82 from
-  Rollup output. `tds-tools-frontend` and `tds-landingpage-frontend` carry the
-  same tsconfig without the exclude, and the tools site's `astro check` now
-  runs V8 out of heap locally for exactly this reason.
+  Rollup output. The sibling sites carry the same exclude.
 - **`@testing-library/jest-dom` is deliberately absent.** Nothing imported it;
   the one island suite uses `@testing-library/react` and plain vitest matchers.
   `@testing-library/dom` stays because RTL peer-depends on it.
@@ -1143,37 +1140,27 @@ stays consistent across both domains.
 
 ## Site key (`TDS_SITE_KEY`)
 
-The credential this site presents to the composed API for its **build-time**
-content reads. Issued in the admin portal under *Einstellungen →
-Site-Verbindungen*; `src/lib/siteKey.ts` reads it and every fetch in
-`src/lib/` carries it.
+The credential this site presents to the composed API for its content reads.
+Issued in the admin portal under *Einstellungen → Site-Verbindungen*;
+`src/lib/siteKey.ts` reads it and every fetch in `src/lib/` carries it
+(through `readContentJson` in `src/lib/contentFetch.ts`).
 
-Optional: unset, the build behaves exactly as before, and the public read routes
+Optional: unset, the site behaves exactly as before, and the public read routes
 stay open unless an admin switched enforcement on.
 
-Four things here were each learned by breaking:
-
 - **`process.env`, never `import.meta.env`.** Astro/Vite inline only `PUBLIC_`
-  names there, and this repo declares no `envField` schema, so
-  `import.meta.env.TDS_SITE_KEY` would be `undefined` in every build with
-  nothing to say so. That is exactly how `TOOLS_REGISTRY_TOKEN` spent its whole
-  life. And the obvious "fix" — a `PUBLIC_` prefix — is worse: it inlines the
-  credential into the shipped bundle.
-- **A `throw` from the fetch helper does NOT fail the build.** Every content
-  fetch is wrapped in a fail-soft `try/catch` that warns and returns the baked
-  fallback. The first version threw from `assertKeyAccepted`; a real build
-  against a 401 stub printed "the build stops here" five times and then
-  completed **green**. No source-scanning test could see it.
-- **So the guarantee is the `siteKeyGuard()` integration** in
-  `astro.config.mjs`, which throws in `astro:build:done` — outside every
-  `try/catch`, including one somebody adds later.
-- **The rejection list hangs off `globalThis`.** `astro.config.mjs` and the page
-  modules are two separate module graphs, so a module-scoped array gives the
-  integration its own empty one: the guard reads zero while the pages record
-  several. That was the second version and it failed identically — green build,
-  message printed, nothing stopped.
+  names there, so `import.meta.env.TDS_SITE_KEY` would be `undefined` with
+  nothing to say so. A `PUBLIC_` prefix is worse: it inlines the credential into
+  the shipped bundle.
+- **Every read is fail-soft, so a rejected key renders a valid page of
+  fallbacks.** `assertKeyAccepted` counts each rejection on `globalThis`, and
+  `src/middleware.ts` refuses to STORE any page whose render grew the counter.
+  The page is served once and never cached.
+- **Never memoise a failed read.** `memoisedOr` remembers successes only. A
+  loader that caught inside the generation memo pinned its fallback for the
+  whole generation, and the rejection was then counted on the first render
+  only — later fallback pages were stored as good ones.
+- **Demo posts only on a connection failure** (`isConnectionFailure`). A
+  reachable API that answers 5xx makes the render fail; a failed render is
+  never cached, and the next request asks again.
 
-Verified as a matrix, because three of the four cells must NOT fail: rejected
-key → exit 1; no key against a 401 → exit 0; key set but API unreachable →
-exit 0 (an API hiccup must never fail a deploy). `src/lib/siteKey.test.ts` pins
-the structural half.

@@ -10,12 +10,14 @@ import { resolveLocalizedPost } from "~/lib/localizedPost";
 // because `getStaticPaths` is not allowed on an on-demand route. The page is
 // cached by path, so this fetch happens once per rebuild, not once per reader.
 const { slug } = Astro.params;
-const allPosts = await listAllPosts();
-
 const localized = await resolveLocalizedPost(slug as string, "en");
 if (!localized) {
-  return new Response("Not found", { status: 404 });
+  return new Response(null, { status: 404 });
 }
+
+// The corpus only AFTER the post is known to exist: a 404 used to read every
+// post first.
+const allPosts = await listAllPosts();
 
 // One entry per slug for related + prev/next; prefer the EN row's metadata.
 const bySlug = new Map<string, (typeof allPosts)[number]>();

@@ -53,12 +53,12 @@ describe("listAllPosts", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("falls back to demo posts on a non-OK response (build stays green)", async () => {
+  it("propagates an error ANSWER instead of serving demo posts", async () => {
+    // Demo posts on a 502 meant invented articles in production, stored by
+    // the page cache. A failed render is never stored; the next one retries.
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, 502)));
 
-    const posts = await listAllPosts("de");
-    expect(posts).toEqual(demoPostList("de"));
-    expect(posts.length).toBeGreaterThan(0);
+    await expect(listAllPosts("de")).rejects.toThrow("502");
   });
 
   it("falls back to demo posts when fetch throws", async () => {

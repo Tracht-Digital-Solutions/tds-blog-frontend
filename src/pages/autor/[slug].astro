@@ -21,7 +21,7 @@ import type { BlogAuthor } from "@tracht-digital-solutions/tds-shared";
 // a 404 rather than an empty listing: an indexable, permanently-200 page for
 // something nobody wrote is worse than nothing.
 const group = await byAuthor("de", String(Astro.params.slug ?? ""));
-if (!group) return new Response("Not found", { status: 404 });
+if (!group) return new Response(null, { status: 404 });
 const { author, posts } = group as { author: BlogAuthor; posts: typeof group.posts };
 
 const pageUrl = `${siteConfig.url}/autor/${author.slug}`;

@@ -102,7 +102,9 @@ describe("sitemapUrls", () => {
           return new Response(JSON.stringify({ paths: patterns }), { status: 200 });
         }
         // No content API — `content-api.ts` falls back to the demo corpus.
-        return new Response("no", { status: 500 });
+        // A connection failure, not a 5xx: an API that ANSWERS with an error
+        // gets no demo posts.
+        throw new TypeError("fetch failed");
       }),
     );
     const mod = await import("./sitemap");

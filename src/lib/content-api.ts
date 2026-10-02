@@ -24,8 +24,8 @@
 import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
 import { contentCache } from "./cache";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
-import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
 import { contentApiBase } from "./connection";
+import { ContentHttpError, isConnectionFailure, memoisedOr, readContentJson } from "./contentFetch";
 
 export type { TopicItem, TopicsBlock } from "./demoContent";
 
@@ -132,21 +132,22 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
       if (lang) url.searchParams.set("lang", lang);
       if (cursor !== null) url.searchParams.set("cursor", String(cursor));
 
-      const res = await fetch(url, { headers: siteKeyHeaders() });
-      assertKeyAccepted(res, url);
-      if (!res.ok) {
-        throw new Error(`content-api ${url.pathname} → ${res.status}`);
-      }
-      const data: ListResponse = await res.json();
+      const data = await readContentJson<ListResponse>(url);
       all.push(...data.posts);
       cursor = data.nextCursor;
     } while (cursor !== null);
 
     return withResolvedCovers(all);
   } catch (err) {
-    // No content API reachable at build time → ship demo posts instead of
-    // an empty blog. A *connected* API that returns 0 posts stays empty
-    // (that path returns [] without throwing).
+    // Demo posts ONLY when the API never answered. A reachable API answering
+    // an error used to get demo posts too — invented articles, in production,
+    // stored by the page cache and fed to the sitemap and llms.txt. Now a 5xx
+    // propagates: the render fails, and a failed render is never cached.
+    // A rejected key reads as "no posts"; the middleware refuses to store it.
+    if (!isConnectionFailure(err)) {
+      if (err instanceof Error && err.name === "SiteKeyRejectedError") return [];
+      throw err;
+    }
     console.warn("[tds-blog] content-api unreachable — serving demo posts:", err);
     return demoPostList(lang);
   }
@@ -167,14 +168,12 @@ export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListRes
   url.searchParams.set("limit", String(limit));
 
   try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) {
-      throw new Error(`content-api ${url.pathname} → ${res.status}`);
-    }
-    const data = (await res.json()) as { posts: ListResponse["posts"] };
+    const data = await readContentJson<{ posts: ListResponse["posts"] }>(url);
     return withResolvedCovers(data.posts ?? []);
   } catch (err) {
+    // A side tab, not the page: an erroring API leaves it empty rather than
+    // filling it with demo posts.
+    if (!isConnectionFailure(err)) return [];
     console.warn("[tds-blog] content-api unreachable — serving demo popular:", err);
     return demoPostList(lang).slice(0, limit);
   }
@@ -195,12 +194,10 @@ export async function listTopics(lang: "de" | "en"): Promise<TopicsBlock | null>
   url.searchParams.set("lang", lang);
 
   try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) return null; // reachable but 404/5xx → no curated topics
-    const data = (await res.json()) as { lang: string; topics: TopicsBlock | null };
+    const data = await readContentJson<{ lang: string; topics: TopicsBlock | null }>(url);
     return data.topics ?? null;
   } catch (err) {
+    if (!isConnectionFailure(err)) return null; // reachable but 404/5xx → no curated topics
     // Host unreachable at build time → demo block (keeps a local/no-API
     // build from rendering an empty section), same as listAllPosts.
     console.warn("[tds-blog] content-api unreachable — serving demo topics:", err);
@@ -240,11 +237,15 @@ async function loadLandingBlocks(): Promise<LandingBlocks | null> {
   const url = new URL(`${contentApiBase()}/landing`);
   url.searchParams.set("lang", "de");
 
-  const res = await fetch(url, { headers: siteKeyHeaders() });
-  assertKeyAccepted(res, url);
-  if (!res.ok) return null; // reachable, but nothing to read
-  const data = (await res.json()) as { blocks?: LandingBlocks };
-  return data.blocks ?? {};
+  try {
+    const data = await readContentJson<{ blocks?: LandingBlocks }>(url);
+    return data.blocks ?? {};
+  } catch (err) {
+    // Reachable, but nothing to read: a STATE, remembered as null. Anything
+    // else throws and is not remembered — see the note above.
+    if (err instanceof ContentHttpError) return null;
+    throw err;
+  }
 }
 
 /**
@@ -338,22 +339,13 @@ export interface BlogSnippet {
  * still reads through. Empty on demo mode or an API outage.
  */
 export function blogSnippets(): Promise<BlogSnippet[]> {
-  return contentCache.get("blog:snippets", loadSnippets);
+  if (DEMO_MODE) return Promise.resolve([]);
+  return memoisedOr("blog:snippets", loadSnippets, [], "custom snippets");
 }
 
 async function loadSnippets(): Promise<BlogSnippet[]> {
-  if (DEMO_MODE) return [];
-  const url = new URL(`${contentApiBase()}/snippets`);
-  try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) return [];
-    const data = (await res.json()) as { snippets?: BlogSnippet[] };
-    return data.snippets ?? [];
-  } catch (err) {
-    console.warn("[tds-blog] content-api unreachable — no custom snippets:", err);
-    return [];
-  }
+  const data = await readContentJson<{ snippets?: BlogSnippet[] }>(`${contentApiBase()}/snippets`);
+  return data.snippets ?? [];
 }
 
 export async function getPost(slug: string, lang: "de" | "en"): Promise<FullPost | null> {
@@ -363,15 +355,17 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<FullPost
   url.searchParams.set("lang", lang);
 
   try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      throw new Error(`content-api ${url.pathname} → ${res.status}`);
-    }
-    const { post } = (await res.json()) as { post: FullPost };
+    const { post } = await readContentJson<{ post: FullPost }>(url);
     return withResolvedAuthor({ ...post, coverHint: resolveCoverHint(post.coverHint) });
   } catch (err) {
+    // A 404 is an ANSWER: the post does not exist.
+    if (err instanceof ContentHttpError && err.status === 404) return null;
+    // Any other answered error propagates (an uncached 500), or reads as
+    // missing for a rejected key — never as a demo post under a real slug.
+    if (!isConnectionFailure(err)) {
+      if (err instanceof Error && err.name === "SiteKeyRejectedError") return null;
+      throw err;
+    }
     // API down → serve the matching demo post (keeps demo slugs from
     // listAllPosts() renderable). Returns null for an unknown slug.
     console.warn("[tds-blog] content-api unreachable — serving demo post:", err);

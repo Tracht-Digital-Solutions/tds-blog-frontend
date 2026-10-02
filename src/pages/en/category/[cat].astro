@@ -13,7 +13,7 @@ import { categoryDescription } from "~/lib/metaDescription";
 // something nobody wrote is worse than nothing.
 const cat = Astro.params.cat as string;
 const group = await byCategory("en", cat);
-if (!group) return new Response("Not found", { status: 404 });
+if (!group) return new Response(null, { status: 404 });
 const { name, posts } = group;
 
 // Only when a category with the SAME slug exists in the German tree — see the

@@ -4,9 +4,8 @@ import {
   type ShopProductRef,
 } from "@tracht-digital-solutions/tds-shared/schemas";
 
-import { contentCache } from "./cache";
 import { contentApiBase } from "./connection";
-import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
+import { memoisedOr, readContentJson } from "./contentFetch";
 
 /**
  * TDShop reads — the journal's half of product placement.
@@ -32,23 +31,23 @@ import { assertKeyAccepted, siteKeyHeaders } from "./siteKey";
  * scopes before anything else.
  */
 
-/** Memoised per cache generation: one article often embeds the same product twice. */
-function memo<T>(key: string, load: () => Promise<T>): Promise<T> {
-  return contentCache.get(key, load);
-}
-
-async function read<T>(path: string, fallback: T, label: string): Promise<T> {
-  const url = `${contentApiBase()}${path}`;
-  try {
-    const res = await fetch(url, { headers: siteKeyHeaders() });
-    assertKeyAccepted(res, url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as T;
-  } catch (err) {
-    if (err instanceof Error && err.name === "SiteKeyRejectedError") throw err;
-    console.warn(`[tds-blog] shop ${label} unreachable — rendering nothing:`, err);
-    return fallback;
-  }
+/**
+ * Memoised per cache generation (one article often embeds the same product
+ * twice), and only on success.
+ *
+ * A rejected site key is swallowed like every other failure, as it is in
+ * `content-api.ts`: `assertKeyAccepted` has already counted it, and the
+ * middleware refuses to store the page. It used to be rethrown here, which
+ * took the whole ARTICLE down for a product box — the opposite of the contract
+ * above.
+ */
+function read<T>(path: string, fallback: T, label: string): Promise<T> {
+  return memoisedOr(
+    `shop:${path}`,
+    () => readContentJson<T>(`${contentApiBase()}${path}`),
+    fallback,
+    `shop ${label} (rendering nothing)`,
+  );
 }
 
 /** One product for an inline block. Null when it does not exist or is unreachable. */
@@ -56,13 +55,7 @@ export function getShopProduct(
   slug: string,
   lang: "de" | "en",
 ): Promise<ShopProductRef | null> {
-  return memo(`shop:product:${lang}:${slug}`, () =>
-    read<ShopProductRef | null>(
-      `/shop/${encodeURIComponent(slug)}?lang=${lang}`,
-      null,
-      `product ${slug}`,
-    ),
-  );
+  return read<ShopProductRef | null>(`/shop/${encodeURIComponent(slug)}?lang=${lang}`, null, `product ${slug}`);
 }
 
 /**
@@ -79,12 +72,10 @@ export function getShopPlacement(
 ): Promise<ShopPlacement> {
   const params = new URLSearchParams({ lang });
   if (category) params.set("category", category);
-  return memo(`shop:placement:${key}:${lang}:${category ?? ""}`, () =>
-    read<ShopPlacement>(
-      `/shop/placement/${encodeURIComponent(key)}?${params}`,
-      emptyPlacement(key, lang),
-      `placement ${key}`,
-    ),
+  return read<ShopPlacement>(
+    `/shop/placement/${encodeURIComponent(key)}?${params}`,
+    emptyPlacement(key, lang),
+    `placement ${key}`,
   );
 }
 

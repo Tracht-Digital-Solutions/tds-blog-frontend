@@ -13,12 +13,17 @@ interface Props {
   code: string;
 }
 const { code } = Astro.props;
+
+// The page had no heading and no landmark: a screen reader heard one link,
+// and the layout's skip link pointed at an `#main` that did not exist.
+const title = code === "404" ? "Diese Seite gibt es nicht." : "Hier ist etwas schiefgelaufen.";
 ---
 
-<div class="err">
+<main id="main" class="err">
+  <h1 class="sr-only">{title}</h1>
   <span class="err-glow" aria-hidden="true"></span>
   <a href="/" class="err-code" aria-label="Zurück zum Journal">{code}</a>
-</div>
+</main>
 
 <style>
   .err {
