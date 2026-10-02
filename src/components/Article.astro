@@ -101,6 +101,50 @@ const plain = isBlocks
 const wordCount = plain.split(/\s+/).filter(Boolean).length;
 const readingMinutes = Math.max(1, Math.round(wordCount / 220));
 
+/**
+ * The outside sources this article links to, for the graph's `citation`.
+ *
+ * Read off the RENDERED body, which is the only honest source: every entry is
+ * a link a reader can see and follow, so there is nothing here to invent. A
+ * markdown post yields them from its HTML; a blocks post from its button
+ * blocks, which is where a block article puts an outbound link.
+ *
+ * Capped, de-duplicated, and anything on a tracht-digital.de host dropped —
+ * citing ourselves is not a source.
+ */
+const citations = Array.from(
+  new Set(
+    [
+      ...(isBlocks
+        ? blocks!.flatMap((b) => (b.type === "button" && b.href ? [b.href] : []))
+        : [...bodyHtml.matchAll(/href="(https?:\/\/[^"]+)"/g)].map((m) => m[1]!)),
+    ].filter((href) => {
+      try {
+        return !new URL(href).hostname.endsWith("tracht-digital.de");
+      } catch {
+        return false;
+      }
+    }),
+  ),
+).slice(0, 10);
+
+/**
+ * When the text last changed, if that is later than publication.
+ *
+ * `dateModified` and `article:modified_time` have named `updatedAt` all along
+ * while the page showed only the publication date — a freshness claim in the
+ * markup with nothing on the page to back it. Shown only when it really is
+ * later: an "updated" line on the day of publication is noise.
+ */
+const updatedLabel =
+  post.updatedAt && post.publishedAt && Date.parse(post.updatedAt) > Date.parse(post.publishedAt)
+    ? new Date(post.updatedAt).toLocaleDateString(lang === "de" ? "de-DE" : "en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
 const ogImagePath = explicitCover ?? `/og/${lang}/${post.slug}.png`;
 const imageUrl = ogImagePath.startsWith("http")
   ? ogImagePath
@@ -116,11 +160,11 @@ const contactUrl = `https://tracht-digital.de${pfx}/#contact`;
 
 // One resolved description for the head and the graph. JSON-LD that disagrees
 // with the rendered meta description is a mismatch Google reports.
-const metaDesc = postDescription(post.metaDescription, post.excerpt);
+const metaDesc = postDescription(post.metaDescription, post.excerpt, lang);
 
 const tx = lang === "de"
   ? {
-      back: "Alle Beiträge", read: "Min. Lesezeit", contents: "Inhalt",
+      back: "Alle Beiträge", read: "Min. Lesezeit", updated: "aktualisiert", contents: "Inhalt",
       tocCollapse: "Inhalt einklappen", tocExpand: "Inhalt ausklappen",
       aboutAuthor: "Über den Autor", owner: "Inhaber, Tracht Digital Solutions",
       bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
@@ -132,7 +176,7 @@ const tx = lang === "de"
       contactCta: "Unverbindlich anfragen",
     }
   : {
-      back: "All posts", read: "min read", contents: "Contents",
+      back: "All posts", read: "min read", updated: "updated", contents: "Contents",
       tocCollapse: "Collapse contents", tocExpand: "Expand contents",
       aboutAuthor: "About the author", owner: "Owner, Tracht Digital Solutions",
       bio: "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg.",
@@ -173,6 +217,8 @@ const jsonLd = [
     lang,
     imageUrl,
     wordCount,
+    readingMinutes,
+    citations,
     author: author
       ? { name: author.name, url: authorPageHref ? new URL(authorPageHref, siteConfig.url).toString() : null }
       : null,
@@ -292,8 +338,22 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         <div class="flex flex-wrap items-center gap-3.5 mb-3.5">
           <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
           <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)]"></span>
+          {/* `<time datetime>` rather than plain text: the machine date is
+              what `dateModified` and `article:modified_time` repeat, and the
+              audit fails a date that exists only in the markup. */}
           <p class="text-[0.8125rem] text-[var(--color-muted)] tabular">
-            {dateLabel && <>{dateLabel} · </>}~{readingMinutes} {tx.read}
+            {dateLabel && post.publishedAt && (
+              <>
+                <time datetime={post.publishedAt}>{dateLabel}</time> ·{" "}
+              </>
+            )}
+            ~{readingMinutes} {tx.read}
+            {updatedLabel && post.updatedAt && (
+              <>
+                {" · "}
+                {tx.updated} <time datetime={post.updatedAt}>{updatedLabel}</time>
+              </>
+            )}
           </p>
           {/* Reader focus mode — hides all chrome for distraction-free reading.
               Toggled here or with the `f` key; state persists per reader. */}

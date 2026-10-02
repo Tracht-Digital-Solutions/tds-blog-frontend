@@ -27,7 +27,8 @@
  * should always have had.
  */
 
-import { archivePage, byAuthor, byCategory, byTag, type Lang } from "./routes";
+import { archivePage, byAuthor, byCategory, byTag, corpus, type Lang } from "./routes";
+import { categorySlug } from "./taxonomy";
 
 /** The other tree. */
 export function otherLang(lang: Lang): Lang {
@@ -49,14 +50,47 @@ export async function tagAlternate(lang: Lang, tag: string): Promise<string | nu
 }
 
 /**
- * `/en/category/x` for `/kategorie/x`, when a category with the SAME slug
- * exists in the other tree. Usually it does not — see the module comment.
+ * `/en/category/<y>` for `/kategorie/<x>`, where `<y>` is the category the
+ * SAME ARTICLES are filed under in the other tree.
+ *
+ * The slug match is tried first and still covers a category whose name happens
+ * not to be translated. When it misses — which is the normal case, because
+ * "Digitalisierung" is filed as "Digitalization" — the counterpart is derived
+ * from the articles themselves: an article and its translation share a slug,
+ * so the category its translations sit in IS this category in the other
+ * language.
+ *
+ * That is not "the nearest equivalent", which the module comment above rightly
+ * refuses. It is the pairing the corpus already states. The derivation is
+ * still conservative in two ways: at least one article must have a
+ * translation, and ALL translated articles must agree on one category. A
+ * category whose articles scatter across several in the other tree is not one
+ * page in two languages, and gets no alternate.
  */
 export async function categoryAlternate(lang: Lang, slug: string): Promise<string | null> {
   const other = otherLang(lang);
-  const group = await byCategory(other, slug);
-  if (!group || group.posts.length === 0) return null;
-  return `${PREFIX[other]}/${SEGMENTS[other].category}/${slug.trim().toLowerCase()}`;
+  const path = (value: string) =>
+    `${PREFIX[other]}/${SEGMENTS[other].category}/${categorySlug(value)}`;
+
+  // The slug that actually matched is the slug of the page that exists —
+  // re-deriving one from the category's display name could name a different
+  // URL than the one just looked up.
+  const direct = await byCategory(other, slug);
+  if (direct && direct.posts.length > 0) {
+    return `${PREFIX[other]}/${SEGMENTS[other].category}/${slug.trim().toLowerCase()}`;
+  }
+
+  const here = await byCategory(lang, slug);
+  if (!here || here.posts.length === 0) return null;
+
+  const twins = new Map((await corpus(other)).map((post) => [post.slug, post]));
+  const categories = new Set<string>();
+  for (const post of here.posts) {
+    const twin = twins.get(post.slug);
+    if (twin) categories.add(twin.category);
+  }
+  if (categories.size !== 1) return null;
+  return path([...categories][0]!);
 }
 
 /** `/en/author/x` for `/autor/x`, when that author has posts in the other tree. */

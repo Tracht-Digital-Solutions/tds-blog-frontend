@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { pageTitle, RENDERED_TITLE_LENGTH, siteConfig } from "./seo";
-import { postDescription, RENDERED_META_LENGTH } from "./metaDescription";
+import { MIN_META_LENGTH, postDescription, RENDERED_META_LENGTH } from "./metaDescription";
 import {
   asGraph,
   authorPersonId,
@@ -64,16 +64,37 @@ describe("pageTitle", () => {
 });
 
 describe("postDescription", () => {
+  /** Long enough to clear the 80-character floor on its own. */
+  const EDITED = "Die gepflegte Beschreibung, lang genug für ein Suchergebnis und keinen Zeichen kürzer.";
+  const EXCERPT = "Der Teaser, ebenfalls lang genug für ein Suchergebnis und keinen Zeichen kürzer.";
+
   it("prefers the editor's meta description over the excerpt", () => {
-    expect(postDescription("Die gepflegte Beschreibung.", "Der Teaser.")).toBe(
-      "Die gepflegte Beschreibung.",
-    );
+    expect(postDescription(EDITED, EXCERPT)).toBe(EDITED);
   });
 
   it("falls back to the excerpt when the field is empty, blank or absent", () => {
-    expect(postDescription(null, "Der Teaser.")).toBe("Der Teaser.");
-    expect(postDescription(undefined, "Der Teaser.")).toBe("Der Teaser.");
-    expect(postDescription("   ", "Der Teaser.")).toBe("Der Teaser.");
+    expect(postDescription(null, EXCERPT)).toBe(EXCERPT);
+    expect(postDescription(undefined, EXCERPT)).toBe(EXCERPT);
+    expect(postDescription("   ", EXCERPT)).toBe(EXCERPT);
+  });
+
+  it("tops a too-short value up, keeping the author's sentence first", () => {
+    // Only a maximum used to be enforced, so one article shipped a
+    // 79-character description — below what a result page will use, which
+    // then pads it with text of its own choosing instead of the author's.
+    const short = "Nicht für jedes Sortiment.";
+    const de = postDescription(short, "");
+    expect(de.startsWith(short)).toBe(true);
+    expect(de.length).toBeGreaterThanOrEqual(MIN_META_LENGTH);
+    expect(de).toContain("TDS Journal");
+
+    const en = postDescription("Not for every range of products.", "", "en");
+    expect(en.startsWith("Not for every range of products.")).toBe(true);
+    expect(en).toContain("From the TDS Journal");
+  });
+
+  it("still produces something usable when both sources are empty", () => {
+    expect(postDescription(null, "").length).toBeGreaterThanOrEqual(MIN_META_LENGTH);
   });
 
   it("clamps an over-long value from either source", () => {
@@ -87,7 +108,11 @@ describe("postDescription", () => {
   });
 
   it("leaves a description that already fits completely untouched", () => {
-    const fits = "Eine Beschreibung, die bequem in eine Suchergebnisseite passt.";
+    // Between the floor and the ceiling: neither topped up nor clamped.
+    const fits =
+      "Eine Beschreibung, die bequem in eine Suchergebnisseite passt und dafür lang genug ist.";
+    expect(fits.length).toBeGreaterThanOrEqual(MIN_META_LENGTH);
+    expect(fits.length).toBeLessThanOrEqual(RENDERED_META_LENGTH);
     expect(postDescription(fits, "x")).toBe(fits);
   });
 });
