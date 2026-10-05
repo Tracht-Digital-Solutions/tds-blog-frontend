@@ -965,41 +965,55 @@ a.topic-card:focus-visible {
   margin-inline: auto;
 }
 
+/* The reading frame: title, lede and body run at a reading measure, not at
+   the 48rem column. 48rem set ~87 characters per line at the lg prose size
+   (19px); 38rem sets ~70, inside the 60–75 a long text reads best at. The
+   panels after the article (contact, author, related, prev/next) stay on the
+   wider `.article-col`. The reader's zoom (`--reader-zoom` on <html>, set by
+   the floating buttons) scales the frame as a whole with CSS `zoom`, so a
+   larger text keeps the same characters per line instead of wrapping more —
+   and the frame's own width grows with it, capped by whatever is available. */
+.article-shell {
+  --read-w: 38rem;
+  --reader-tools-w: 3.5rem;
+  --toc-reserve: var(--tds-gutter);
+}
+.article-shell.has-toc { --toc-reserve: calc(var(--toc-w) + 1.75rem); }
+.article-shell.has-toc.toc-collapsed { --toc-reserve: 4.5rem; }
+.article-col {
+  max-width: max(var(--tds-shell-prose), calc(var(--read-w) * var(--reader-zoom, 1)));
+}
+.article-read {
+  position: relative;
+  max-width: calc(var(--read-w) * var(--reader-zoom, 1));
+  margin-inline: auto;
+}
+.article-zoom { zoom: var(--reader-zoom, 1); }
+
 @media (min-width: 1024px) {
-  /* Reserve the right edge for the FIXED TOC rail, and let the column simply
-     centre in what is left.
+  /* The column sits on the VIEWPORT centre and never moves when the sidebar
+     or the TOC folds.
 
-     What used to be here was `position/left` + a clamped `max()` on
-     `.article-col`, pulling it back over the sidebar's whitespace to sit on
-     the true viewport centre. Three things were wrong with it:
-       · it measured with `100vw`, which counts the scrollbar (~10px with the
-         brand thin scrollbar), eating most of the 0.75rem safety gutter it
-         was itself computing;
-       · focus mode resets margin/padding on `.article-shell` but could not
-         reset a `left` on the COLUMN — the sidebar is only `display:none`
-         there, so `--nav-w` stayed 264px and the column sat a permanent 132px
-         left of centre, on every article, in the mode meant for reading;
-       · it only ever considered the LEFT rail. The shell reserved nothing on
-         either side, on the theory that both rails "float in the side
-         margins" — true only while the viewport is wide enough to have side
-         margins. At 1280px the text ran under the sidebar (the documented
-         "ESIGN" bug); at 1024px the same formula pushed it 16px the other way,
-         under the TOC. Neither overflows, so neither was ever reported.
+     The shell steps back over the sidebar offset (`margin-left: -nav-w`) so
+     it spans the full window, and pads BOTH sides by the larger of the two
+     reservations: left = sidebar rail + gutter + the floating reading tools,
+     right = the TOC rail. Symmetric padding plus `margin-inline: auto` on the
+     column is the centre — no viewport arithmetic, no `left` offsets.
 
-     `.with-sidebar` already carries `margin-left: var(--nav-w)`, so the left
-     rail needs no reservation at all — that was the whole reason the old rule
-     had to fight its way back left. Reserving only the right, and letting
-     `margin-inline: auto` do the rest, keeps the column clear of both rails at
-     every width and lands it within 2px of the optical centre of the free band
-     on a wide screen. */
-  .article-shell.has-toc {
-    padding-right: max(var(--tds-gutter), calc(var(--toc-w) + 1.75rem));
-  }
-  /* Collapsed the rail is a narrow dot strip (`width: auto`); its labels only
-     appear on hover, and hovering them over the text is fine — that is an
-     overlay, not a layout. */
-  .article-shell.has-toc.toc-collapsed {
-    padding-right: max(var(--tds-gutter), 4.5rem);
+     What it replaced centred the column in what was left RIGHT of the
+     sidebar, so the text moved with the sidebar. Combined with the pre-paint
+     restore running before `#page-shift` existed, a collapsed rail (64px)
+     sat next to a page still offset by 264px, and every article rendered
+     100px right of centre. Folding a rail now only narrows the column when
+     the window is too small to hold both reservations. */
+  .with-sidebar .article-shell {
+    max-width: none;
+    margin-left: calc(-1 * var(--nav-w));
+    padding-inline: max(
+      calc(var(--nav-w) + var(--tds-gutter) + var(--reader-tools-w)),
+      var(--toc-reserve)
+    );
+    transition: margin-left 320ms ease, padding 320ms ease;
   }
 }
 
@@ -1151,11 +1165,11 @@ a.topic-card:focus-visible {
   width: 28px;
   background: var(--color-accent);
 }
-/* Heading label rides the rail as a floating chip to its LEFT. It appears
-   exactly while its heading is on screen in the article (`.in-view`, set by
-   an IntersectionObserver — several may show at once and stack on the row
-   pitch) and on hover/focus; the active section is additionally marked by
-   its wider accent tick. */
+/* Heading label rides the rail as a floating chip to its LEFT, and ONLY on
+   hover or keyboard focus of its tick. It used to show as well for every
+   heading on screen (an IntersectionObserver `.in-view`), which put chips
+   beside the text the whole time — exactly what folding the rail was meant to
+   stop. The section in view is marked by its wider accent tick alone. */
 .toc-collapsed .toc-label {
   position: absolute;
   right: calc(100% + 10px);
@@ -1176,11 +1190,79 @@ a.topic-card:focus-visible {
   transition: opacity 160ms ease, transform 160ms ease;
   z-index: 5;
 }
-.toc-collapsed .toc-link.in-view .toc-label,
 .toc-collapsed .toc-link:hover .toc-label,
 .toc-collapsed .toc-link:focus-visible .toc-label {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
+}
+
+/* ---- Article: floating reading tools (zoom, focus, print) ----
+   Quiet by design: no ground, no shadow, muted icons at reduced opacity that
+   only come up to full strength while the bar is hovered or holds focus.
+   Below lg a small fixed cluster in the bottom-right corner, lifted above the
+   cookie notice and the chat launcher by their published lanes; on lg+ a
+   column hanging in the left margin of the text, riding a zero-height sticky
+   anchor so it travels with the article and stops where the text ends. */
+.reader-tools {
+  position: fixed;
+  right: 0.75rem;
+  bottom: calc(var(--tds-bottom-lane, 0px) + var(--tds-right-lane, 0px) + 0.75rem);
+  z-index: 30;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: color-mix(in srgb, var(--color-paper) 86%, transparent);
+  opacity: 0.75;
+  transition: opacity 180ms ease;
+}
+.reader-tools:hover,
+.reader-tools:focus-within { opacity: 1; }
+.reader-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+.reader-tool:hover,
+.reader-tool:focus-visible {
+  color: var(--color-ink);
+  background: var(--jnl-tile-hover);
+}
+.reader-tool[aria-pressed="true"] { color: var(--color-accent); }
+.reader-tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: transparent;
+  color: var(--color-muted);
+}
+@media (min-width: 1024px) {
+  .reader-tools-anchor {
+    position: sticky;
+    top: 40vh;
+    height: 0;
+    z-index: 20;
+  }
+  .reader-tools {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 1.25rem);
+    bottom: auto;
+    flex-direction: column;
+    padding: 0;
+    background: transparent;
+    opacity: 0.45;
+  }
+}
+@media print {
+  .reader-tools-anchor { display: none; }
 }
 
 /* ---- Article: fixed collapsible sidebar (lg+) ---- */
@@ -1488,7 +1570,9 @@ a.topic-card:focus-visible {
   .toc-tick,
   .article-shell.has-toc,
   .with-sidebar,
-  .with-sidebar .article-col,
+  .with-sidebar .article-shell,
+  .reader-tools,
+  .reader-tool,
   .back-rail {
     transition: none;
   }
@@ -1781,6 +1865,14 @@ html.focus-mode .article-col {
 }
 html.focus-mode #focus-toggle {
   color: var(--color-accent);
+}
+/* The reading tools stay in focus mode — they are the way back out — and so
+   does their margin: on lg+ the bar hangs left of the text. */
+@media (min-width: 1024px) {
+  html.focus-mode .article-shell {
+    padding-left: max(1.25rem, calc(var(--reader-tools-w) + 0.75rem)) !important;
+    padding-right: max(1.25rem, calc(var(--reader-tools-w) + 0.75rem)) !important;
+  }
 }
 
 /* ---- Tools promo (blog index) ---- */

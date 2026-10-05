@@ -4,7 +4,11 @@
  * the top nav). From the design-system blog template: logo + wordmark,
  * collapse toggle, search, nav links, DE/EN toggle and the primary
  * CTA. Collapsed it narrows to an icon rail and the CTA becomes a
- * phone icon. State persists in localStorage (`tds-blog-sidenav`).
+ * phone icon. It renders COLLAPSED: a first visit gets the quiet icon rail,
+ * and only a reader who opened it (`tds-blog-sidenav` = "open") gets it
+ * back expanded. That restore lives in Layout, as the first child of
+ * `#page-shift` — it has to touch both elements, and from here the wrapper
+ * is not parsed yet.
  *
  * Mirrors the JournalHeader IA: Journal · Entdecken (Kategorien ·
  * Beliebte Tags · Aktuelle Themen). The vertical layout renders the
@@ -44,12 +48,12 @@ const toggleCollapse = lang === "de" ? "Navigation einklappen" : "Collapse navig
 const contact = propertyContact(lang);
 ---
 
-<aside class="blog-sidebar" id="article-sidebar">
+<aside class="blog-sidebar collapsed" id="article-sidebar">
   <div class="flex items-center justify-between gap-2 mb-5 sidebar-head">
     <a href={home} class="brand-wordmark text-[1.0625rem] tracking-tight no-underline sidebar-hide-collapsed" style="color: var(--color-ink);">
       Tracht <span class="accent-italic">Journal</span>
     </a>
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label={toggleCollapse} aria-expanded="true">
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label={toggleCollapse} aria-expanded="false">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
   </div>
@@ -135,24 +139,6 @@ const contact = propertyContact(lang);
     </svg>
   </a>
 </aside>
-
-{/* Apply the saved collapse state before first paint so the layout
-    doesn't jump. Runs synchronously right after the markup above. */}
-<script is:inline>
-  (function () {
-    try {
-      if (localStorage.getItem("tds-blog-sidenav") === "collapsed") {
-        document.getElementById("article-sidebar").classList.add("collapsed");
-        var shift = document.getElementById("page-shift");
-        if (shift) shift.classList.add("nav-collapsed");
-        var btn = document.getElementById("sidebar-toggle");
-        if (btn) btn.setAttribute("aria-expanded", "false");
-      }
-    } catch (e) {
-      /* storage disabled — start expanded */
-    }
-  })();
-</script>
 
 <script>
   const aside = document.getElementById("article-sidebar");

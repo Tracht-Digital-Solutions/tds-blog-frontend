@@ -170,6 +170,8 @@ const tx = lang === "de"
       bio: "Entwickelt Software, Websites und Digitalisierungslösungen für kleine und mittlere Unternehmen — ansässig in Schwarzenbek bei Hamburg.",
       newer: "Neuerer Artikel", older: "Älterer Artikel", nav: "Artikel-Navigation",
       allArticles: "Alle Artikel", rss: "RSS abonnieren", print: "Drucken",
+      tools: "Lesewerkzeuge", zoomIn: "Text vergrößern", zoomOut: "Text verkleinern",
+      focus: "Fokusmodus", focusTitle: "Fokusmodus (Taste F)",
       machine: "Automatisch übersetzt — das Original ist auf Englisch verfasst.",
       contactHead: "Zusammenarbeiten",
       contactLead: "Ich baue Websites, Webshops und individuelle Lösungen für Selbstständige, kleine Unternehmen und lokale Betriebe — aus Schwarzenbek bei Hamburg.",
@@ -182,6 +184,8 @@ const tx = lang === "de"
       bio: "Builds software, websites and digitalization solutions for small and medium-sized businesses — based in Schwarzenbek near Hamburg.",
       newer: "Newer article", older: "Older article", nav: "Article navigation",
       allArticles: "All articles", rss: "Subscribe via RSS", print: "Print",
+      tools: "Reading tools", zoomIn: "Larger text", zoomOut: "Smaller text",
+      focus: "Focus mode", focusTitle: "Focus mode (press F)",
       machine: "Machine-translated — the original is written in German.",
       contactHead: "Work together",
       contactLead: "I build websites, online shops and custom solutions for freelancers, small companies and local businesses — from Schwarzenbek near Hamburg.",
@@ -334,6 +338,11 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
     )}
 
     <article class="article-col">
+      {/* The reading frame: header + body at a reading measure (~70
+          characters), scaled as one by the reader's zoom. Everything after it
+          (contact, author, related, prev/next) keeps the normal column. */}
+      <div class="article-read">
+      <div class="article-zoom">
       <header class="mb-7">
         <div class="flex flex-wrap items-center gap-3.5 mb-3.5">
           <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
@@ -355,37 +364,6 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
               </>
             )}
           </p>
-          {/* Reader focus mode — hides all chrome for distraction-free reading.
-              Toggled here or with the `f` key; state persists per reader. */}
-          <button
-            type="button"
-            id="focus-toggle"
-            class="ml-auto inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors"
-            aria-pressed="false"
-            title={lang === "de" ? "Fokusmodus (Taste F)" : "Focus mode (press F)"}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-            </svg>
-            <span data-focus-label>{lang === "de" ? "Fokus" : "Focus"}</span>
-          </button>
-          {/* Opens the colourless print / PDF view in its own tab. */}
-          <a
-            href={`${pfx}/${post.slug}/print`}
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] no-underline transition-colors"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 9V2h12v7"></path>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <path d="M6 14h12v8H6z"></path>
-            </svg>
-            <span>{tx.print}</span>
-          </a>
         </div>
         {/* Back arrow sits directly left of the heading (hangs into the left
             margin on lg+; inline before the title on small screens). */}
@@ -435,8 +413,47 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           </p>
         )}
       </header>
+      </div>
 
-      <div class="mt-4 pb-10">
+      {/* Floating reading tools. A zero-height sticky anchor: on lg+ the bar
+          hangs in the left margin of the text and travels with it until the
+          article ends; below lg it is a small fixed cluster bottom-right.
+          Deliberately quiet (faint until hovered or focused) so it never
+          competes with the text. */}
+      <div class="reader-tools-anchor">
+        <div class="reader-tools" role="toolbar" aria-label={tx.tools} aria-orientation="vertical">
+          <button type="button" class="reader-tool" id="zoom-in" aria-label={tx.zoomIn} title={tx.zoomIn}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path><path d="M11 8v6"></path><path d="M8 11h6"></path>
+            </svg>
+          </button>
+          <button type="button" class="reader-tool" id="zoom-out" aria-label={tx.zoomOut} title={tx.zoomOut}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path><path d="M8 11h6"></path>
+            </svg>
+          </button>
+          {/* Reader focus mode — hides all chrome for distraction-free reading.
+              Toggled here or with the `f` key; state persists per reader. */}
+          <button type="button" class="reader-tool" id="focus-toggle" aria-pressed="false" aria-label={tx.focus} title={tx.focusTitle}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+            </svg>
+          </button>
+          {/* Opens the colourless print / PDF view in its own tab. */}
+          <a href={`${pfx}/${post.slug}/print`} target="_blank" rel="noopener" class="reader-tool" aria-label={tx.print} title={tx.print}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9V2h12v7"></path>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <path d="M6 14h12v8H6z"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="article-zoom mt-4 pb-10">
           {isBlocks ? (
             blkSplit.intro.length > 0 && (
               <BlockRenderer blocks={blkSplit.intro} ads={ads} showAds={showBlockAds} lang={lang} snippets={snippets} dropCap />
@@ -484,6 +501,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
           {showManualAds && ads.slotEndArticle && (
             <AdSlot client={ads.publisherId} slot={ads.slotEndArticle} lang={lang} />
           )}
+      </div>
       </div>
 
       {/* The end of the article is one flush stack of panels instead of boxes
@@ -631,6 +649,37 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         }
       });
     })();
+
+    // Reader zoom: scales the reading frame (`--reader-zoom`, read by
+    // `.article-read` / `.article-zoom`). The pre-paint restore lives in Layout.
+    (function () {
+      const root = document.documentElement;
+      const KEY = "tds-blog-zoom";
+      const STEPS = [0.9, 1, 1.1, 1.25, 1.4];
+      const inBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
+      const outBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
+      const current = () => {
+        const v = parseFloat(root.style.getPropertyValue("--reader-zoom")) || 1;
+        // Snap to the nearest step so a stale stored value still moves sanely.
+        return STEPS.reduce((best, s) => (Math.abs(s - v) < Math.abs(best - v) ? s : best), 1);
+      };
+      const sync = () => {
+        const i = STEPS.indexOf(current());
+        if (inBtn) inBtn.disabled = i >= STEPS.length - 1;
+        if (outBtn) outBtn.disabled = i <= 0;
+      };
+      const step = (dir: 1 | -1) => {
+        const i = STEPS.indexOf(current());
+        const next = STEPS[Math.min(STEPS.length - 1, Math.max(0, i + dir))]!;
+        if (next === 1) root.style.removeProperty("--reader-zoom");
+        else root.style.setProperty("--reader-zoom", String(next));
+        try { localStorage.setItem(KEY, String(next)); } catch { /* no-op */ }
+        sync();
+      };
+      inBtn?.addEventListener("click", () => step(1));
+      outBtn?.addEventListener("click", () => step(-1));
+      sync();
+    })();
   </script>
 
   <script>
@@ -698,30 +747,6 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       spy();
       addEventListener("scroll", spy, { passive: true });
       addEventListener("resize", spy, { passive: true });
-    }
-
-    // Collapsed-rail labels: a label shows exactly while its HEADING (the
-    // id sits on the <h2>) is on screen (`.in-view` — several can show at
-    // once and stack on the row pitch). No-IO fallback: labels still
-    // reveal on hover/focus.
-    if (tocLinks.length > 0 && "IntersectionObserver" in window) {
-      const byId = new Map(
-        Array.from(tocLinks).map((l) => [l.dataset.toc ?? "", l]),
-      );
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            byId
-              .get((e.target as HTMLElement).id)
-              ?.classList.toggle("in-view", e.isIntersecting);
-          }
-        },
-        { threshold: 0 },
-      );
-      byId.forEach((_link, id) => {
-        const sec = document.getElementById(id);
-        if (sec) io.observe(sec);
-      });
     }
 
     // Fade the fixed rail out once the reader scrolls past the article

@@ -607,7 +607,10 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
 - `src/components/ArticleSidebar.astro` — fixed collapsible left nav
   on article pages (lg+ only; small screens keep the top nav via the
   `sidebar` Layout prop). Collapsed = 64px icon rail, CTA becomes a
-  phone icon; state persists in localStorage `tds-blog-sidenav`
+  phone icon. **Renders collapsed by default**; only `tds-blog-sidenav` =
+  `"open"` re-opens it, and that pre-paint restore sits in `Layout.astro` as
+  the first child of `#page-shift` — a script beside the `<aside>` runs before
+  the wrapper exists, which left a 264px page offset next to a 64px rail.
 - `src/lib/sections.ts` — splits rendered article HTML at h2
   boundaries for the collapsible sections + scrollspy TOC on
   `[slug].astro` (TOC renders only with ≥2 sections). The TOC (`.toc`
@@ -623,37 +626,30 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
   label logic). Collapsible to a tick
   rail (toggle + `localStorage["tds-blog-toc"]`, pre-paint restore);
   when collapsed, a heading's floating label (left of the rail) shows
-  **only while that `<h2>` is visible in the viewport** (per-heading
-  IntersectionObserver → `.in-view`; several can show at once), plus on
-  hover/focus — the active section keeps its wider accent tick. A second
+  **only on hover/focus of its tick** — no labels at rest; the active
+  section is marked by its wider accent tick alone. A second
   observer fades the rail out (`.rail-off`) once the reader scrolls past
   the article column. Back navigation is a **single arrow-only** control
   (`.back-rail`, a centred SVG arrow) sitting **directly left of the heading**
   (`.title-row`): inline before the `<h1>` on small screens, and on lg+ it
   hangs into the left margin (absolute, `right: 100%`) so the heading isn't
   indented.
-- **Reading column is window-centred on sidebar pages** (the "Mitte der Seite"
-  fix). The `.with-sidebar` wrapper stays offset by the sidebar (keeps the
-  footer/newsletter clear of it), and `--nav-w` (264px / 64px collapsed, set on
-  `#page-shift`) drives everything: `.with-sidebar .article-col` is nudged
-  left by half of it so it lands on the true viewport centre and
-  **doesn't move when the sidebar toggles** (the offset + nudge cancel). Uses
-  `position/left`, not `transform`, so the fixed `.toc` keeps its viewport
-  anchor. The fixed TOC (right) and sidebar (left) overlay the side whitespace.
-  - **The nudge is CLAMPED with `max()`, and that clamp is not optional.** The
-    recentring only clears the fixed sidebar while `(100vw − 48rem) / 2 ≥
-    --nav-w`, i.e. from ~1296px up. Below that the column slid *under* the
-    sidebar — at 1280, the most common desktop width there is, by 8px, so every
-    line of every article lost its first characters: the eyebrow rendered
-    "ESIGN", the lede "arben, Typografie…". Nothing overflowed, nothing errored,
-    nothing logged; the text was painted behind an opaque panel.
-  - This note used to call that an "accepted trade-off for exact
-    window-centring". **It was not a trade-off worth accepting, and the clamp
-    costs nothing:** the second term of the `max()` is the largest shift that
-    still leaves a 0.75rem gutter, so viewports ≥1296px keep the exact
-    window-centring the rule was written for (measured: 336px at 1440, 576px at
-    1920 — both the true centre) and narrower ones stop at the sidebar edge
-    instead of behind it.
+- **Reading column is window-centred on sidebar pages** and never moves when
+  a rail folds. On lg+ `.with-sidebar .article-shell` steps back over the
+  sidebar offset (`margin-left: -var(--nav-w)`) to span the window and pads
+  both sides by `max(nav-w + gutter + reading tools, TOC reserve)`; the column
+  centres with `margin-inline: auto`. No `left` offsets, no `100vw`
+  (`layout.test.ts` pins both).
+- **Reading measure:** title, lede and body sit in `.article-read`
+  (`--read-w: 38rem` ≈ 70 characters at the lg prose size); the panels after
+  the article keep the wider `.article-col` (48rem).
+- **Floating reading tools** (`.reader-tools`): zoom in/out, focus mode,
+  print. lg+: a faint column hanging left of the text on a zero-height sticky
+  anchor; below lg: a small fixed cluster bottom-right above
+  `--tds-bottom-lane`/`--tds-right-lane`. Zoom sets `--reader-zoom` on
+  `<html>` (steps 0.9–1.4, `localStorage["tds-blog-zoom"]`, pre-paint restore
+  in Layout) and scales `.article-zoom` with CSS `zoom`, widening the frame
+  with it, so characters per line stay put.
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
 - `src/pages/[slug].astro` — article (both DE + EN via the lang prop
   from getStaticPaths); drop-cap on first paragraph, marginalia rail
@@ -661,8 +657,8 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
   progress bar, chronological prev/next footer nav, and the inline
   interest-cookie script (see below)
 - `src/pages/[slug]/print.astro` + `src/pages/en/[slug]/print.astro` — the
-  **print / PDF view**, opened in its own tab from the "Drucken" button in the
-  article header. Both are thin wrappers over `src/components/PrintDoc.astro`
+  **print / PDF view**, opened in its own tab from the print button of the
+  floating reading tools. Both are thin wrappers over `src/components/PrintDoc.astro`
   (shared like `Article.astro`), rendered with Layout `bare` + `noindex` (no
   site chrome; excluded from the sitemap). It's a colourless, single-flow
   rendering (`.prose-print`, hard-coded neutral colours so it never inverts in
@@ -905,8 +901,8 @@ not parse CSS, so a mangled rule only surfaces at build time.
 Article pages pass `focusable` to `Layout`, enabling a **distraction-free reading
 toggle** (`html.focus-mode`). Restored pre-paint by a gated inline script in the
 Layout head (mirrors the theme/TOC no-flash pattern; keyed `tds-blog-focus`, only
-applied on article pages so it never leaks onto listings). The header button
-(`#focus-toggle`) + the **`f`** key toggle it, **`Escape`** exits; state persists.
+applied on article pages so it never leaks onto listings). The focus button of
+the floating reading tools (`#focus-toggle`) + the **`f`** key toggle it, **`Escape`** exits; state persists.
 The CSS (`global.css`, `html.focus-mode …`) hides the sidebar/header/footer/TOC/
 ads and every `.focus-hide` extra (contact CTA, author bio, related, tags,
 prev/next), centring `.article-col`. Fully reversible, no layout dependency on it.
