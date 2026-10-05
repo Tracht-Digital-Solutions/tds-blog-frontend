@@ -114,12 +114,27 @@ describe("page shell", () => {
     expect(cssCode).not.toContain("100vw");
   });
 
-  it("reserves a real gutter for the fixed TOC rail", () => {
+  it("reserves both rails symmetrically so the column stays on the window centre", () => {
     // The shell used to reserve nothing, on the theory that both rails "float
     // in the side margins". True only when there ARE side margins: at 1280px
-    // the text ran under the sidebar, at 1024px under the TOC. The left rail
-    // is covered by .with-sidebar's own margin; the right one needs this.
-    expect(cssCode).toMatch(/\.article-shell\.has-toc\s*\{[^}]*padding-right:\s*max\(/);
+    // the text ran under the sidebar, at 1024px under the TOC. Then it
+    // reserved only the right and centred in what was left of the sidebar —
+    // so the text moved with the sidebar, and sat 100px right of centre when
+    // the rail was collapsed. The shell now spans the window and pads both
+    // sides by the larger reservation.
+    expect(cssCode).toMatch(/\.with-sidebar \.article-shell\s*\{[^}]*margin-left:\s*calc\(-1 \* var\(--nav-w\)\)/);
+    expect(cssCode).toMatch(/\.with-sidebar \.article-shell\s*\{[^}]*padding-inline:\s*max\(/);
+  });
+
+  it("restores the open sidebar where #page-shift already exists", () => {
+    // The restore used to run beside the <aside>, before the wrapper was
+    // parsed: the rail collapsed, the page kept its 264px offset.
+    const layout = readFileSync(join(SRC, "layouts", "Layout.astro"), "utf8");
+    const shift = layout.indexOf('id="page-shift"');
+    const restore = layout.indexOf('getItem("tds-blog-sidenav")');
+    expect(shift).toBeGreaterThan(-1);
+    expect(restore).toBeGreaterThan(shift);
+    expect(layout).toContain('class="with-sidebar nav-collapsed" id="page-shift"');
   });
 });
 

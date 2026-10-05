@@ -182,6 +182,11 @@ const showConsent =
             if (localStorage.getItem("tds-blog-focus") === "1") {
               document.documentElement.classList.add("focus-mode");
             }
+            /* Reader text size (the floating zoom buttons), same no-flash rule. */
+            var z = parseFloat(localStorage.getItem("tds-blog-zoom") || "");
+            if (z >= 0.85 && z <= 1.5) {
+              document.documentElement.style.setProperty("--reader-zoom", String(z));
+            }
           } catch (e) { /* storage disabled — start unfocused */ }
         })();
       </script>
@@ -246,7 +251,26 @@ const showConsent =
       ) : sidebar ? (
         <>
           <ArticleSidebar lang={lang} />
-          <div class="with-sidebar" id="page-shift">
+          <div class="with-sidebar nav-collapsed" id="page-shift">
+            {/* The sidebar renders collapsed; re-open it before first paint for
+                a reader who left it open. It lives HERE, not in ArticleSidebar:
+                it must flip `#page-shift` too, and a script beside the aside
+                runs before this wrapper exists — which left the page offset by
+                the full 264px next to a 64px rail. */}
+            <script is:inline>
+              (function () {
+                try {
+                  if (localStorage.getItem("tds-blog-sidenav") === "open") {
+                    document.getElementById("article-sidebar").classList.remove("collapsed");
+                    document.getElementById("page-shift").classList.remove("nav-collapsed");
+                    var btn = document.getElementById("sidebar-toggle");
+                    if (btn) btn.setAttribute("aria-expanded", "true");
+                  }
+                } catch (e) {
+                  /* storage disabled — stay collapsed */
+                }
+              })();
+            </script>
             <JournalHeader lang={lang} />
             <slot />
             <JournalFooter lang={lang} />
