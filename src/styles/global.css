@@ -127,11 +127,32 @@
 :root[data-theme="dark"] {
   --jnl-tint: color-mix(in srgb, var(--color-primary) 20%, var(--color-paper));
 }
+/* The same tokens for a themed SUBTREE — the theme toggle's hover preview
+   clones the page and marks the clone with the other theme. Declared on
+   <html>, the mixes above resolve against the page's palette and reach the
+   clone as literals, so the dark circle showed the light tint on the language
+   switch, the search field and every tinted band. Restated here they resolve
+   against the clone's palette. Keep the values identical to the blocks above. */
+[data-theme]:not(:root) {
+  --jnl-tint: color-mix(in srgb, var(--color-primary) 9%, var(--color-paper));
+  --jnl-muted: color-mix(in srgb, var(--color-ink) 72%, var(--color-soft));
+  --jnl-tile: var(--color-soft);
+  --jnl-tile-hover: color-mix(in srgb, var(--color-soft) 92%, var(--color-ink));
+  --color-muted: var(--jnl-muted);
+}
+[data-theme="dark"]:not(:root) {
+  --jnl-tint: color-mix(in srgb, var(--color-primary) 20%, var(--color-paper));
+}
 
 /* The ground is never paper. The print sheet keeps its own white. */
 body {
   background-color: var(--color-soft);
   --color-muted: var(--jnl-muted);
+}
+/* The preview clone brings its own ground (paper in tds-shared); the
+   journal's ground is soft, so the circle takes that too. */
+.tds-theme-preview__page {
+  background-color: var(--color-soft);
 }
 @media print {
   body {
