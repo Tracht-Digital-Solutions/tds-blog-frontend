@@ -976,7 +976,6 @@ a.topic-card:focus-visible {
    and the frame's own width grows with it, capped by whatever is available. */
 .article-shell {
   --read-w: 38rem;
-  --reader-tools-w: 3.5rem;
   --toc-reserve: var(--tds-gutter);
 }
 .article-shell.has-toc { --toc-reserve: calc(var(--toc-w) + 1.75rem); }
@@ -1011,7 +1010,7 @@ a.topic-card:focus-visible {
     max-width: none;
     margin-left: calc(-1 * var(--nav-w));
     padding-inline: max(
-      calc(var(--nav-w) + var(--tds-gutter) + var(--reader-tools-w)),
+      calc(var(--nav-w) + var(--tds-gutter)),
       var(--toc-reserve)
     );
     transition: margin-left 320ms ease, padding 320ms ease;
@@ -1200,10 +1199,11 @@ a.topic-card:focus-visible {
 /* ---- Article: floating reading tools (zoom, focus, print) ----
    Quiet by design: no ground, no shadow, muted icons at reduced opacity that
    only come up to full strength while the bar is hovered or holds focus.
-   Below lg a small fixed cluster in the bottom-right corner, lifted above the
-   cookie notice and the chat launcher by their published lanes; on lg+ a
-   column hanging in the left margin of the text, riding a zero-height sticky
-   anchor so it travels with the article and stops where the text ends. */
+   A fixed column in the bottom-right corner of the viewport, lifted above the
+   cookie notice and the chat launcher by their published lanes. It used to
+   hang in the text's left margin on a sticky anchor, which made it travel
+   with the article and jump when the sidebar opened; a fixed corner never
+   moves. Below lg the same tools live in the app's "Mehr" page instead. */
 .reader-tools {
   position: fixed;
   right: 0.75rem;
@@ -1250,21 +1250,11 @@ a.topic-card:focus-visible {
   .reader-tools-anchor { display: none; }
 }
 @media (min-width: 1024px) {
-  .reader-tools-anchor {
-    position: sticky;
-    top: 40vh;
-    height: 0;
-    z-index: 20;
-  }
   .reader-tools {
-    position: absolute;
-    top: 0;
-    right: calc(100% + 1.25rem);
-    bottom: auto;
+    right: 1rem;
+    bottom: calc(var(--tds-bottom-lane, 0px) + var(--tds-right-lane, 0px) + 1rem);
     flex-direction: column;
-    padding: 0;
-    background: transparent;
-    opacity: 0.45;
+    opacity: 0.55;
   }
 }
 @media print {
@@ -1961,14 +1951,8 @@ html.focus-mode .article-col {
 html.focus-mode #focus-toggle {
   color: var(--color-accent);
 }
-/* The reading tools stay in focus mode — they are the way back out — and so
-   does their margin: on lg+ the bar hangs left of the text. */
-@media (min-width: 1024px) {
-  html.focus-mode .article-shell {
-    padding-left: max(1.25rem, calc(var(--reader-tools-w) + 0.75rem)) !important;
-    padding-right: max(1.25rem, calc(var(--reader-tools-w) + 0.75rem)) !important;
-  }
-}
+/* The reading tools stay in focus mode — they are the way back out — fixed
+   in the bottom-right corner, so the text needs no margin for them. */
 
 /* ---- Tools promo (blog index) ---- */
 /* Points at the sibling tools site and names what you unlock there. Since the
