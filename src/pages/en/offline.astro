@@ -1,0 +1,10 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import OfflineView from "~/components/OfflineView.astro";
+// Prerendered and precached by the service worker (src/pages/sw.js.ts).
+export const prerender = true;
+---
+
+<Layout title="Offline · Tracht Journal" lang="en" bare noindex>
+  <OfflineView lang="en" />
+</Layout>

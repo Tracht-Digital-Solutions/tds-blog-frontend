@@ -30,7 +30,10 @@ import { ContentHttpError, isConnectionFailure, memoisedOr, readContentJson } fr
 export type { TopicItem, TopicsBlock } from "./demoContent";
 
 interface ListResponse {
-  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode">>;
+  // `readingMinutes`: sent by tds-ext-blog-cms ≥ 0.3.0 (from LENGTH(body)),
+  // absent on older APIs. Widened here, not in tds-shared — read by this repo
+  // alone (the books, src/lib/book.ts).
+  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode"> & { readingMinutes?: number }>;
   nextCursor: number | null;
 }
 

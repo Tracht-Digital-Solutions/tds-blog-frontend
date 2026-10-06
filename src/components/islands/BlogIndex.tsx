@@ -389,7 +389,7 @@ export default function BlogIndex({
               // unlayered .tds-grid-auto class, so a leftover `style={{gap:20}}`
               // would silently pin the gutter and the token would do nothing.
               // `jnl-mosaic` narrows it to the 1px seam.
-              <div className="tds-grid-auto jnl-mosaic">
+              <div className="tds-grid-auto jnl-mosaic jnl-shelf">
                 {gridPosts.map((p) => (
                   // The SLOT is the container query container, never the card:
                   // a container styles its descendants, so a card can never

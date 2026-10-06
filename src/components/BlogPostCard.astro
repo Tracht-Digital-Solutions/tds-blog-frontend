@@ -10,15 +10,20 @@ interface Props {
   title: string;
   excerpt: string;
   publishedAt: string | null;
+  /** Reading time from the list API — the book's thickness and label. */
+  readingMinutes?: number | null;
   lang?: "de" | "en";
 }
 
-const { slug, category, title, excerpt, publishedAt, lang = "de" } = Astro.props;
+import { bookClass, bookLabel } from "~/lib/book";
+
+const { slug, category, title, excerpt, publishedAt, readingMinutes = null, lang = "de" } = Astro.props;
+const book = bookLabel(readingMinutes, lang);
 const locale = lang === "de" ? "de-DE" : "en-US";
 ---
 
 <li class="list-none">
-  <a href={`${lang === "en" ? "/en" : ""}/${slug}`} class="post-row">
+  <a href={`${lang === "en" ? "/en" : ""}/${slug}`} class:list={["post-row", bookClass(readingMinutes)]}>
     <div class="flex flex-col gap-2.5">
       <p class="eyebrow card-meta" style="color: var(--color-accent);">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -37,6 +42,14 @@ const locale = lang === "de" ? "de-DE" : "en-US";
             day: "numeric",
           })}
         </time>
+      )}
+      {book && (
+        <span class="book-meta tabular">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z" /><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5" />
+          </svg>
+          {book}
+        </span>
       )}
     </div>
     <div>

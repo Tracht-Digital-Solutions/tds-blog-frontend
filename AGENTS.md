@@ -185,36 +185,38 @@ nothing about the released line.
   past it. No-ops on single-post layouts (most blog pages today)
   — kept for parity with the other frontends.
 
-## Mobile navigation (2026-08-18, tds-shared 0.25.0)
+## The phone is an app (2026-10-06, tds-shared 0.47)
 
-The hamburger opens the **shared** `.tds-mobile-menu` sheet, docked under the
-sticky bar, and every mechanic comes from `mountMobileNav`
-(`@tracht-digital-solutions/tds-shared/nav`). What this repo used to own — a
-`position: fixed; inset: 0` full-screen overlay, `body.drawer-open` as a scroll
-lock, its own Escape handler and its own `matchMedia("(min-width: 768px)")` — is
-gone. `src/__tests__/header.test.ts` fails if any of it comes back.
+Below `lg` there is no hamburger. `AppChrome.astro` renders a bottom tab bar
+(Start · Themen · Suche · [Inhalt on articles] · Mehr) and one bottom sheet
+per tab; mechanics and CSS come from `tds-shared/app` +
+`styles/app-shell.css`. The header only shows logo + account menu and tucks
+away while reading down (`mountAppHeader`). `header.test.ts` pins this.
 
-Three things about this that are easy to get wrong again:
+* **The tab bar owns `--tds-tabbar-lane`.** Cookie notice, toasts and the chat
+  launcher add it; anything new fixed at the bottom must too.
+* **"Mehr" holds the settings** — theme, language, and on articles text size,
+  focus mode and print (the floating reading tools are lg+ only). Theme,
+  language, text size, sidebar and TOC state are saved through
+  `tds-shared/prefs` (cookie on `.tracht-digital.de` + account sync), so they
+  carry to the other sites and, signed in, to other devices. Focus mode stays
+  per device. The pre-paint restores read `window.__tdsPrefs` first and the
+  old `tds-blog-*` localStorage keys as a fallback.
+* **PWA:** `src/pages/manifest.webmanifest.ts` and `src/pages/sw.js.ts` are
+  PRERENDERED (worker version = build time); `/offline` + `/en/offline` are
+  the fallback pages and list the articles this device kept (last 30, the
+  worker's `tds-pages` cache). Icons in `public/icons/`.
 
-* **The breakpoint moved from `md` to `lg`.** All three public sites hide their
-  desktop nav at 1024px now, and `.tds-mobile-menu` bakes that width in. If the
-  bar went back to `md:` the two would disagree across 256px of viewport — with
-  neither the desktop nav nor a hamburger on screen, and nothing to report it.
-* **Never hide the toggle or the panel with `lg:hidden`.** tds-shared is
-  unlayered CSS and Tailwind's utilities sit in `@layer utilities`, so `hidden`
-  on an element wearing `.btn` loses outright. The breakpoint belongs to the
-  shared classes; a utility here is a silent no-op.
-* **`--tds-mobile-menu-inset` must match the panel's `top-[…]`.** It is what the
-  shared `max-height` subtracts, and this menu is the long one — nav plus the
-  full Entdecken taxonomy plus the language and theme controls plus the CTA. Get
-  them out of step and the sheet runs past the bottom of the viewport: a fixed
-  element shows no scrollbar and throws no error, so the tail is simply
-  unreachable.
+## Posts are books (2026-10-06)
 
-The journal's editorial link optics (`.jnl-fullmenu-*`) deliberately stayed
-local — the surface keeps its voice, only the mechanics converged. The desktop
-"Entdecken" disclosure is a separate control and keeps its own state and its own
-Escape handler.
+Every post card, list row, "Für dich" tile and the hero cover carries
+`book book--1…5` (`src/lib/book.ts`): a spine on the left and a page block
+whose thickness follows `readingMinutes` (tds-ext-blog-cms ≥ 0.3.0 sends it
+in the list). The page block IS the hard 2D shadow, split into 1px
+paper/edge lines. Grids of books are `.jnl-shelf`: real gaps instead of the
+1px seam and no mosaic drop-shadow — a book's pages need air. No length from
+the API → the neutral level 2 and no label, never an invented page count.
+
 
 ## The language switch moved into tds-shared (2026-08-18, 0.25.3)
 
@@ -249,7 +251,7 @@ stranger, and had no auth code at all.
   oversight: this bar already carries a contact CTA, and a sign-in link beside
   it would be noise on a public article. The tools site passes
   `loggedOut="login"` because there a session unlocks something.
-- **It is mounted OUTSIDE the `hidden lg:flex` cluster**, next to the hamburger.
+- **It is mounted OUTSIDE the `hidden lg:flex` cluster** — on a phone it is the only control in the bar.
   Who you are is not desktop chrome, and below `lg` this is the only control in
   the bar besides the toggle — inside that cluster it would be absent, not
   merely smaller. Pinned by `header.test.ts`.
@@ -607,7 +609,7 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
 - `src/components/ArticleSidebar.astro` — fixed collapsible left nav
   on article pages (lg+ only; small screens keep the top nav via the
   `sidebar` Layout prop). Collapsed = 64px icon rail, CTA becomes a
-  phone icon. **Renders collapsed by default**; only `tds-blog-sidenav` =
+  phone icon. **Renders collapsed by default**; only a saved `reader_sidenav` (tds-shared/prefs; old key `tds-blog-sidenav`) =
   `"open"` re-opens it, and that pre-paint restore sits in `Layout.astro` as
   the first child of `#page-shift` — a script beside the `<aside>` runs before
   the wrapper exists, which left a 264px page offset next to a 64px rail.
@@ -624,7 +626,7 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
   legible so the reading position is always visible (scoped
   `.article-shell:not(.toc-collapsed)` so the collapsed rail keeps its own
   label logic). Collapsible to a tick
-  rail (toggle + `localStorage["tds-blog-toc"]`, pre-paint restore);
+  rail (toggle + prefs `reader_toc`, pre-paint restore);
   when collapsed, a heading's floating label (left of the rail) shows
   **only on hover/focus of its tick** — no labels at rest; the active
   section is marked by its wider accent tick alone. A second
@@ -647,7 +649,7 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
   print. lg+: a faint column hanging left of the text on a zero-height sticky
   anchor; below lg: a small fixed cluster bottom-right above
   `--tds-bottom-lane`/`--tds-right-lane`. Zoom sets `--reader-zoom` on
-  `<html>` (steps 0.9–1.4, `localStorage["tds-blog-zoom"]`, pre-paint restore
+  `<html>` (steps 0.9–1.4, prefs `reader_zoom`, pre-paint restore
   in Layout) and scales `.article-zoom` with CSS `zoom`, widening the frame
   with it, so characters per line stay put.
 - `src/pages/page/[num].astro` + `src/pages/en/page/[num].astro` — pages 2..N
@@ -717,12 +719,8 @@ curl -X POST -H 'x-tds-cache-token: …' -H 'content-type: application/json' \
   topic overlap + recency, renders top 3 with a transparency note and
   a reset action. Renders nothing without a profile.
 - `src/components/JournalHeader.astro` / `JournalFooter.astro` — chrome.
-  Below `md` the section links/search/CTA collapse into a flat slide-down
-  frontend behind a hamburger. **The hamburger bars are `.tds-menu-bar*` from
-  tds-shared `primitives.css`**, not the old local `.jnl-menu-bar*` — that block
-  and the landingpage's were the same rules under two names. The bars stay
-  square because `[data-surface="blog"]` sets `--tds-radius-bar: 0`, which was
-  the only real difference. Nav links come from `src/lib/nav.ts` (the single
+  Below `lg` navigation lives in the app tab bar (see "The phone is an app").
+  Nav links come from `src/lib/nav.ts` (the single
   source shared with `ArticleSidebar.astro`): **Journal**, **Aktuelles**,
   **RSS** — "Kundenportal" lives in the footer only. Active/hover is a flat
   accent underline (`.jnav-item`) / left bar (`.snav-item`), no filled pill.

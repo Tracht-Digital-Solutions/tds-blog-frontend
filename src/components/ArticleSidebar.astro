@@ -120,8 +120,8 @@ const contact = propertyContact(lang);
   </div>
 
   <div class="tds-lang-toggle mb-2.5 sidebar-hide-collapsed" role="group" aria-label="Sprache / Language">
-    <a href="/" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-    <a href="/en/" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    <a href="/" data-locale-link="de" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+    <a href="/en/" data-locale-link="en" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
   </div>
 
   <a href={contact} class="btn-flat sidebar-hide-collapsed">{cta}</a>
@@ -141,7 +141,11 @@ const contact = propertyContact(lang);
 </aside>
 
 <script>
+  import { writePrefs } from "@tracht-digital-solutions/tds-shared/prefs";
+  import { mountPreferenceControls } from "@tracht-digital-solutions/tds-shared/app";
+
   const aside = document.getElementById("article-sidebar");
+  if (aside) mountPreferenceControls(aside);
   const toggle = document.getElementById("sidebar-toggle");
   const shift = document.getElementById("page-shift");
 
@@ -149,10 +153,7 @@ const contact = propertyContact(lang);
     const collapsed = aside?.classList.toggle("collapsed") ?? false;
     shift?.classList.toggle("nav-collapsed", collapsed);
     toggle.setAttribute("aria-expanded", String(!collapsed));
-    try {
-      localStorage.setItem("tds-blog-sidenav", collapsed ? "collapsed" : "open");
-    } catch {
-      /* storage disabled */
-    }
+    // Saved for the reader across the sites (and the account, if signed in).
+    writePrefs({ reader_sidenav: collapsed ? "collapsed" : "open" });
   });
 </script>

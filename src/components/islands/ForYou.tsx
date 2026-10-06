@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { BookMeta } from "../PostCard";
+import { bookClass } from "../../lib/book";
 
 /**
  * "Für Sie" — interest-based recommendations on the journal index.
@@ -24,6 +26,7 @@ interface IndexedPost {
   excerpt: string;
   tags: string | null;
   publishedAt: string | null;
+  readingMinutes?: number | null;
 }
 
 const COOKIE = "tds-interests";
@@ -124,11 +127,11 @@ export default function ForYou({ lang, limit = 3 }: { lang: "de" | "en"; limit?:
           </button>
         </div>
 
-        <ul className="tds-grid-auto tds-grid-roomy jnl-mosaic">
+        <ul className="tds-grid-auto tds-grid-roomy jnl-mosaic jnl-shelf">
           {picks.map((p) => (
             <li key={p.slug}>
               {/* Article pages for both languages live at the root route. */}
-              <a href={`/${p.slug}`} className="jnl-tile block group h-full p-5">
+              <a href={`/${p.slug}`} className={`jnl-tile ${bookClass(p.readingMinutes)} block group h-full p-5 pl-7`}>
                 <p className="eyebrow mb-2">{p.category}</p>
                 <h3 className="display-tight text-xl mb-2 group-hover:text-[var(--color-accent)] transition-colors">
                   {p.title}
@@ -146,6 +149,7 @@ export default function ForYou({ lang, limit = 3 }: { lang: "de" | "en"; limit?:
                       })}
                     </time>
                   )}
+                  <BookMeta minutes={p.readingMinutes} lang={lang} />
                   <span className="link-underline text-[var(--color-accent)]">{t.read}</span>
                 </div>
               </a>

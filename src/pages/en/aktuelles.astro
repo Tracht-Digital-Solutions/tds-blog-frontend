@@ -102,7 +102,7 @@ const jsonLd = asGraph(
         {latest.length === 0 ? (
           <p class="marginalia">No posts yet.</p>
         ) : (
-          <ul class="tds-grid-auto jnl-mosaic list-none p-0 m-0">
+          <ul class="tds-grid-auto jnl-mosaic jnl-shelf list-none p-0 m-0">
             {latest.map((p, i) => (
               /* See the DE page: no flex wrapper (containment collapse), and the
                  lead spans all tracks rather than a fixed 2/3. */

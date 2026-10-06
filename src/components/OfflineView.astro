@@ -1,0 +1,97 @@
+---
+/**
+ * The page the service worker shows when a page is requested offline and was
+ * never read before (tds-shared/pwa precaches it). Lists what IS available —
+ * the articles this device kept for offline reading — straight from the
+ * worker's page cache, so the reader always has somewhere to go.
+ */
+import { SW_PAGE_CACHE } from "@tracht-digital-solutions/tds-shared/pwa";
+
+interface Props {
+  lang: "de" | "en";
+}
+const { lang } = Astro.props;
+const t = lang === "de"
+  ? {
+      title: "Du bist gerade offline.",
+      lead: "Diese Seite ist noch nicht auf deinem Gerät. Diese Beiträge kannst du ohne Verbindung lesen:",
+      none: "Noch keine Beiträge gespeichert. Jeder Beitrag, den du online öffnest, bleibt danach offline lesbar.",
+      retry: "Erneut versuchen",
+    }
+  : {
+      title: "You are offline.",
+      lead: "This page is not on your device yet. You can read these posts without a connection:",
+      none: "No posts saved yet. Every post you open online stays readable offline afterwards.",
+      retry: "Try again",
+    };
+---
+
+<main id="main" class="offline">
+  <div class="offline-inner">
+    <p class="eyebrow" style="color: var(--color-accent);">Tracht Journal</p>
+    <h1 class="display offline-title">{t.title}</h1>
+    <p class="offline-lead">{t.lead}</p>
+    <ul class="offline-list" id="offline-list" data-cache={SW_PAGE_CACHE} data-lang={lang}></ul>
+    <p class="offline-none" id="offline-none" hidden>{t.none}</p>
+    <button type="button" class="btn-flat" id="offline-retry">{t.retry}</button>
+  </div>
+</main>
+
+<style>
+  .offline {
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.25rem;
+    background: var(--color-soft);
+  }
+  .offline-inner { width: min(100%, 34rem); }
+  .offline-title { margin: 0.5rem 0 0.75rem; font-size: clamp(2rem, 7vw, 3rem); }
+  .offline-lead, .offline-none { color: var(--color-muted); }
+  .offline-list { list-style: none; margin: 1.25rem 0; padding: 0; }
+  .offline-list :global(a) {
+    display: block;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .offline-list :global(a:hover) { color: var(--color-primary); }
+</style>
+
+<script>
+  // Read the worker's page cache: every entry is a page this device kept.
+  // Titles come from each cached page's <title>, minus the site suffix.
+  const list = document.getElementById("offline-list");
+  const none = document.getElementById("offline-none");
+  document.getElementById("offline-retry")?.addEventListener("click", () => location.reload());
+  (async () => {
+    if (!list || !("caches" in window)) {
+      if (none) none.hidden = false;
+      return;
+    }
+    const cache = await caches.open(list.dataset.cache ?? "tds-pages");
+    const keys = await cache.keys();
+    const en = list.dataset.lang === "en";
+    const items: Array<{ href: string; title: string }> = [];
+    for (const req of [...keys].reverse()) {
+      const path = new URL(req.url).pathname;
+      if (en !== path.startsWith("/en/")) continue;
+      const res = await cache.match(req);
+      const html = res ? await res.text() : "";
+      const title = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? path).split(" — ")[0]!.trim();
+      if (path === "/" || path === "/en/" || path.includes("/offline")) continue;
+      items.push({ href: path, title });
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = item.href;
+      a.textContent = item.title;
+      li.append(a);
+      list.append(li);
+    }
+    if (none) none.hidden = items.length > 0;
+  })();
+</script>
