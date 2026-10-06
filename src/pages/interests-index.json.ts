@@ -25,6 +25,7 @@ export async function GET() {
     excerpt: p.excerpt,
     tags: p.tags ?? null,
     publishedAt: p.publishedAt,
+    readingMinutes: p.readingMinutes ?? null,
   }));
 
   return new Response(JSON.stringify(index), {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AuthorChip, fallbackAuthorName, formatPostDate, type CardPost } from "../PostCard";
+import { bookClass, bookLabel } from "../../lib/book";
 import { PostCover } from "../Covers";
 
 /**
@@ -125,6 +126,11 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 18 }}>
           <AuthorChip inverse name={lead.author?.name ?? fallbackAuthorName(lang)} avatarUrl={lead.author?.avatarUrl} />
+          {bookLabel(lead.readingMinutes, lang) && (
+            <span className="tabular hidden sm:inline" style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
+              {bookLabel(lead.readingMinutes, lang)}
+            </span>
+          )}
           {lead.publishedAt && (
             <span className="tabular" style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
               {formatPostDate(lead.publishedAt, lang)}
@@ -160,7 +166,7 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
             headline above already links to the same URL. */}
         <a
           href={hrefFor(lang, lead.slug)}
-          className="hero-cover"
+          className={`hero-cover ${bookClass(lead.readingMinutes)}`}
           aria-hidden="true"
           tabIndex={-1}
           style={{ overflow: "hidden", position: "relative", display: "block" }}

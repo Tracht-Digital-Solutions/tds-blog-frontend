@@ -267,6 +267,9 @@ function summaryFor(seed: DemoSeed, id: number, lang: "de" | "en"): PostSummary 
     viewCount: id * 137,
     authorId: DEMO_AUTHOR.id,
     author: DEMO_AUTHOR,
+    // Same rule as the CMS list (tds-ext-blog-cms readingMinutes): ~6 bytes a
+    // word, 220 words a minute, at least one.
+    readingMinutes: Math.max(1, Math.round(new TextEncoder().encode(v.body).length / 6 / 220)),
   } as PostSummary;
 }
 

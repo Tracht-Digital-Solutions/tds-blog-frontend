@@ -42,6 +42,7 @@
    off under reduced motion. See "No decorative motion" in AGENTS.md for why
    it is kept. */
 @import "@tracht-digital-solutions/tds-shared/styles/page-transitions.css";
+@import "@tracht-digital-solutions/tds-shared/styles/app-shell.css";
 @import "@tracht-digital-solutions/tds-shared/styles/app.css";
 @import "@tracht-digital-solutions/tds-shared/styles/surfaces/blog.css";
 
@@ -1243,6 +1244,11 @@ a.topic-card:focus-visible {
   background: transparent;
   color: var(--color-muted);
 }
+/* On a phone the same tools live in the app's settings sheet ("Mehr"), so
+   the floating cluster would only be a second copy over the text. */
+@media (max-width: 1023.98px) {
+  .reader-tools-anchor { display: none; }
+}
 @media (min-width: 1024px) {
   .reader-tools-anchor {
     position: sticky;
@@ -2047,4 +2053,120 @@ a.jnl-tile:is(:hover, :focus-visible) {
   :is(.btn-flat, .hero-cta, .hero-arrow, .topic-card, .chip-flat, .post-card, a.jnl-tile):is(:hover, :focus-visible) {
     translate: none;
   }
+}
+
+/* === Books ==========================================================
+   Every post is a book, in every view (index, category, tag, author,
+   related, Aktuelles, the hero lead, the list rows): a spine on the left and
+   a page block on the right/bottom edge whose thickness follows the reading
+   time (src/lib/book.ts → `.book--1` Heft … `.book--5` Wälzer).
+
+   The page block IS the hard 2D shadow of the kit, split into 1px lines:
+   alternating paper and edge colour, then the usual ink offset behind the
+   last page. So a book keeps the angular, unblurred look of every other box
+   here — only its shadow now says how much there is to read.
+
+   A shelf (`.jnl-shelf`) is a grid of books: books need air between them for
+   their page blocks, so a shelf drops the mosaic's 1px seam and its shared
+   drop-shadow (each book draws its own). */
+.book {
+  /* Pages: near-white sheets with a clearly darker edge line between them,
+     so even a two-minute "Heft" shows that it has pages. */
+  --book-paper: #fffefa;
+  --book-edge: color-mix(in srgb, var(--color-line) 55%, var(--color-ink) 28%);
+  --book-spine: var(--color-accent);
+  --book-drop: 6px;
+  position: relative;
+  box-shadow:
+    var(--book-stack),
+    calc(var(--book-n) + var(--book-drop)) calc(var(--book-n) + var(--book-drop)) 0 0 var(--tds-shadow-ink);
+}
+.book--1 {
+  --book-n: 3px;
+  --book-stack: 1px 1px 0 var(--book-edge), 2px 2px 0 var(--book-paper), 3px 3px 0 var(--book-edge);
+}
+.book--2 {
+  --book-n: 5px;
+  --book-stack: 1px 1px 0 var(--book-edge), 2px 2px 0 var(--book-paper), 3px 3px 0 var(--book-edge), 4px 4px 0 var(--book-paper), 5px 5px 0 var(--book-edge);
+}
+.book--3 {
+  --book-n: 8px;
+  --book-stack: 1px 1px 0 var(--book-edge), 2px 2px 0 var(--book-paper), 3px 3px 0 var(--book-edge), 4px 4px 0 var(--book-paper), 5px 5px 0 var(--book-edge), 6px 6px 0 var(--book-paper), 7px 7px 0 var(--book-edge), 8px 8px 0 var(--book-paper);
+}
+.book--4 {
+  --book-n: 11px;
+  --book-stack: 1px 1px 0 var(--book-edge), 2px 2px 0 var(--book-paper), 3px 3px 0 var(--book-edge), 4px 4px 0 var(--book-paper), 5px 5px 0 var(--book-edge), 6px 6px 0 var(--book-paper), 7px 7px 0 var(--book-edge), 8px 8px 0 var(--book-paper), 9px 9px 0 var(--book-edge), 10px 10px 0 var(--book-paper), 11px 11px 0 var(--book-edge);
+}
+.book--5 {
+  --book-n: 15px;
+  --book-stack: 1px 1px 0 var(--book-edge), 2px 2px 0 var(--book-paper), 3px 3px 0 var(--book-edge), 4px 4px 0 var(--book-paper), 5px 5px 0 var(--book-edge), 6px 6px 0 var(--book-paper), 7px 7px 0 var(--book-edge), 8px 8px 0 var(--book-paper), 9px 9px 0 var(--book-edge), 10px 10px 0 var(--book-paper), 11px 11px 0 var(--book-edge), 12px 12px 0 var(--book-paper), 13px 13px 0 var(--book-edge), 14px 14px 0 var(--book-paper), 15px 15px 0 var(--book-edge);
+}
+/* The spine: a band down the left edge, with a crease. Always visible — the
+   old hover-only accent bar grows into it on hover. */
+.book::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 7px;
+  background:
+    linear-gradient(90deg, transparent 4px, rgb(255 255 255 / 0.28) 4px 5px, transparent 5px),
+    var(--book-spine);
+  pointer-events: none;
+}
+.book.post-card::before { display: none; }
+.book:is(:hover, :focus-visible, :focus-within) {
+  --book-drop: 8px;
+}
+/* Dark bands: lighter pages so the block still reads against navy/ink. */
+:is(.hero-stage, .jnl-tone-navy, .jnl-tone-ink, .jnl-tone-accent) .book {
+  --book-paper: rgb(255 255 255 / 0.82);
+  --book-edge: rgb(255 255 255 / 0.38);
+  --book-spine: var(--color-accent-pink, var(--color-accent));
+}
+:root[data-theme="dark"] .book {
+  /* Paper stays paper in the dark: light sheets, dark edge lines. */
+  --book-paper: #d8d4c8;
+  --book-edge: #55534d;
+}
+/* The label in the card foot: reading time and printed pages. */
+.book-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 12px;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.book-meta svg { flex: none; }
+
+/* Shelves: room for the page blocks, no shared mosaic shadow. */
+.tds-grid-auto.jnl-mosaic.jnl-shelf,
+.jnl-stack.jnl-shelf {
+  gap: calc(var(--tds-gutter) * 0.9) calc(var(--tds-gutter) * 0.9);
+  filter: none;
+  padding-right: 24px;
+  padding-bottom: 24px;
+}
+/* A list row as a lying book: the spine stays left, the pages under it. */
+.jnl-stack.jnl-shelf { row-gap: 1.25rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .book { transition: none; }
+}
+@media print {
+  .book { box-shadow: none !important; }
+  .book::after { display: none; }
+}
+
+/* The hover lift of the shared tiles sets `box-shadow` with a higher
+   specificity than `.book`; a book keeps its pages while it lifts. */
+.book.post-card:is(:hover, :focus-visible),
+a.book.jnl-tile:is(:hover, :focus-visible),
+.book:is(:hover, :focus-visible) {
+  box-shadow:
+    var(--book-stack),
+    calc(var(--book-n) + var(--book-drop)) calc(var(--book-n) + var(--book-drop)) 0 0 var(--tds-shadow-ink);
 }

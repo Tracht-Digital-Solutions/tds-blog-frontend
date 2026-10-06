@@ -11,10 +11,16 @@ import "~/styles/global.css";
 import JournalHeader from "~/components/JournalHeader.astro";
 import JournalFooter from "~/components/JournalFooter.astro";
 import ArticleSidebar from "~/components/ArticleSidebar.astro";
+import AppChrome from "~/components/AppChrome.astro";
 import JsonLd from "~/components/JsonLd.astro";
 import { LiveChatCta } from "@tracht-digital-solutions/tds-shared/components";
 import { ConsentBanner } from "@tracht-digital-solutions/tds-shared/consent";
-import { pageTransitionOptIn, themeBootstrapScript } from "@tracht-digital-solutions/tds-shared/astro";
+import {
+  pageDirectionScript,
+  pageTransitionOptIn,
+  speculationRules,
+  themeBootstrapScript,
+} from "@tracht-digital-solutions/tds-shared/astro";
 import { siteConfig } from "~/lib/seo";
 import { isExcluded } from "~/lib/sitemapExclusions";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
@@ -64,6 +70,10 @@ interface Props {
   /** Effective ad mode for this page (article pages resolve it from the post's
    *  `adsMode` + global config). Absent → inherit the global default mode. */
   adsMode?: "off" | "auto" | "manual";
+  /** Article pages: the reading rows of the phone's settings sheet. */
+  reader?: { printHref: string } | null;
+  /** Article pages with a TOC: an "Inhalt" tab on the phone. */
+  hasToc?: boolean;
 }
 
 const {
@@ -80,6 +90,8 @@ const {
   bare = false,
   focusable = false,
   adsMode,
+  reader = null,
+  hasToc = false,
 } = Astro.props;
 
 // Journal-specific default (resolved after destructuring — the default
@@ -116,6 +128,11 @@ const altUrl =
     ? null
     : (altUrlProp ?? new URL(autoAltPath, site).toString());
 const altLang = lang === "de" ? "en" : "de";
+// For the phone's language switch: the twin when there is one, else the other
+// language's home. Unlike `altUrl` this exists for every page.
+const appAltHref = altUrl ? new URL(altUrl).pathname : lang === "de" ? "/en/" : "/";
+// Only the two homes send a returning visitor to their saved language.
+const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "/en/" || Astro.url.pathname === "/en";
 
 // Language-matched RSS autodiscovery (the EN feed carries EN posts).
 const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
@@ -154,7 +171,7 @@ const showConsent =
      no elevation, the 800 display voice, --tds-flat-tint/-hover. Do not
      author radii locally; that is what made this repo fork .chip,
      .display, .display-tight and .eyebrow in the first place. -->
-<html lang={lang} data-surface="blog">
+<html lang={lang} data-surface="blog" class="tds-app">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -162,8 +179,17 @@ const showConsent =
          incoming page's opt-in at its first render, and the stylesheet linked at the
          end of this head often arrives later (tds-shared pageTransitionOptIn). -->
     <style is:inline set:html={pageTransitionOptIn} />
+    {/* Tags each page transition forward/back, so a phone slides like an app. */}
+    <script is:inline set:html={pageDirectionScript} />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#050f68" />
+    <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070a14" media="(prefers-color-scheme: dark)" />
+    {/* Installable app (tds-shared/pwa): manifest, home-screen icon. */}
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Journal" />
     {hidden && <meta name="robots" content="noindex,nofollow" />}
     <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
 
@@ -174,20 +200,40 @@ const showConsent =
     <script is:inline set:html={themeBootstrapScript} />
     {focusable && (
       <script is:inline>
-        /* No-flash focus-mode restore. Gated behind `focusable` so the class is
-           only ever set on article pages — a persisted preference never leaks
-           onto listing/home pages and hides their chrome. */
+        /* No-flash restore of the reading settings. Gated behind `focusable` so
+           the classes are only ever set on article pages.
+           Text size comes from the cross-site preference record the theme
+           bootstrap above published (window.__tdsPrefs, cookie on
+           .tracht-digital.de); the old per-origin key is the fallback for a
+           reader who set it before the move. Focus mode stays per device. */
         (function () {
           try {
             if (localStorage.getItem("tds-blog-focus") === "1") {
               document.documentElement.classList.add("focus-mode");
             }
-            /* Reader text size (the floating zoom buttons), same no-flash rule. */
-            var z = parseFloat(localStorage.getItem("tds-blog-zoom") || "");
-            if (z >= 0.85 && z <= 1.5) {
+            var prefs = window.__tdsPrefs || {};
+            var z = parseFloat(prefs.reader_zoom || localStorage.getItem("tds-blog-zoom") || "");
+            if (z >= 0.85 && z <= 1.5 && z !== 1) {
               document.documentElement.style.setProperty("--reader-zoom", String(z));
             }
           } catch (e) { /* storage disabled — start unfocused */ }
+        })();
+      </script>
+    )}
+    {isHome && altUrl && (
+      <script is:inline define:vars={{ pageLang: lang, homeAlt: altUrl }}>
+        /* A returning visitor who chose the other language lands there — only
+           when arriving from outside our sites (tds-shared/prefs
+           redirectToSavedLocale, inlined so it acts before anything paints).
+           Crawlers carry no cookie; hreflang stays authoritative. */
+        (function () {
+          try {
+            var saved = (window.__tdsPrefs || {}).locale;
+            if (!saved || saved === pageLang) return;
+            var ref = document.referrer ? new URL(document.referrer).hostname : "";
+            if (/(^|\.)tracht-digital\.de$/i.test(ref)) return;
+            location.replace(homeAlt);
+          } catch (e) {}
         })();
       </script>
     )}
@@ -240,6 +286,8 @@ const showConsent =
     <meta name="twitter:image" content={ogImageAbs} />
 
     {jsonLd && <JsonLd data={jsonLd} />}
+    {/* Near-instant navigation: prerender a link once the reader shows intent. */}
+    <script is:inline type="speculationrules" set:html={speculationRules(["/og/", "/rss"])} />
   </head>
   <body>
     <a href="#main" class="absolute -top-full left-0 z-50 px-6 py-3 bg-[var(--color-surface-navy)] text-white text-sm font-semibold focus:top-0 transition-all">
@@ -260,7 +308,8 @@ const showConsent =
             <script is:inline>
               (function () {
                 try {
-                  if (localStorage.getItem("tds-blog-sidenav") === "open") {
+                  var saved = (window.__tdsPrefs || {}).reader_sidenav || localStorage.getItem("tds-blog-sidenav");
+                  if (saved === "open") {
                     document.getElementById("article-sidebar").classList.remove("collapsed");
                     document.getElementById("page-shift").classList.remove("nav-collapsed");
                     var btn = document.getElementById("sidebar-toggle");
@@ -285,6 +334,10 @@ const showConsent =
       )
     }
 
+    {!bare && (
+      <AppChrome lang={lang} altHref={appAltHref} reader={reader} hasToc={hasToc} />
+    )}
+
     {/* One banner. With advertising on it is a real opt-in per purpose; with
         it off it states what the site stores and offers an acknowledgement.
         The AdSense loader below is unchanged — it still reads `tds-ad-consent`,
@@ -304,7 +357,14 @@ const showConsent =
         gatedEmbeds.ts. */}
     <script>
       import { initGatedEmbeds } from "~/lib/gatedEmbeds";
+      import { startAccountPrefsSync } from "@tracht-digital-solutions/tds-shared/prefs";
+      import { registerServiceWorker } from "@tracht-digital-solutions/tds-shared/app";
       initGatedEmbeds();
+      // Signed in? Then theme, language and reading settings follow the
+      // account to other devices (best-effort, silent).
+      void startAccountPrefsSync();
+      // Installable + offline reading (src/pages/sw.js.ts).
+      registerServiceWorker();
     </script>
 
     {/* Floating support widget — self-hides unless the live-chat-cta extension

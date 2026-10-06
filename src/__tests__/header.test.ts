@@ -9,11 +9,10 @@ import { join } from "node:path";
  * violation produces no error, no failing build and no visible symptom until
  * someone opens the page at a phone width.
  *
- * The mobile menu converged on the landingpage's docked sheet in tds-shared
- * 0.25.0. Before that this file carried a bespoke full-screen overlay at a
- * DIFFERENT breakpoint (`md`) with its own scroll lock (`body.drawer-open`)
- * and its own Escape handler — three details that had to agree with the
- * landingpage's and silently did not.
+ * Below lg the journal is an app: a bottom tab bar with sheets
+ * (AppChrome.astro, tds-shared/app). It replaced the docked hamburger sheet,
+ * which itself had replaced a bespoke overlay with its own scroll lock and
+ * Escape handler.
  */
 
 const HEADER = join(process.cwd(), "src", "components", "JournalHeader.astro");
@@ -27,93 +26,49 @@ const source = raw
   .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
   .replace(/^\s*\/\/.*$/gm, "");
 
-/**
- * The opening tag carrying `id="…"`. Walks back to the nearest `<` rather than
- * matching `<tag[\s\S]*?id="…"`, which happily starts at an EARLIER tag of the
- * same name and swallows everything between — the header has three buttons, so
- * that form silently asserts against the wrong element.
- */
-function openingTag(id: string): string {
-  const at = source.indexOf(`id="${id}"`);
-  if (at === -1) return "";
-  const start = source.lastIndexOf("<", at);
-  const end = source.indexOf(">", at);
-  return start === -1 || end === -1 ? "" : source.slice(start, end + 1);
-}
-
 describe("mobile navigation", () => {
-  it("takes its mechanics from tds-shared", () => {
-    expect(source).toMatch(
-      /import \{ mountMobileNav \} from "@tracht-digital-solutions\/tds-shared\/nav"/,
-    );
-    expect(source).toContain("mountMobileNav({");
+  const chromeRaw = readFileSync(join(process.cwd(), "src", "components", "AppChrome.astro"), "utf8");
+
+  it("is the app tab bar, not a hamburger", () => {
+    // The phone navigates with the bottom tab bar + sheets (AppChrome). A
+    // second, hidden menu in the header would be a second source of truth.
+    expect(source).not.toContain("tds-menu-toggle");
+    expect(source).not.toContain("tds-mobile-menu");
+    expect(chromeRaw).toContain('class="tds-tabbar"');
+    expect(chromeRaw).toMatch(/mountAppTabBar\(/);
+    expect(chromeRaw).toMatch(/mountSheet\(/);
+  });
+
+  it("takes the header mechanics from tds-shared", () => {
+    expect(source).toMatch(/from "@tracht-digital-solutions\/tds-shared\/app"/);
+    expect(source).toContain("mountAppHeader(header)");
   });
 
   it("does not hand-roll the scroll lock", () => {
     expect(source).not.toContain("drawer-open");
     expect(source).not.toContain("body.style.overflow");
-    // And the CSS half of the old lock is gone with it, rather than lingering
-    // as a rule nothing sets.
+    expect(chromeRaw).not.toContain("body.style.overflow");
     expect(css).not.toContain("drawer-open");
   });
 
-  it("keeps Escape for the Entdecken disclosure but not for the menu", () => {
-    // The desktop disclosure is a separate control with its own state and
-    // legitimately keeps its handler; the menu's must come from the shared
-    // module, or the two race for the same key.
-    // Only the DOCUMENT-level ones: the search field's own Enter handler is
-    // element-scoped and has nothing to do with either disclosure.
+  it("keeps Escape for the Entdecken disclosure only", () => {
+    // Sheets close on Escape natively (modal <dialog>); only the desktop
+    // disclosure needs its own handler.
     const globalKeydown = source.match(/document\.addEventListener\(\s*"keydown"/g) ?? [];
     expect(globalKeydown).toHaveLength(1);
     expect(source).not.toMatch(/matchMedia\(\s*"\(min-width/);
   });
 
-  it("wears the shared classes on the toggle and the panel", () => {
-    expect(source).toMatch(/class="btn btn-ghost tds-menu-toggle"/);
-    expect(source).toMatch(/class="tds-mobile-menu\b/);
-    expect(source).toContain("tds-menu-bar-top");
-  });
-
   it("hides its desktop chrome at lg, the width every public site uses", () => {
-    // The panel's own breakpoint is baked into `.tds-mobile-menu`; if the bar
-    // hid its nav at `md` the two would disagree for 256px of viewport, with
-    // neither the desktop nav nor a hamburger on screen.
-    expect(source).not.toMatch(/\bmd:(flex|hidden)\b/);
-    // The bar's own breakpoint is `.tds-sitebar__nav` / `__desktop` (tds-shared,
-    // 64rem); the search field is the one local piece and keeps `hidden lg:flex`.
+    expect(source).not.toMatch(/md:(flex|hidden)/);
     expect(source).toContain('<nav class="tds-sitebar__nav"');
     expect(source).toContain('<div class="tds-sitebar__desktop">');
     expect(source).toContain("hidden lg:flex");
   });
 
-  it("never hides the mobile chrome with a utility", () => {
-    // `hidden` loses to unlayered `.btn { display: inline-flex }`.
-    const toggle = openingTag("jnl-menu-toggle");
-    const panel = openingTag("jnl-mobile-menu");
-    expect(toggle).not.toBe("");
-    expect(panel).not.toBe("");
-    expect(toggle).not.toMatch(/\blg:hidden\b/);
-    expect(panel).not.toMatch(/\blg:hidden\b/);
-  });
-
-  it("keeps the panel's docking offset and its max-height in agreement", () => {
-    const panel = openingTag("jnl-mobile-menu");
-    const top = panel.match(/top-\[([\d.]+rem)\]/)?.[1];
-    const inset = panel.match(/--tds-mobile-menu-inset:\s*([\d.]+rem)/)?.[1];
-    expect(top).toBeDefined();
-    expect(inset).toBe(top);
-  });
-
-  it("no longer styles the panel container itself", () => {
-    // Only the journal's editorial link optics stay local. A re-declared
-    // container is how the surfaces drift apart again.
-    const style = raw.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? "";
-    expect(style).not.toMatch(/\.jnl-fullmenu\s*\{/);
-    expect(style).not.toMatch(/\.tds-mobile-menu\s*\{/);
-  });
-
   it("bundles the script rather than inlining it", () => {
-    expect(raw).not.toMatch(/<script[^>]*\bis:inline\b/);
+    expect(raw).not.toMatch(/<script[^>]*is:inline/);
+    expect(chromeRaw).not.toMatch(/<script[^>]*is:inline/);
   });
 });
 
@@ -201,10 +156,10 @@ describe("the account menu", () => {
     expect(source).not.toMatch(/<AccountMenu[^>]*loggedOut=/);
   });
 
-  it("sits OUTSIDE the desktop-only cluster and before the hamburger", () => {
+  it("sits OUTSIDE the desktop-only cluster", () => {
     // Inside `hidden lg:flex` it would vanish on a phone — where it is the
-    // only control beside the hamburger, so its absence is total rather than
-    // partial.
+    // only control in the bar (navigation lives in the tab bar), so its
+    // absence would be total rather than partial.
     const desktopCluster = source.indexOf('<div class="tds-sitebar__desktop">');
     // The cluster's own closing tag: the second `</div>` after the CTA, which
     // sits in `.tds-sitebar__wide`. Searching from the end would find the
@@ -212,11 +167,9 @@ describe("the account menu", () => {
     const cta = source.indexOf("btn btn-primary", desktopCluster);
     const clusterEnd = source.indexOf("</div>", source.indexOf("</div>", cta) + 1);
     const mount = source.indexOf("<AccountMenu");
-    const toggle = source.indexOf('id="jnl-menu-toggle"');
 
     expect(desktopCluster).toBeGreaterThan(-1);
     expect(mount).toBeGreaterThan(clusterEnd);
-    expect(mount).toBeLessThan(toggle);
   });
 
   it("carries no visibility utility of its own", () => {

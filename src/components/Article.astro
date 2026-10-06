@@ -266,6 +266,8 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   sidebar
   focusable
   adsMode={adsMode}
+  reader={{ printHref: `${pfx}/${post.slug}/print` }}
+  hasToc={showToc}
 >
   <div
     id="reading-progress"
@@ -323,7 +325,8 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
         <script is:inline>
           (function () {
             try {
-              if (localStorage.getItem("tds-blog-toc") === "collapsed") {
+              var saved = (window.__tdsPrefs || {}).reader_toc || localStorage.getItem("tds-blog-toc");
+              if (saved === "collapsed") {
                 var m = document.getElementById("main");
                 if (m) m.classList.add("toc-collapsed");
                 var t = document.getElementById("toc-toggle");
@@ -621,15 +624,21 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
   </main>
 
   <script>
+    import { writePrefs } from "@tracht-digital-solutions/tds-shared/prefs";
+
     // Reader focus mode: toggles `focus-mode` on <html> (pre-paint restore lives
     // in Layout), persists the choice, and binds the `f` key (toggle) + `Escape`
     // (exit). Ignores key presses while typing in a field.
     (function () {
       const root = document.documentElement;
       const btn = document.getElementById("focus-toggle");
+      // The phone's settings sheet carries the same toggle.
+      const others = Array.from(document.querySelectorAll<HTMLElement>("[data-focus-toggle]"));
       const KEY = "tds-blog-focus";
       const sync = () => {
-        if (btn) btn.setAttribute("aria-pressed", String(root.classList.contains("focus-mode")));
+        const on = String(root.classList.contains("focus-mode"));
+        if (btn) btn.setAttribute("aria-pressed", on);
+        for (const b of others) b.setAttribute("aria-pressed", on);
       };
       const set = (on: boolean) => {
         root.classList.toggle("focus-mode", on);
@@ -638,6 +647,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       };
       sync();
       btn?.addEventListener("click", () => set(!root.classList.contains("focus-mode")));
+      for (const b of others) b.addEventListener("click", () => set(!root.classList.contains("focus-mode")));
       document.addEventListener("keydown", (e) => {
         const t = e.target as HTMLElement | null;
         if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
@@ -651,38 +661,53 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
     })();
 
     // Reader zoom: scales the reading frame (`--reader-zoom`, read by
-    // `.article-read` / `.article-zoom`). The pre-paint restore lives in Layout.
+    // `.article-read` / `.article-zoom`). The pre-paint restore lives in Layout;
+    // the value is saved through tds-shared/prefs, so it follows the reader to
+    // every Tracht Digital site and, signed in, to other devices.
     (function () {
       const root = document.documentElement;
-      const KEY = "tds-blog-zoom";
       const STEPS = [0.9, 1, 1.1, 1.25, 1.4];
-      const inBtn = document.getElementById("zoom-in") as HTMLButtonElement | null;
-      const outBtn = document.getElementById("zoom-out") as HTMLButtonElement | null;
+      const inBtns = [document.getElementById("zoom-in"), ...document.querySelectorAll<HTMLElement>('[data-zoom-step="1"]')]
+        .filter(Boolean) as HTMLButtonElement[];
+      const outBtns = [document.getElementById("zoom-out"), ...document.querySelectorAll<HTMLElement>('[data-zoom-step="-1"]')]
+        .filter(Boolean) as HTMLButtonElement[];
+      const resets = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-zoom-reset]"));
       const current = () => {
         const v = parseFloat(root.style.getPropertyValue("--reader-zoom")) || 1;
         // Snap to the nearest step so a stale stored value still moves sanely.
         return STEPS.reduce((best, s) => (Math.abs(s - v) < Math.abs(best - v) ? s : best), 1);
       };
       const sync = () => {
-        const i = STEPS.indexOf(current());
-        if (inBtn) inBtn.disabled = i >= STEPS.length - 1;
-        if (outBtn) outBtn.disabled = i <= 0;
+        const z = current();
+        const i = STEPS.indexOf(z);
+        for (const b of inBtns) b.disabled = i >= STEPS.length - 1;
+        for (const b of outBtns) b.disabled = i <= 0;
+        for (const r of resets) {
+          const label = r.querySelector("[data-zoom-label]");
+          if (label) label.textContent = `${Math.round(z * 100)} %`;
+          r.setAttribute("aria-pressed", String(z === 1));
+        }
+      };
+      const apply = (next: number) => {
+        if (next === 1) root.style.removeProperty("--reader-zoom");
+        else root.style.setProperty("--reader-zoom", String(next));
+        writePrefs({ reader_zoom: String(next) });
+        sync();
       };
       const step = (dir: 1 | -1) => {
         const i = STEPS.indexOf(current());
-        const next = STEPS[Math.min(STEPS.length - 1, Math.max(0, i + dir))]!;
-        if (next === 1) root.style.removeProperty("--reader-zoom");
-        else root.style.setProperty("--reader-zoom", String(next));
-        try { localStorage.setItem(KEY, String(next)); } catch { /* no-op */ }
-        sync();
+        apply(STEPS[Math.min(STEPS.length - 1, Math.max(0, i + dir))]!);
       };
-      inBtn?.addEventListener("click", () => step(1));
-      outBtn?.addEventListener("click", () => step(-1));
+      for (const b of inBtns) b.addEventListener("click", () => step(1));
+      for (const b of outBtns) b.addEventListener("click", () => step(-1));
+      for (const r of resets) r.addEventListener("click", () => apply(1));
       sync();
     })();
   </script>
 
   <script>
+    import { writePrefs } from "@tracht-digital-solutions/tds-shared/prefs";
+
     // Fold the section nav into a tick rail (each section = one line; the
     // line for the section in view expands via the scroll-spy `.on` class).
     // State persists in localStorage so it survives navigation.
@@ -703,11 +728,7 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       tocToggle.addEventListener("click", () => {
         const collapsed = !tocShell.classList.contains("toc-collapsed");
         applyToc(collapsed);
-        try {
-          localStorage.setItem("tds-blog-toc", collapsed ? "collapsed" : "open");
-        } catch {
-          /* storage disabled — fold state just won't persist */
-        }
+        writePrefs({ reader_toc: collapsed ? "collapsed" : "open" });
       });
     }
 

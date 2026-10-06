@@ -71,7 +71,7 @@ const jsonLd = asGraph(
 
     <section class="jnl-band jnl-tone-tint">
       <div class="tds-shell">
-        <ul class="jnl-stack">
+        <ul class="jnl-stack jnl-shelf">
           {posts.map((p) => (
             <BlogPostCard
               slug={p.slug}
@@ -79,6 +79,7 @@ const jsonLd = asGraph(
               title={p.title}
               excerpt={p.excerpt}
               publishedAt={p.publishedAt}
+              readingMinutes={p.readingMinutes}
               lang="de"
             />
           ))}

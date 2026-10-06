@@ -113,7 +113,7 @@ const jsonLd = asGraph(
         {latest.length === 0 ? (
           <p class="marginalia">Zurzeit keine Beiträge.</p>
         ) : (
-          <ul class="tds-grid-auto jnl-mosaic list-none p-0 m-0">
+          <ul class="tds-grid-auto jnl-mosaic jnl-shelf list-none p-0 m-0">
             {latest.map((p, i) => (
               /* No `flex` wrapper — .post-card is a container-query container and
                  a flex item would collapse to zero width (see RelatedArticles).

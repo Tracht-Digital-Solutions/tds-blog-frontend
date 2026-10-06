@@ -1,4 +1,5 @@
 import { PostCover } from "./Covers";
+import { bookClass, bookLabel } from "../lib/book";
 
 /**
  * Flat post card from the design-system blog kit: cover block on top,
@@ -24,6 +25,8 @@ export interface CardPost {
   publishedAt: string | null;
   coverHint?: string | null;
   author?: CardAuthor | null;
+  /** Reading time from the list API — sets the book's thickness. */
+  readingMinutes?: number | null;
 }
 
 /** Neutral byline for a post whose author is missing (deleted user / legacy). */
@@ -103,6 +106,21 @@ export function formatPostDate(publishedAt: string | null, lang: "de" | "en"): s
   });
 }
 
+/** "~7 Min. · 6 Seiten" with a small book glyph; nothing without a length. */
+export function BookMeta({ minutes, lang }: { minutes?: number | null; lang: "de" | "en" }) {
+  const label = bookLabel(minutes, lang);
+  if (!label) return null;
+  return (
+    <span className="book-meta tabular">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"></path>
+        <path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"></path>
+      </svg>
+      {label}
+    </span>
+  );
+}
+
 export default function PostCard({
   post,
   lang,
@@ -119,7 +137,7 @@ export default function PostCard({
   // change shape for a wide track no matter what CSS was written.
   return (
     <a
-      className={`post-card${large ? " post-card--large" : ""}`}
+      className={`post-card ${bookClass(post.readingMinutes)}${large ? " post-card--large" : ""}`}
       href={`${lang === "en" ? "/en" : ""}/${post.slug}`}
     >
       <div className="post-card__cover">
@@ -148,6 +166,7 @@ export default function PostCard({
             name={post.author?.name ?? fallbackAuthorName(lang)}
             avatarUrl={post.author?.avatarUrl}
           />
+          <BookMeta minutes={post.readingMinutes} lang={lang} />
         </div>
       </div>
     </a>

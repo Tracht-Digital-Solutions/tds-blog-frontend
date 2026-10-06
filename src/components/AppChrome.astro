@@ -1,0 +1,299 @@
+---
+/**
+ * The journal on a phone, as an app: a bottom tab bar and the sheets it opens
+ * (Themen, Suche, Einstellungen and — on an article — Inhalt). Below `lg`
+ * only; the desktop keeps the header and, on articles, the sidebar.
+ *
+ * It replaces the hamburger menu. Everything that menu held has a tab now:
+ * the taxonomy is "Themen", language/theme/contact are "Einstellungen", and
+ * search — which the phone never had — is a tab of its own.
+ *
+ * Markup and copy are the journal's; the mechanics are shared
+ * (`tds-shared/app`: tab bar lane, sheet focus/drag/scroll-lock, the theme
+ * and language controls) and so is the CSS (`styles/app-shell.css`).
+ */
+import { propertyContact, propertyNav } from "@tracht-digital-solutions/tds-shared/nav";
+import { primaryNav, entdeckenLabels, categoryHref, tagHref, topicsHref, isActiveNav } from "~/lib/nav";
+import { getTaxonomy } from "~/lib/taxonomy";
+
+interface Props {
+  lang: "de" | "en";
+  /** The other language's version of this page (or its home). */
+  altHref: string;
+  /** Article pages: the reading rows (text size, focus, print) in Einstellungen. */
+  reader?: { printHref: string } | null;
+  /** Article pages with ≥2 sections: an "Inhalt" tab. */
+  hasToc?: boolean;
+}
+
+const { lang, altHref, reader = null, hasToc = false } = Astro.props;
+const de = lang === "de";
+const home = de ? "/" : "/en/";
+const path = Astro.url.pathname;
+const labels = entdeckenLabels(lang);
+const { categories, topTags } = await getTaxonomy(lang);
+const nav = primaryNav(lang).filter((n) => n.kind === "link");
+const others = propertyNav("journal", lang, home).filter((p) => !p.current);
+const contact = propertyContact(lang);
+
+const t = de
+  ? {
+      tabs: "App-Navigation", start: "Start", topics: "Themen", search: "Suche", contents: "Inhalt", settings: "Mehr",
+      close: "Schließen", searchLabel: "Im Journal suchen", searchPh: "Wonach suchst du?", searchGo: "Suchen",
+      searchHint: "Durchsucht Titel, Auszüge und Tags aller Beiträge.",
+      look: "Darstellung", light: "Hell", dark: "Dunkel", system: "System", language: "Sprache",
+      reading: "Lesen", size: "Textgröße", smaller: "Kleiner", larger: "Größer", focus: "Fokusmodus", print: "Drucken / PDF",
+      more: "Weitere Angebote", cta: "Unverbindlich anfragen", saved: "Wird für dich gespeichert – auf allen Tracht-Digital-Seiten.",
+    }
+  : {
+      tabs: "App navigation", start: "Home", topics: "Topics", search: "Search", contents: "Contents", settings: "More",
+      close: "Close", searchLabel: "Search the journal", searchPh: "What are you looking for?", searchGo: "Search",
+      searchHint: "Searches titles, excerpts and tags of every post.",
+      look: "Appearance", light: "Light", dark: "Dark", system: "System", language: "Language",
+      reading: "Reading", size: "Text size", smaller: "Smaller", larger: "Larger", focus: "Focus mode", print: "Print / PDF",
+      more: "More from Tracht Digital", cta: "Get in touch", saved: "Saved for you — on every Tracht Digital site.",
+    };
+const deHref = de ? path : altHref;
+const enHref = de ? altHref : path;
+---
+
+<nav class="tds-tabbar" id="app-tabbar" aria-label={t.tabs}>
+  <a class="tds-tabbar__item" href={home} data-tab-match={`${home} ${de ? "/page" : "/en/page"}`}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path><path d="M10 21v-6h4v6"></path></svg>
+    <span>{t.start}</span>
+  </a>
+  <button type="button" class="tds-tabbar__item" data-sheet-open="sheet-topics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a1 1 0 0 1 1-1h4v16H5a1 1 0 0 1-1-.5Z"></path><path d="M9 4h4v16H9z"></path><path d="m14 5.2 3.9-1 3.6 14.6-3.9 1z"></path></svg>
+    <span>{t.topics}</span>
+  </button>
+  <button type="button" class="tds-tabbar__item" data-sheet-open="sheet-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+    <span>{t.search}</span>
+  </button>
+  {hasToc && (
+    <button type="button" class="tds-tabbar__item" data-sheet-open="sheet-toc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"></path><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>
+      <span>{t.contents}</span>
+    </button>
+  )}
+  <button type="button" class="tds-tabbar__item" data-sheet-open="sheet-settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+    <span>{t.settings}</span>
+  </button>
+</nav>
+
+<dialog class="tds-sheet" id="sheet-topics" aria-labelledby="sheet-topics-title">
+  <div class="tds-sheet__grab">
+    <h2 class="tds-sheet__title" id="sheet-topics-title">{t.topics}</h2>
+    <button type="button" class="tds-sheet__close" data-sheet-close aria-label={t.close}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </div>
+  <div class="tds-sheet__body">
+    {nav.map((n) => n.kind === "link" && (
+      <a class="tds-sheet-row" href={n.href} aria-current={isActiveNav(n.href, path) ? "page" : undefined}>
+        <span>{n.label}</span><span aria-hidden="true">→</span>
+      </a>
+    ))}
+    <p class="tds-sheet-heading">{labels.categories}</p>
+    {categories.length === 0 ? <p class="jnav-dd-empty">—</p> : categories.map((c) => (
+      <a class="tds-sheet-row" href={categoryHref(lang, c.slug)} aria-current={isActiveNav(categoryHref(lang, c.slug), path) ? "page" : undefined}>
+        <span>{c.name}</span><span class="jnav-dd-count">{c.count}</span>
+      </a>
+    ))}
+    {topTags.length > 0 && (
+      <>
+        <p class="tds-sheet-heading">{labels.tags}</p>
+        <div class="jnav-dd-chips app-sheet-chips">
+          {topTags.map((tag) => (
+            <a href={tagHref(lang, tag.name)} class="chip-flat chip-flat--sm">#{tag.name}</a>
+          ))}
+        </div>
+      </>
+    )}
+    <p class="tds-sheet-heading">{labels.topics}</p>
+    <a class="tds-sheet-row" href={topicsHref(lang)}><span>{labels.topics}</span><span aria-hidden="true">→</span></a>
+  </div>
+</dialog>
+
+<dialog class="tds-sheet" id="sheet-search" aria-labelledby="sheet-search-title">
+  <div class="tds-sheet__grab">
+    <h2 class="tds-sheet__title" id="sheet-search-title">{t.search}</h2>
+    <button type="button" class="tds-sheet__close" data-sheet-close aria-label={t.close}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </div>
+  <div class="tds-sheet__body">
+    <form class="app-search" action={home} method="get" role="search">
+      <label class="sr-only" for="app-search-q">{t.searchLabel}</label>
+      <input id="app-search-q" name="q" type="search" enterkeyhint="search" autocomplete="off" placeholder={t.searchPh} />
+      <button type="submit" class="btn-flat">{t.searchGo}</button>
+    </form>
+    <p class="app-search-hint">{t.searchHint}</p>
+  </div>
+</dialog>
+
+{hasToc && (
+  <dialog class="tds-sheet" id="sheet-toc" aria-labelledby="sheet-toc-title">
+    <div class="tds-sheet__grab">
+      <h2 class="tds-sheet__title" id="sheet-toc-title">{t.contents}</h2>
+      <button type="button" class="tds-sheet__close" data-sheet-close aria-label={t.close}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+    <div class="tds-sheet__body" id="sheet-toc-body">
+      {/* Filled from the article's own TOC links on mount — one source. */}
+    </div>
+  </dialog>
+)}
+
+<dialog class="tds-sheet" id="sheet-settings" aria-labelledby="sheet-settings-title">
+  <div class="tds-sheet__grab">
+    <h2 class="tds-sheet__title" id="sheet-settings-title">{t.settings}</h2>
+    <button type="button" class="tds-sheet__close" data-sheet-close aria-label={t.close}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </div>
+  <div class="tds-sheet__body" id="sheet-settings-body">
+    {reader && (
+      <>
+        <p class="tds-sheet-heading">{t.reading}</p>
+        <div class="tds-segmented" role="group" aria-label={t.size}>
+          <button type="button" data-zoom-step="-1" aria-label={t.smaller}>A−</button>
+          <button type="button" data-zoom-reset aria-label={t.size}><span data-zoom-label>100 %</span></button>
+          <button type="button" data-zoom-step="1" aria-label={t.larger}>A+</button>
+        </div>
+        <div class="app-sheet-actions">
+          <button type="button" class="tds-sheet-row app-sheet-button" data-focus-toggle aria-pressed="false">
+            <span>{t.focus}</span><span aria-hidden="true">F</span>
+          </button>
+          <a class="tds-sheet-row" href={reader.printHref} target="_blank" rel="noopener">
+            <span>{t.print}</span><span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </>
+    )}
+
+    <p class="tds-sheet-heading">{t.look}</p>
+    <div class="tds-segmented" role="group" aria-label={t.look}>
+      <button type="button" data-theme-choice="light" aria-pressed="false">{t.light}</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false">{t.dark}</button>
+      <button type="button" data-theme-choice="system" aria-pressed="false">{t.system}</button>
+    </div>
+
+    <p class="tds-sheet-heading">{t.language}</p>
+    <div class="tds-segmented" role="group" aria-label={t.language}>
+      <a href={deHref} data-locale-link="de" hreflang="de" aria-current={de ? "true" : undefined}>Deutsch</a>
+      <a href={enHref} data-locale-link="en" hreflang="en" aria-current={!de ? "true" : undefined}>English</a>
+    </div>
+    <p class="app-sheet-note">{t.saved}</p>
+
+    <p class="tds-sheet-heading">{t.more}</p>
+    {others.map((p) => (
+      <a class="tds-sheet-row" href={p.href}><span>{p.label}</span><span aria-hidden="true">↗</span></a>
+    ))}
+    <a href={contact} class="btn-flat app-sheet-cta">{t.cta}</a>
+  </div>
+</dialog>
+
+<style>
+  .app-search {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  .app-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.875rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-card, var(--color-paper));
+    color: var(--color-ink);
+    font: inherit;
+    font-size: 1rem; /* ≥16px: iOS does not zoom the page on focus */
+  }
+  .app-search input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -1px;
+  }
+  .app-search-hint,
+  .app-sheet-note {
+    margin: 0.625rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+  .app-sheet-chips { padding: 0.25rem 0 0.5rem; }
+  .app-sheet-actions { margin-top: 0.5rem; }
+  .app-sheet-button {
+    width: 100%;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    background: transparent;
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .app-sheet-button[aria-pressed="true"] { color: var(--color-accent); }
+  .app-sheet-cta {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+</style>
+
+<script>
+  import { mountAppTabBar, mountSheet, mountPreferenceControls } from "@tracht-digital-solutions/tds-shared/app";
+
+  const bar = document.getElementById("app-tabbar");
+  if (bar) mountAppTabBar(bar);
+
+  // One sheet per tab; a tab is its sheet's trigger.
+  for (const dialog of Array.from(document.querySelectorAll<HTMLDialogElement>("dialog.tds-sheet"))) {
+    const triggers = Array.from(document.querySelectorAll<HTMLElement>(`[data-sheet-open="${dialog.id}"]`));
+    mountSheet({
+      dialog,
+      triggers,
+      onOpen: () => {
+        if (dialog.id === "sheet-search") dialog.querySelector<HTMLInputElement>("input[name=q]")?.focus();
+      },
+    });
+  }
+
+  const settings = document.getElementById("sheet-settings-body");
+  if (settings) mountPreferenceControls(settings);
+
+  // Search: on the index the BlogIndex island filters live (same event the
+  // desktop field dispatches); elsewhere the form submits to `/?q=`.
+  const q = document.getElementById("app-search-q") as HTMLInputElement | null;
+  if (q) {
+    q.value = new URLSearchParams(location.search).get("q") ?? "";
+    q.addEventListener("input", () => {
+      if (document.documentElement.dataset.blogLiveSearch) {
+        document.dispatchEvent(new CustomEvent("tds-blog-search", { detail: q.value }));
+      }
+    });
+    q.form?.addEventListener("submit", (e) => {
+      if (document.documentElement.dataset.blogLiveSearch) {
+        e.preventDefault();
+        (document.getElementById("sheet-search") as HTMLDialogElement | null)?.close();
+      }
+    });
+  }
+
+  // "Inhalt": the article's own TOC links, so the chapter list has one source.
+  const tocBody = document.getElementById("sheet-toc-body");
+  if (tocBody) {
+    for (const link of Array.from(document.querySelectorAll<HTMLAnchorElement>(".toc a[data-toc]"))) {
+      const row = document.createElement("a");
+      row.className = "tds-sheet-row";
+      row.href = link.getAttribute("href") ?? "#";
+      row.dataset.toc = link.dataset.toc ?? "";
+      row.textContent = link.querySelector(".toc-label")?.textContent ?? link.textContent ?? "";
+      row.addEventListener("click", () => link.click());
+      tocBody.append(row);
+    }
+  }
+</script>
