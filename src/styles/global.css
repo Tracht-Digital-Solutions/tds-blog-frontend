@@ -1767,25 +1767,55 @@ a.topic-card:focus-visible {
 /* The sheet — a real page-sized surface (Seitenabstand via padding), flat
    border, centred in the remaining space. Widths match the paper; the island
    swaps the size-* class and the @page rule together. */
+/* The sheet. `#print-root` is the stage of PAGES (printPaginate.ts): each
+   `.print-page` is one sheet of the chosen paper at its exact size, with the
+   16mm margin as padding, a gap between sheets and the kit's hard offset
+   under each. Until the island has paginated, the root itself looks like one
+   sheet so nothing flashes. The whole stage keeps the paper width in mm and is
+   scaled to the screen with `zoom` (--print-scale, PrintControls). */
 .print-doc {
   color: #111;
-  background: #fff;
   font-family: var(--font-body);
   box-sizing: border-box;
   margin-inline: auto;
+  --print-fs: 1rem; /* body prose size, driven by the fs-* class below */
+  --page-h: 297mm;
+  zoom: var(--print-scale, 1);
+}
+.print-doc.size-a5 { width: 148mm; --page-h: 210mm; }
+.print-doc.size-a4 { width: 210mm; --page-h: 297mm; }
+.print-doc.size-a3 { width: 297mm; --page-h: 420mm; }
+.print-doc:not(.is-paged),
+.print-page {
+  box-sizing: border-box;
+  background: #fff;
   border: 1px solid #18181b;
   padding: 16mm;
-  --print-fs: 1rem; /* body prose size, driven by the fs-* class below */
-  /* True paper width, scaled to the screen as a whole (PrintControls sets
-     --print-scale). Never `max-width: 100%` — that clamped every format to
-     the phone's width and A5/A4/A3 looked identical. The sheet reads as a
-     page lying on the desk: the kit's hard offset under it. */
-  zoom: var(--print-scale, 1);
   box-shadow: 8px 8px 0 0 #18181b;
 }
-.print-doc.size-a5 { width: 148mm; min-height: 210mm; }
-.print-doc.size-a4 { width: 210mm; min-height: 297mm; }
-.print-doc.size-a3 { width: 297mm; min-height: 420mm; }
+.print-doc:not(.is-paged) { min-height: var(--page-h); }
+.print-page {
+  position: relative;
+  width: 100%;
+  height: var(--page-h);
+  margin-bottom: 12mm;
+}
+.print-page:last-child { margin-bottom: 0; }
+.print-page__inner {
+  height: 100%;
+  overflow: hidden;
+}
+/* A single block taller than a page (a huge image) keeps its page and may
+   not be cut: it is the only thing on it. */
+.print-page__inner:has(> :only-child) { overflow: visible; }
+.print-page__no {
+  position: absolute;
+  right: 16mm;
+  bottom: 6mm;
+  font-size: 0.6875rem;
+  color: #71717a;
+  font-variant-numeric: tabular-nums;
+}
 .print-doc.fs-s { --print-fs: 0.9rem; }
 .print-doc.fs-m { --print-fs: 1rem; }
 .print-doc.fs-l { --print-fs: 1.15rem; }
@@ -1874,7 +1904,20 @@ a.topic-card:focus-visible {
 @media print {
   .print-controls { display: none !important; }
   .print-shell { max-width: none; margin: 0; padding: 0; }
-  .print-doc { zoom: 1 !important; min-height: 0 !important; }
+  .print-doc { zoom: 1 !important; min-height: 0 !important; width: auto !important; }
+  /* Paper: the page boxes dissolve into the printer's own pages — same
+     content box (@page size + 16mm margin), and a forced break where the
+     preview broke, so the printout matches the preview page for page. */
+  .print-page {
+    height: auto;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+  .print-page + .print-page { break-before: page; }
+  .print-page__inner { height: auto; overflow: visible; }
+  .print-page__no { display: none; }
   /* Let @page own the sheet size + margin — drop the on-screen sheet frame
      so the paper margin isn't applied twice. */
   .print-doc {

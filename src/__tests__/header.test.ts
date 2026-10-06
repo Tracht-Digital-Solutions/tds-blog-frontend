@@ -36,7 +36,7 @@ describe("mobile navigation", () => {
     expect(source).not.toContain("tds-mobile-menu");
     expect(chromeRaw).toContain('class="tds-tabbar"');
     expect(chromeRaw).toMatch(/mountAppTabBar\(/);
-    expect(chromeRaw).toMatch(/mountSheet\(/);
+    expect(chromeRaw).toMatch(/mountTabPages\(/);
   });
 
   it("takes the header mechanics from tds-shared", () => {
