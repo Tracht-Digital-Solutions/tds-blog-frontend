@@ -1601,14 +1601,21 @@ a.topic-card:focus-visible {
 }
 @media (min-width: 900px) {
   /* Leave room for the floating control bar pinned to the right. */
-  .print-shell { padding-right: 18rem; }
+  .print-shell { padding-right: 19rem; }
 }
-/* Meta / format controls — a floating bar on the right (flat, no shadow). */
+/* The sheet's stage: the island measures its width to scale the sheet. The
+   sheet's hard offset (8px) needs room on the right or it is cut off. */
+.print-shell > #print-root { margin-right: 8px; }
+/* Meta / format controls — a floating panel on the right on a wide screen,
+   a block above the sheet on a phone. Since 2026-10-06 it carries the kit's
+   hard 2D shadow like every other panel of the site (screen only; @media
+   print drops every shadow). */
 .print-controls {
   background: #fff;
-  border: 1px solid #e4e4e7;
+  border: 1px solid #18181b;
   padding: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  box-shadow: 6px 6px 0 0 #18181b;
 }
 @media (min-width: 900px) {
   .print-controls {
@@ -1622,7 +1629,29 @@ a.topic-card:focus-visible {
     z-index: 10;
   }
 }
-.print-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.print-group { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+/* Paper and type size side by side. */
+.print-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 900px) {
+  .print-row { grid-template-columns: 1fr; }
+}
+.print-scale-note {
+  margin: -0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #71717a;
+}
+.print-mark-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e4e4e7;
+}
+.print-mark-row .print-action { width: auto; flex: 1 1 auto; }
 .print-seg { display: flex; gap: 0.25rem; }
 .print-seg-btn {
   flex: 1;
@@ -1636,6 +1665,11 @@ a.topic-card:focus-visible {
 }
 .print-seg-btn:hover { background: #e4e4e7; }
 .print-seg-btn.on { background: #18181b; color: #fff; border-color: #18181b; }
+.print-seg-btn,
+.print-action { box-shadow: 2px 2px 0 0 #18181b; }
+.print-seg-btn.on,
+.print-seg-btn:active,
+.print-action:active { box-shadow: none; translate: 2px 2px; }
 
 /* Highlighter toggle + clear. */
 .print-action {
@@ -1680,10 +1714,16 @@ a.topic-card:focus-visible {
   color: #71717a;
   margin: 0;
 }
+/* The switches in two columns, in document order — eight toggles in one
+   long column was the "unordered" list. */
 .print-switches {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.75rem;
+}
+/* The fixed side panel on a wide screen is one narrow column: one switch a row. */
+@media (min-width: 900px) {
+  .print-switches { grid-template-columns: 1fr; }
 }
 .print-switch {
   display: flex;
@@ -1722,7 +1762,7 @@ a.topic-card:focus-visible {
 .print-switch-input:checked + .print-switch-track { background: #18181b; }
 .print-switch-input:checked + .print-switch-track .print-switch-thumb { transform: translateX(14px); }
 .print-switch-input:focus-visible + .print-switch-track { outline: 2px solid #18181b; outline-offset: 2px; }
-.print-do { margin-top: 0.15rem; align-self: flex-start; }
+.print-do { width: 100%; justify-content: center; }
 
 /* The sheet — a real page-sized surface (Seitenabstand via padding), flat
    border, centred in the remaining space. Widths match the paper; the island
@@ -1733,14 +1773,19 @@ a.topic-card:focus-visible {
   font-family: var(--font-body);
   box-sizing: border-box;
   margin-inline: auto;
-  max-width: 100%;
-  border: 1px solid #e4e4e7;
+  border: 1px solid #18181b;
   padding: 16mm;
   --print-fs: 1rem; /* body prose size, driven by the fs-* class below */
+  /* True paper width, scaled to the screen as a whole (PrintControls sets
+     --print-scale). Never `max-width: 100%` — that clamped every format to
+     the phone's width and A5/A4/A3 looked identical. The sheet reads as a
+     page lying on the desk: the kit's hard offset under it. */
+  zoom: var(--print-scale, 1);
+  box-shadow: 8px 8px 0 0 #18181b;
 }
-.print-doc.size-a5 { width: 148mm; }
-.print-doc.size-a4 { width: 210mm; }
-.print-doc.size-a3 { width: 297mm; }
+.print-doc.size-a5 { width: 148mm; min-height: 210mm; }
+.print-doc.size-a4 { width: 210mm; min-height: 297mm; }
+.print-doc.size-a3 { width: 297mm; min-height: 420mm; }
 .print-doc.fs-s { --print-fs: 0.9rem; }
 .print-doc.fs-m { --print-fs: 1rem; }
 .print-doc.fs-l { --print-fs: 1.15rem; }
@@ -1829,6 +1874,7 @@ a.topic-card:focus-visible {
 @media print {
   .print-controls { display: none !important; }
   .print-shell { max-width: none; margin: 0; padding: 0; }
+  .print-doc { zoom: 1 !important; min-height: 0 !important; }
   /* Let @page own the sheet size + margin — drop the on-screen sheet frame
      so the paper margin isn't applied twice. */
   .print-doc {
@@ -2006,13 +2052,8 @@ html.focus-mode #focus-toggle {
 :is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) :is(.tds-grid-auto.jnl-mosaic, .jnl-stack, .jnl-article-end) {
   filter: none;
 }
-/* Paper has no depth: the print view and the print controls stay flat.
-   Only shadows are cleared — the print sheet's own filters (the greyscale
-   cover) stay. */
-.print-controls,
-.print-controls * {
-  box-shadow: none !important;
-}
+/* Paper itself has no depth: on paper (@media print below) every shadow goes.
+   On screen the print view takes the kit's hard offsets (2026-10-06). */
 @media print {
   * {
     box-shadow: none !important;
@@ -2169,4 +2210,20 @@ a.book.jnl-tile:is(:hover, :focus-visible),
   box-shadow:
     var(--book-stack),
     calc(var(--book-n) + var(--book-drop)) calc(var(--book-n) + var(--book-drop)) 0 0 var(--tds-shadow-ink);
+}
+
+/* ---- Phone: the logo sits IN the first band (2026-10-06) ----
+   On a phone there is no top bar (tds-shared app-shell): the header is the
+   page's first line. When the page opens on the dark hero (`.hero-stage`, the index pages), that
+   line takes the hero's navy so the logo stands inside the band rather than
+   on a strip of paper above it — the mark and the wordmark turn light. */
+@media (max-width: 63.99rem) {
+  .tds-app body:has(.hero-stage) .tds-app-header {
+    background: var(--color-surface-navy);
+    color: #fff;
+  }
+  .tds-app body:has(.hero-stage) .tds-app-header .brand-logo { background-color: #fff; }
+  .tds-app body:has(.hero-stage) .tds-app-header .brand-wordmark,
+  .tds-app body:has(.hero-stage) .tds-app-header .brand-wordmark .accent-italic { color: #fff; }
+  .tds-app body:has(.hero-stage) .tds-app-header .brand-wordmark .accent-italic { color: var(--color-accent-pink, #ff8fab); }
 }

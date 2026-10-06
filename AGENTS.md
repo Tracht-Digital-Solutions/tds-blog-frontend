@@ -1158,3 +1158,21 @@ stay open unless an admin switched enforcement on.
   reachable API that answers 5xx makes the render fail; a failed render is
   never cached, and the next request asks again.
 
+## 2026-10-06: no top bar on the phone, sectioned sitemap, print view at scale
+
+- **Phone:** the header is the page's first line, not a bar (tds-shared 0.48
+  app-shell). When the page opens on the navy hero (`.hero-stage`), that line
+  takes the navy and the logo turns light (`body:has(.hero-stage)` in
+  global.css). The "Themen" sheet lists the journal's taxonomy only — links to
+  the sibling sites live under "Mehr" alone.
+- **Sitemap:** `/sitemap-index.xml` names `sitemap-{pages,posts,categories,tags,authors}.xml`
+  (src/lib/sitemapSections.ts), each with its own newest date; posts carry an
+  `image:image` (cover or OG card). `/sitemap-0.xml` still lists everything.
+  `cache.ts` rebuilds all of them via `SITEMAP_PATHS`.
+- **Print view:** the sheet keeps its true paper width in mm and is scaled to
+  the screen with CSS `zoom` (`--print-scale`, set by PrintControls) — never
+  `max-width: 100%`, which made A5/A4/A3 identical on a phone. Controls:
+  print button first, format + type size side by side, the content switches
+  in a grid, the marker last. Screen gets the kit's hard offsets; paper none.
+- **Performance:** `public/.htaccess` compresses (mod_deflate, IfModule); the
+  body and display fonts are preloaded (their late swap was the whole CLS).

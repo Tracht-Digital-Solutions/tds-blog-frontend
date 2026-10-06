@@ -105,3 +105,12 @@ Options -Indexes
     Header append Vary "Accept-Encoding"
   </FilesMatch>
 </IfModule>
+
+# Compression (2026-10-06). Nothing here compressed before: the CSS, the JS and
+# every cached page went out raw — ~400 KiB a first visit, which Lighthouse
+# measured as the largest single performance loss. Wrapped in IfModule so a
+# host without mod_deflate ignores it instead of answering 500 (the Plesk
+# lesson from `Options +FollowSymLinks`). No `Options` line, no `SetEnvIf`.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/javascript application/json application/ld+json application/manifest+json application/xml application/rss+xml image/svg+xml
+</IfModule>
