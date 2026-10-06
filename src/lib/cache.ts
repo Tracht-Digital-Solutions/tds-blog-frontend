@@ -21,6 +21,7 @@ import {
 
 import { corpus, type Lang, type PostSummary } from "./routes";
 import { categorySlug } from "./taxonomy";
+import { SITEMAP_PATHS } from "./sitemapSections";
 
 /**
  * The one memo every content fetch on this site shares.
@@ -66,7 +67,7 @@ async function indexPages(lang: Lang): Promise<string[]> {
     // The "Für Sie" island fetches this at runtime instead of hitting the
     // content API, so a new article is invisible to it until this is rebuilt.
     "/interests-index.json",
-    "/sitemap-0.xml",
+    ...SITEMAP_PATHS,
   ];
 }
 
@@ -154,7 +155,7 @@ export const cacheEvents: EventMap = {
     const langs: Lang[] =
       event.lang === "de" || event.lang === "en" ? [event.lang] : ["de", "en"];
 
-    const paths: string[] = ["/sitemap-index.xml"];
+    const paths: string[] = [...SITEMAP_PATHS];
     for (const lang of langs) {
       paths.push(...(await indexPages(lang)));
       const p = prefix(lang);
@@ -185,6 +186,5 @@ export const alwaysPaths = [
   "/rss.xml",
   "/en/rss.xml",
   "/interests-index.json",
-  "/sitemap-0.xml",
-  "/sitemap-index.xml",
+  ...SITEMAP_PATHS,
 ];

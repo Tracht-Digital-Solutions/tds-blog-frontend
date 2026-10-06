@@ -239,9 +239,9 @@ describe("itemListSchema", () => {
 
 describe("sitemap lastmod", () => {
   const urls: SitemapUrl[] = [
-    { path: "/", changefreq: "daily", priority: 1.0, lastmod: "2026-09-01" },
-    { path: "/alt", changefreq: "monthly", priority: 0.8, lastmod: "2026-06-16" },
-    { path: "/ohne", changefreq: "weekly", priority: 0.4 },
+    { section: "pages", path: "/", changefreq: "daily", priority: 1.0, lastmod: "2026-09-01" },
+    { section: "pages", path: "/alt", changefreq: "monthly", priority: 0.8, lastmod: "2026-06-16" },
+    { section: "pages", path: "/ohne", changefreq: "weekly", priority: 0.4 },
   ];
 
   it("renders each URL's own date rather than one date for the whole document", () => {

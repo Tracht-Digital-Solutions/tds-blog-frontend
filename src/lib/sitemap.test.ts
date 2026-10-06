@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { absolute, renderSitemapIndex, renderUrlset, type SitemapUrl } from "./sitemap";
+import { absolute, renderSectionIndex, renderSitemapIndex, renderUrlset, type SitemapUrl } from "./sitemap";
 
 /**
  * The sitemap document, and the rules that make it valid.
@@ -21,9 +21,10 @@ function alternates(xml: string): string[] {
   return [...xml.matchAll(/hreflang="([^"]+)" href="([^"]+)"/g)].map((m) => `${m[1]} ${m[2]}`);
 }
 
-const plain = (path: string): SitemapUrl => ({ path, changefreq: "weekly", priority: 0.5 });
+const plain = (path: string): SitemapUrl => ({ path, section: "pages", changefreq: "weekly", priority: 0.5 });
 const article = (slug: string): SitemapUrl => ({
   path: `/${slug}`,
+  section: "posts",
   changefreq: "monthly",
   priority: 0.8,
   alternate: { de: `/${slug}`, en: `/en/${slug}` },
@@ -60,7 +61,7 @@ describe("renderUrlset", () => {
   });
 
   it("writes priority with one decimal and the given lastmod", () => {
-    const xml = renderUrlset([{ path: "/", changefreq: "daily", priority: 1 }], LAST);
+    const xml = renderUrlset([{ section: "pages", path: "/", changefreq: "daily", priority: 1 }], LAST);
     expect(xml).toContain("<priority>1.0</priority>");
     expect(xml).toContain(`<lastmod>${LAST}</lastmod>`);
   });
@@ -162,5 +163,27 @@ describe("sitemapUrls", () => {
 
   it("is unchanged by an empty list", async () => {
     expect(await pathsWith([])).toEqual(await pathsWith([]));
+  });
+});
+
+describe("the sectioned index (2026-10-06)", () => {
+  it("lists one child per non-empty section, each with its own newest date", () => {
+    const urls: SitemapUrl[] = [
+      { ...plain("/"), lastmod: "2026-09-01" },
+      { ...article("a"), lastmod: "2026-10-01" },
+      { ...article("b"), lastmod: "2026-08-01" },
+    ];
+    const xml = renderSectionIndex(urls);
+    expect(xml).toContain(`<loc>${absolute("/sitemap-pages.xml")}</loc><lastmod>2026-09-01</lastmod>`);
+    expect(xml).toContain(`<loc>${absolute("/sitemap-posts.xml")}</loc><lastmod>2026-10-01</lastmod>`);
+    // No tags in the corpus → no empty tag sitemap (an empty child is an error).
+    expect(xml).not.toContain("sitemap-tags.xml");
+  });
+
+  it("puts an image on an article entry", () => {
+    const xml = renderUrlset([{ ...article("a"), image: { loc: "/og/de/a.png", title: "A & B" } }], LAST);
+    expect(xml).toContain('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"');
+    expect(xml).toContain(`<image:loc>${absolute("/og/de/a.png")}</image:loc>`);
+    expect(xml).toContain("<image:title>A &amp; B</image:title>");
   });
 });

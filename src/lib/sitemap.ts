@@ -24,7 +24,8 @@ import { PAGE_SIZE } from "./pagination";
 import { categorySlug } from "./taxonomy";
 import { siteConfig } from "./seo";
 import { exclusionPatterns, groupExcluded, hreflangGroup } from "./sitemapExclusions";
-import { escapeXml } from "@tracht-digital-solutions/tds-shared/site";
+import { escapeXml, renderSectionedSitemapIndex } from "@tracht-digital-solutions/tds-shared/site";
+import { SITEMAP_SECTIONS, sectionPath, type SitemapSection } from "./sitemapSections";
 
 const PREFIX: Record<Lang, string> = { de: "", en: "/en" };
 const SEGMENTS: Record<Lang, { category: string; author: string }> = {
@@ -34,6 +35,14 @@ const SEGMENTS: Record<Lang, { category: string; author: string }> = {
 
 export interface SitemapUrl {
   path: string;
+  /** Which child sitemap lists it (`sitemap-<section>.xml`). */
+  section: SitemapSection;
+  /**
+   * An image for Google Images / image-aware answer engines: the article's
+   * own cover when it has one, else its generated OG card. Absolute or
+   * site-relative.
+   */
+  image?: { loc: string; title: string };
   changefreq: "daily" | "weekly" | "monthly";
   priority: number;
   /** The other language's path, when the two really mirror. */
@@ -86,18 +95,19 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   const siteNewest = newestDate(ordered);
 
   const urls: SitemapUrl[] = [
-    { path: `${p}/`, changefreq: "daily", priority: 1.0, lastmod: siteNewest },
-    { path: `${p}/aktuelles`, changefreq: "weekly", priority: 0.6, lastmod: siteNewest },
+    { path: `${p}/`, section: "pages", changefreq: "daily", priority: 1.0, lastmod: siteNewest },
+    { path: `${p}/aktuelles`, section: "pages", changefreq: "weekly", priority: 0.6, lastmod: siteNewest },
     // The human-facing RSS explainer, not the feed. It is an ordinary
     // indexable page that carries a canonical and alternates like any other,
     // and it was the one such page missing from this list.
-    { path: `${p}/rss`, changefreq: "monthly", priority: 0.3, lastmod: siteNewest },
+    { path: `${p}/rss`, section: "pages", changefreq: "monthly", priority: 0.3, lastmod: siteNewest },
   ];
 
   const pageCount = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
   for (let n = 2; n <= pageCount; n++) {
     urls.push({
       path: `${p}/page/${n}`,
+      section: "pages",
       changefreq: "weekly",
       priority: 0.4,
       // An archive page shows one slice, and an older page genuinely does not
@@ -119,8 +129,13 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   for (const post of ordered) {
     urls.push({
       path: `${p}/${post.slug}`,
+      section: "posts",
       changefreq: "monthly",
       priority: 0.8,
+      image: {
+        loc: post.coverHint?.startsWith("http") ? post.coverHint : `/og/${lang}/${post.slug}.png`,
+        title: post.title,
+      },
       // Slugs are shared across both trees — a post authored in one language
       // is machine-translated into the other, so both URLs always exist.
       alternate: { de: `/${post.slug}`, en: `/en/${post.slug}` },
@@ -141,6 +156,7 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   for (const slug of [...categories.keys()].sort()) {
     urls.push({
       path: `${p}/${s.category}/${slug}`,
+      section: "categories",
       changefreq: "weekly",
       priority: 0.5,
       lastmod: newestDate(categories.get(slug)!),
@@ -149,6 +165,7 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   for (const tag of [...tags.keys()].sort()) {
     urls.push({
       path: `${p}/tag/${encodeURIComponent(tag)}`,
+      section: "tags",
       changefreq: "weekly",
       priority: 0.4,
       lastmod: newestDate(tags.get(tag)!),
@@ -157,6 +174,7 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
   for (const slug of [...authors.keys()].sort()) {
     urls.push({
       path: `${p}/${s.author}/${slug}`,
+      section: "authors",
       changefreq: "weekly",
       priority: 0.4,
       lastmod: newestDate(authors.get(slug)!),
@@ -222,10 +240,15 @@ export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {
             `<xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(absolute(url.alternate.de))}"/>`,
           ].join("")
         : "";
+      const image = url.image
+        ? `<image:image><image:loc>${escapeXml(absolute(url.image.loc))}</image:loc>` +
+          `<image:title>${escapeXml(url.image.title)}</image:title></image:image>`
+        : "";
       return [
         "<url>",
         `<loc>${escapeXml(absolute(url.path))}</loc>`,
         alternates,
+        image,
         `<lastmod>${escapeXml(url.lastmod ?? lastmod)}</lastmod>`,
         `<changefreq>${url.changefreq}</changefreq>`,
         `<priority>${url.priority.toFixed(1)}</priority>`,
@@ -237,7 +260,8 @@ export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {
   return (
     '<?xml version="1.0" encoding="UTF-8"?>' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' +
-    'xmlns:xhtml="http://www.w3.org/1999/xhtml">' +
+    'xmlns:xhtml="http://www.w3.org/1999/xhtml" ' +
+    'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' +
     body +
     "</urlset>"
   );
@@ -258,5 +282,20 @@ export function renderSitemapIndex(lastmod: string): string {
     `<lastmod>${escapeXml(lastmod)}</lastmod>` +
     "</sitemap>" +
     "</sitemapindex>"
+  );
+}
+
+/**
+ * The sectioned index (2026-10-06): one child per non-empty section, each with
+ * the newest date of the URLs inside it. An empty section is left out — a
+ * child sitemap with no `<url>` is reported as an error.
+ */
+export function renderSectionIndex(urls: readonly SitemapUrl[]): string {
+  return renderSectionedSitemapIndex(
+    SITEMAP_SECTIONS.flatMap((section) => {
+      const inSection = urls.filter((url) => url.section === section);
+      if (inSection.length === 0) return [];
+      return [{ loc: absolute(sectionPath(section)), lastmod: newestLastmod(inSection) }];
+    }),
   );
 }

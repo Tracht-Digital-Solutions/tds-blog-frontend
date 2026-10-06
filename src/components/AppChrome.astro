@@ -13,7 +13,7 @@
  * and language controls) and so is the CSS (`styles/app-shell.css`).
  */
 import { propertyContact, propertyNav } from "@tracht-digital-solutions/tds-shared/nav";
-import { primaryNav, entdeckenLabels, categoryHref, tagHref, topicsHref, isActiveNav } from "~/lib/nav";
+import { entdeckenLabels, categoryHref, tagHref, topicsHref, isActiveNav } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
 
 interface Props {
@@ -32,7 +32,6 @@ const home = de ? "/" : "/en/";
 const path = Astro.url.pathname;
 const labels = entdeckenLabels(lang);
 const { categories, topTags } = await getTaxonomy(lang);
-const nav = primaryNav(lang).filter((n) => n.kind === "link");
 const others = propertyNav("journal", lang, home).filter((p) => !p.current);
 const contact = propertyContact(lang);
 
@@ -41,7 +40,7 @@ const t = de
       tabs: "App-Navigation", start: "Start", topics: "Themen", search: "Suche", contents: "Inhalt", settings: "Mehr",
       close: "Schließen", searchLabel: "Im Journal suchen", searchPh: "Wonach suchst du?", searchGo: "Suchen",
       searchHint: "Durchsucht Titel, Auszüge und Tags aller Beiträge.",
-      look: "Darstellung", light: "Hell", dark: "Dunkel", system: "System", language: "Sprache",
+      look: "Darstellung", light: "Hell", dark: "Dunkel", system: "Auto", language: "Sprache",
       reading: "Lesen", size: "Textgröße", smaller: "Kleiner", larger: "Größer", focus: "Fokusmodus", print: "Drucken / PDF",
       more: "Weitere Angebote", cta: "Unverbindlich anfragen", saved: "Wird für dich gespeichert – auf allen Tracht-Digital-Seiten.",
     }
@@ -49,7 +48,7 @@ const t = de
       tabs: "App navigation", start: "Home", topics: "Topics", search: "Search", contents: "Contents", settings: "More",
       close: "Close", searchLabel: "Search the journal", searchPh: "What are you looking for?", searchGo: "Search",
       searchHint: "Searches titles, excerpts and tags of every post.",
-      look: "Appearance", light: "Light", dark: "Dark", system: "System", language: "Language",
+      look: "Appearance", light: "Light", dark: "Dark", system: "Auto", language: "Language",
       reading: "Reading", size: "Text size", smaller: "Smaller", larger: "Larger", focus: "Focus mode", print: "Print / PDF",
       more: "More from Tracht Digital", cta: "Get in touch", saved: "Saved for you — on every Tracht Digital site.",
     };
@@ -90,11 +89,9 @@ const enHref = de ? altHref : path;
     </button>
   </div>
   <div class="tds-sheet__body">
-    {nav.map((n) => n.kind === "link" && (
-      <a class="tds-sheet-row" href={n.href} aria-current={isActiveNav(n.href, path) ? "page" : undefined}>
-        <span>{n.label}</span><span aria-hidden="true">→</span>
-      </a>
-    ))}
+    {/* Only the journal's own taxonomy here. Links to the sibling sites live
+        under "Mehr" alone (2026-10-06): a topic list is the wrong place to
+        leave the journal, and "Start" already is the journal's home. */}
     <p class="tds-sheet-heading">{labels.categories}</p>
     {categories.length === 0 ? <p class="jnav-dd-empty">—</p> : categories.map((c) => (
       <a class="tds-sheet-row" href={categoryHref(lang, c.slug)} aria-current={isActiveNav(categoryHref(lang, c.slug), path) ? "page" : undefined}>

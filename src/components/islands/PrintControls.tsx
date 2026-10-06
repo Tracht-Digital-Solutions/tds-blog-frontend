@@ -41,13 +41,17 @@ const DEFAULTS: Record<Key, boolean> = {
 // Sorted small → large.
 const SIZES: Size[] = ["a5", "a4", "a3"];
 const PAGE_NAME: Record<Size, string> = { a5: "A5", a4: "A4", a3: "A3" };
+/** Paper width in mm — the sheet preview is laid out at this true width and
+ *  then scaled to the screen, so A5/A4/A3 differ the way the paper does. */
+const PAGE_WIDTH_MM: Record<Size, number> = { a5: 148, a4: 210, a3: 297 };
+const MM_TO_PX = 96 / 25.4;
 const PAGE_MARGIN = "16mm"; // Seitenabstand — mirrored by .print-doc padding.
 
 const FONT_SIZES: Fs[] = ["s", "m", "l"];
 
 const LABELS: Record<
   "de" | "en",
-  { size: string; font: string; fonts: Record<Fs, string>; mark: string; clear: string; meta: string; print: string; items: Record<Key, string> }
+  { size: string; font: string; fonts: Record<Fs, string>; mark: string; clear: string; meta: string; print: string; scale: (pct: number) => string; items: Record<Key, string> }
 > = {
   de: {
     size: "Seitenformat",
@@ -55,8 +59,9 @@ const LABELS: Record<
     fonts: { s: "Klein", m: "Mittel", l: "Groß" },
     mark: "Markieren",
     clear: "Markierungen löschen",
-    meta: "Meta-Infos",
+    meta: "Inhalte",
     print: "Drucken / Als PDF",
+    scale: (pct) => `Vorschau in ${pct} % der Originalgröße`,
     items: {
       cover: "Titelbild",
       category: "Kategorie",
@@ -74,8 +79,9 @@ const LABELS: Record<
     fonts: { s: "Small", m: "Medium", l: "Large" },
     mark: "Highlight",
     clear: "Clear highlights",
-    meta: "Meta info",
+    meta: "Contents",
     print: "Print / Save as PDF",
+    scale: (pct) => `Preview at ${pct}% of actual size`,
     items: {
       cover: "Cover image",
       category: "Category",
@@ -108,6 +114,7 @@ export default function PrintControls({
   const [size, setSize] = useState<Size>("a4");
   const [fs, setFs] = useState<Fs>("m");
   const [marking, setMarking] = useState(false);
+  const [scale, setScale] = useState(1);
 
   // Restore persisted choices after hydration.
   useEffect(() => {
@@ -162,6 +169,34 @@ export default function PrintControls({
     }
   }, [size]);
 
+  // Fit the true-size sheet to the screen. The sheet keeps its paper width in
+  // mm (so line breaks match the printout) and is scaled down as a whole with
+  // CSS `zoom` — on a phone it used to be clamped to 100% instead, which made
+  // A5, A4 and A3 look exactly alike.
+  useEffect(() => {
+    const root = document.getElementById("print-root");
+    const stage = root?.parentElement;
+    if (!root || !stage) return;
+    const fit = () => {
+      // The stage's content box, minus room for the sheet's 8px hard offset.
+      const cs = getComputedStyle(stage);
+      const available =
+        stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 12;
+      const page = PAGE_WIDTH_MM[size] * MM_TO_PX;
+      const next = Math.min(1, available / page);
+      root.style.setProperty("--print-scale", String(next));
+      setScale(next);
+    };
+    fit();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(fit) : null;
+    ro?.observe(stage);
+    window.addEventListener("resize", fit);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, [size]);
+
   // Font size → #print-root class (drives --print-fs).
   useEffect(() => {
     const root = document.getElementById("print-root");
@@ -196,8 +231,14 @@ export default function PrintControls({
       }
       sel.removeAllRanges();
     };
+    // `pointerup` covers touch too — a phone never sends `mouseup` after a
+    // long-press selection.
     document.addEventListener("mouseup", onUp);
-    return () => document.removeEventListener("mouseup", onUp);
+    document.addEventListener("touchend", onUp);
+    return () => {
+      document.removeEventListener("mouseup", onUp);
+      document.removeEventListener("touchend", onUp);
+    };
   }, [marking]);
 
   const clearMarks = () => {
@@ -214,58 +255,55 @@ export default function PrintControls({
 
   return (
     <div className="print-controls-inner">
-      <div className="print-group">
-        <p className="print-controls-title">{t.size}</p>
-        <div className="print-seg" role="group" aria-label={t.size}>
-          {SIZES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={`print-seg-btn cursor-pointer${size === s ? " on" : ""}`}
-              aria-pressed={size === s}
-              onClick={() => setSize(s)}
-            >
-              {PAGE_NAME[s]}
-            </button>
-          ))}
+      {/* The one action first, full width: what the reader came here to do. */}
+      <button type="button" className="btn-flat print-do cursor-pointer" onClick={() => window.print()}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9V2h12v7" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <path d="M6 14h12v8H6z" />
+        </svg>
+        <span>{t.print}</span>
+      </button>
+
+      {/* Layout: paper and type size side by side — the two choices that
+          change how the page looks. */}
+      <div className="print-row">
+        <div className="print-group">
+          <p className="print-controls-title">{t.size}</p>
+          <div className="print-seg" role="group" aria-label={t.size}>
+            {SIZES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={`print-seg-btn cursor-pointer${size === s ? " on" : ""}`}
+                aria-pressed={size === s}
+                onClick={() => setSize(s)}
+              >
+                {PAGE_NAME[s]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="print-group">
+          <p className="print-controls-title">{t.font}</p>
+          <div className="print-seg" role="group" aria-label={t.font}>
+            {FONT_SIZES.map((f) => (
+              <button
+                key={f}
+                type="button"
+                className={`print-seg-btn cursor-pointer${fs === f ? " on" : ""}`}
+                aria-pressed={fs === f}
+                onClick={() => setFs(f)}
+              >
+                {t.fonts[f]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+      {scale < 1 && <p className="print-scale-note">{t.scale(Math.round(scale * 100))}</p>}
 
-      <div className="print-group">
-        <p className="print-controls-title">{t.font}</p>
-        <div className="print-seg" role="group" aria-label={t.font}>
-          {FONT_SIZES.map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={`print-seg-btn cursor-pointer${fs === f ? " on" : ""}`}
-              aria-pressed={fs === f}
-              onClick={() => setFs(f)}
-            >
-              {t.fonts[f]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="print-group">
-        <button
-          type="button"
-          className={`print-action cursor-pointer${marking ? " on" : ""}`}
-          aria-pressed={marking}
-          onClick={() => setMarking((m) => !m)}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-          <span>{t.mark}</span>
-        </button>
-        <button type="button" className="print-clear cursor-pointer" onClick={clearMarks}>
-          {t.clear}
-        </button>
-      </div>
-
+      {/* What is on the page: the switches in a grid, in document order. */}
       <div className="print-group">
         <p className="print-controls-title">{t.meta}</p>
         <ul className="print-switches list-none p-0 m-0">
@@ -288,14 +326,24 @@ export default function PrintControls({
         </ul>
       </div>
 
-      <button type="button" className="btn-flat print-do cursor-pointer" onClick={() => window.print()}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M6 9V2h12v7" />
-          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-          <path d="M6 14h12v8H6z" />
-        </svg>
-        <span>{t.print}</span>
-      </button>
+      {/* The marker last: a tool for working on the sheet, not a setting. */}
+      <div className="print-mark-row">
+        <button
+          type="button"
+          className={`print-action cursor-pointer${marking ? " on" : ""}`}
+          aria-pressed={marking}
+          onClick={() => setMarking((m) => !m)}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          <span>{t.mark}</span>
+        </button>
+        <button type="button" className="print-clear cursor-pointer" onClick={clearMarks}>
+          {t.clear}
+        </button>
+      </div>
     </div>
   );
 }
