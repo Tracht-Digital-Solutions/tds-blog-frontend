@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { paginate } from "./printPaginate";
 
 /**
  * Screen-only control panel for the article print view (`/[slug]/print`) —
@@ -51,7 +52,7 @@ const FONT_SIZES: Fs[] = ["s", "m", "l"];
 
 const LABELS: Record<
   "de" | "en",
-  { size: string; font: string; fonts: Record<Fs, string>; mark: string; clear: string; meta: string; print: string; scale: (pct: number) => string; items: Record<Key, string> }
+  { size: string; font: string; fonts: Record<Fs, string>; mark: string; clear: string; meta: string; print: string; scale: (pct: number) => string; pages: (n: number) => string; pageNo: (n: number, total: number) => string; items: Record<Key, string> }
 > = {
   de: {
     size: "Seitenformat",
@@ -62,6 +63,8 @@ const LABELS: Record<
     meta: "Inhalte",
     print: "Drucken / Als PDF",
     scale: (pct) => `Vorschau in ${pct} % der Originalgröße`,
+    pages: (n) => (n === 1 ? "1 Seite" : `${n} Seiten`),
+    pageNo: (n, total) => `Seite ${n} von ${total}`,
     items: {
       cover: "Titelbild",
       category: "Kategorie",
@@ -82,6 +85,8 @@ const LABELS: Record<
     meta: "Contents",
     print: "Print / Save as PDF",
     scale: (pct) => `Preview at ${pct}% of actual size`,
+    pages: (n) => (n === 1 ? "1 page" : `${n} pages`),
+    pageNo: (n, total) => `Page ${n} of ${total}`,
     items: {
       cover: "Cover image",
       category: "Category",
@@ -115,6 +120,7 @@ export default function PrintControls({
   const [fs, setFs] = useState<Fs>("m");
   const [marking, setMarking] = useState(false);
   const [scale, setScale] = useState(1);
+  const [pageCount, setPageCount] = useState(0);
 
   // Restore persisted choices after hydration.
   useEffect(() => {
@@ -207,6 +213,24 @@ export default function PrintControls({
       /* storage disabled */
     }
   }, [fs]);
+
+  // Real pages: re-lay the content out whenever paper, type size or the
+  // visible meta changes — and once more when the webfonts have arrived,
+  // because a fallback font measures differently. Runs after the class
+  // effects above (declared later), so it measures the final state.
+  useEffect(() => {
+    const root = document.getElementById("print-root");
+    if (!root) return;
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) setPageCount(paginate(root, t.pageNo));
+    };
+    run();
+    document.fonts?.ready.then(run).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [state, size, fs]);
 
   // Marker mode: while on, releasing a selection inside the sheet highlights it.
   useEffect(() => {
@@ -301,7 +325,11 @@ export default function PrintControls({
           </div>
         </div>
       </div>
-      {scale < 1 && <p className="print-scale-note">{t.scale(Math.round(scale * 100))}</p>}
+      <p className="print-scale-note">
+        {pageCount > 0 ? t.pages(pageCount) : null}
+        {pageCount > 0 && scale < 1 ? " · " : null}
+        {scale < 1 ? t.scale(Math.round(scale * 100)) : null}
+      </p>
 
       {/* What is on the page: the switches in a grid, in document order. */}
       <div className="print-group">
