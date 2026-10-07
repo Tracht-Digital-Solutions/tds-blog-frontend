@@ -349,7 +349,9 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
       <header class="mb-7">
         <div class="flex flex-wrap items-center gap-3.5 mb-3.5">
           <p class="eyebrow" style="color: var(--color-accent);">{post.category}</p>
-          <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)]"></span>
+          {/* No separator on a phone: there the date often wraps, and the
+              square was left hanging at the end of the first line. */}
+          <span aria-hidden="true" class="w-1 h-1 bg-[var(--color-line)] max-sm:hidden"></span>
           {/* `<time datetime>` rather than plain text: the machine date is
               what `dateModified` and `article:modified_time` repeat, and the
               audit fails a date that exists only in the markup. */}
