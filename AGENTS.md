@@ -113,8 +113,8 @@ shared `tdsViteBuild` preset spread into `vite.build` (from
 hand-author the `cssTarget` — the preset pins the Safari floor that keeps
 lightningcss emitting `-webkit-backdrop-filter` on the frosted
 `.brand-header`; without it the blur silently dies in Safari ≤17
-(tds-shared-pkg#10). Small stylesheets inline into the initial HTML via
-`build.inlineStylesheets: "auto"`.
+(tds-shared-pkg#10). Every stylesheet is inlined into the HTML via
+`build.inlineStylesheets: "always"` (since 2026-10-07 — see the last section).
 Sharp is pinned as the image service so `<Image />` consumers auto-
 emit WebP/AVIF — see `IMAGES.md` for the per-asset swap pattern and
 favicon bundle. `<head>` preconnects to `api.tracht-digital.de` and
@@ -1176,3 +1176,25 @@ stay open unless an admin switched enforcement on.
   in a grid, the marker last. Screen gets the kit's hard offsets; paper none.
 - **Performance:** `public/.htaccess` compresses (mod_deflate, IfModule); the
   body and display fonts are preloaded (their late swap was the whole CLS).
+
+## 2026-10-07: print preview = paper, CSS in the page
+
+- **The print preview is measured at true size.** `paginate()` lifts the CSS
+  `zoom` while it lays the pages out, a heading moves to the next page with
+  its block, and nothing on the sheet may size by the viewport (`4vw` on the
+  title measured the screen in the preview and the paper in print — pinned in
+  `printPaginate.test.ts`). The page number prints from an `@page`
+  `@bottom-right` margin box at the spot the preview draws it.
+- **View: Seite / Breite / 100 %.** Wide screens open on the whole sheet,
+  phones on the page width; `.print-stage` scrolls sideways at 100 %. On a
+  phone the controls are a sticky bar (back · print · settings) and the
+  settings fold out under it.
+- **Highlighting** works by selection on every device: a bar low on the screen
+  offers "Markieren" (and "Markierung entfernen" after a tap on one). Marks are
+  made text node by text node, never with `extractContents()`, which used to
+  pull whole paragraphs into one inline `<mark>`. The pieces of one selection
+  share `data-mark`. Marker mode (mark on release) is for mouse pointers only.
+- **All CSS is inlined** (`inlineStylesheets: "always"`). A linked
+  `/_astro/<hash>.css` disappears with the next deploy, and every page rendered
+  before it — cache entry before the restart, open tab, prefetched document,
+  the worker's offline copy — then painted unstyled.

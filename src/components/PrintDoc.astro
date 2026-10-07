@@ -50,20 +50,22 @@ const authorName =
 
 const t =
   lang === "de"
-    ? { readUnit: "Min. Lesezeit", by: "Von", tagsLabel: "Themen", back: "← Zum Beitrag", view: "Druckansicht" }
-    : { readUnit: "min read", by: "By", tagsLabel: "Topics", back: "← Back to article", view: "Print view" };
+    ? { readUnit: "Min. Lesezeit", by: "Von", tagsLabel: "Themen", view: "Druckansicht" }
+    : { readUnit: "min read", by: "By", tagsLabel: "Topics", view: "Print view" };
 ---
 
 <Layout title={`${post.title} — ${t.view}`} description={post.excerpt} lang={lang} bare noindex>
   <div class="print-shell">
     {/* Screen-only controls; hidden by `@media print`. */}
     <aside class="print-controls">
-      <a href={backHref} class="print-back-link">{t.back}</a>
-      <PrintControls lang={lang} hasCover={!!explicitCover} hasTags={tags.length > 0} client:load />
+      <PrintControls lang={lang} backHref={backHref} hasCover={!!explicitCover} hasTags={tags.length > 0} client:load />
     </aside>
 
-    {/* Default hidden meta start baked in as classes so there's no flash
-        before the island hydrates (mirrors PrintControls DEFAULTS). */}
+    {/* The stage the island measures to scale the sheets; it scrolls sideways
+        when the reader picks 100 % on a narrow screen. Default hidden meta
+        start baked in as classes so there's no flash before the island
+        hydrates (mirrors PrintControls DEFAULTS). */}
+    <div class="print-stage">
     <article id="print-root" class="print-doc hide-cover size-a4 fs-m">
       {explicitCover && <img class="pm-cover" src={explicitCover} alt="" />}
 
@@ -85,5 +87,6 @@ const t =
         <p class="pm-tags print-tags">{t.tagsLabel}: {tags.join(", ")}</p>
       )}
     </article>
+    </div>
   </div>
 </Layout>

@@ -92,9 +92,18 @@ export default defineConfig({
   trailingSlash: "ignore",
   build: {
     format: "directory",
-    // Inline small stylesheets into <head> so the critical CSS
-    // ships in the initial HTML — eliminates the round-trip for
-    // a separate .css file before paint.
-    inlineStylesheets: "auto",
+    // EVERY stylesheet goes into the page itself (2026-10-07; was "auto",
+    // which linked the one big Layout sheet as /_astro/<hash>.css).
+    //
+    // A linked sheet is named by its content hash, and a deploy removes the old
+    // names. Every page rendered before the deploy — a page-cache entry until
+    // the restart discards it, an open tab, a prefetched or prerendered
+    // document, the service worker's offline copy — still names the old file,
+    // gets a 404 for it and paints with no styling at all ("die Seite lädt oft
+    // ohne Styling"). Inlined, a page carries the CSS it was rendered with and
+    // can never arrive without it. It also takes the one render-blocking
+    // request off the critical path, which is what Lighthouse scored worst.
+    // Cost: ~46 KB gzipped per document instead of once per visit.
+    inlineStylesheets: "always",
   },
 });
