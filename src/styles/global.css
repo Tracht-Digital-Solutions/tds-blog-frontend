@@ -1820,6 +1820,8 @@ a.topic-card:focus-visible {
   height: 20px;
   border-radius: 999px;
   background: #d4d4d8;
+  /* The track is a groove the thumb runs in: pressed in, like every control. */
+  box-shadow: inset 2px 2px 0 0 rgb(0 0 0 / 0.16);
   transition: background-color 160ms ease;
 }
 .print-switch-thumb {
@@ -1832,7 +1834,10 @@ a.topic-card:focus-visible {
   background: #fff;
   transition: transform 160ms ease;
 }
-.print-switch-input:checked + .print-switch-track { background: #18181b; }
+.print-switch-input:checked + .print-switch-track {
+  background: #18181b;
+  box-shadow: inset 2px 2px 0 0 rgb(0 0 0 / 0.5);
+}
 .print-switch-input:checked + .print-switch-track .print-switch-thumb { transform: translateX(14px); }
 .print-switch-input:focus-visible + .print-switch-track { outline: 2px solid #18181b; outline-offset: 2px; }
 .print-do { justify-content: center; }
@@ -2175,9 +2180,14 @@ html.focus-mode #focus-toggle {
 .jnl-article-end {
   filter: drop-shadow(6px 6px 0 var(--tds-shadow-ink));
 }
-.topic-card,
-.newsletter-form .newsletter-input {
+.topic-card {
   box-shadow: var(--tds-shadow-hard-sm);
+}
+/* A field is pressed IN, not lifted: the depth is drawn inside the box. Its
+   own ink, because the shared black-at-13% vanishes on the navy band. */
+.newsletter-form .newsletter-input {
+  --tds-inset-ink: rgb(0 0 0 / 0.4);
+  box-shadow: var(--tds-shadow-inset);
 }
 .btn-flat,
 .hero-cta,
