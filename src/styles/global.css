@@ -321,10 +321,9 @@ a.jnl-tile:focus-visible {
 .nav-search input::placeholder { color: var(--color-muted); }
 .nav-search input:hover { background: var(--jnl-tile-hover); }
 .nav-search input:focus {
-  /* No `outline: none` here. It used to suppress the global focus ring, which
-     left the width + background change as the only focus indicator — neither
-     of which is a focus indicator under WCAG 2.4.11. Both stay as
-     supplementary cues; the ring does the actual work. */
+  /* No `outline: none` here: tds-shared (0.49.5) hides the ring of every
+     focused field itself, and in the same rule draws the coloured well that
+     replaces it as the indicator. Width and background stay supplementary. */
   background: var(--jnl-tile-hover);
 }
 /* The field grows on focus only where the row has room for it. The shared
@@ -1367,9 +1366,9 @@ a.topic-card:focus-visible {
 }
 .newsletter-input::placeholder { color: rgb(255 255 255 / 0.45); }
 .newsletter-input:focus {
-  /* Same correction as `.nav-search input:focus` above — the ring stays. This
-     one sits on a dark band, where the global accent ring is still the most
-     legible indicator available. */
+  /* The ring is gone here too (tds-shared draws the coloured well instead).
+     This field sits on a dark band where bordeaux sinks, so its well is coral. */
+  --tds-focus-ink: var(--color-accent-pink);
   background: rgb(255 255 255 / 0.2);
 }
 
