@@ -52,6 +52,7 @@ Nothing sits on white:
   press into them. Dark bands (`.jnl-tone-navy/-ink/-accent`, `.hero-stage`) re-declare black ink.
 - Hover and focus lift an interactive element 2 px up-left while its offset grows; a tile leaves the mosaic shadow for
   its own with `z-index: 2`. Print stays flat. The block is the last section of `global.css`.
+- Form controls (`.newsletter-input`, the print switches) are pressed **in** with an inset, never lifted by the offset.
 
 ## Posts are books
 
