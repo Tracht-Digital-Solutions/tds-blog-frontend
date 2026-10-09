@@ -159,8 +159,9 @@ const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off"
  * the site stores disappeared exactly when the site started storing more.
  *
  * One component now, and `categories` decides whether it asks a question or
- * states a fact. Two optional purposes: the site's own statistics
- * (`analytics`, always) and advertising (`marketing`, only while ads run).
+ * states a fact. Optional purposes: reading suggestions from the topics a
+ * reader opened (`functional`, "Komfort"), the site's own statistics
+ * (`analytics`), and advertising (`marketing`, only while ads run).
  *
  * The old informational variant was additionally gated behind
  * `cookieBannerEnabled()`, a CMS toggle — fine for a notice, wrong for a gate,
@@ -168,8 +169,8 @@ const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off"
  * toggle still silences the purely informational case; it can no longer
  * suppress a real question.
  */
-const consentCategories: readonly ("analytics" | "marketing")[] =
-  !!ads && ads.enabled ? ["analytics", "marketing"] : ["analytics"];
+const consentCategories: readonly ("functional" | "analytics" | "marketing")[] =
+  !!ads && ads.enabled ? ["functional", "analytics", "marketing"] : ["functional", "analytics"];
 const showConsent =
   !bare && (consentCategories.length > 0 || (await cookieBannerEnabled()));
 ---

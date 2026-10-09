@@ -47,6 +47,8 @@ byline (`fallbackAuthorName`).
 
 **Author pages** `src/pages/autor/[slug].astro` and `src/pages/en/author/[slug].astro`: profile header plus the
 `AuthorPostList` island with a sort control (Datum / Aufrufe / Trend = `viewCount / max(1, days since publishedAt)`).
+The site sends no view beacon: blog-cms has no view counter (`viewCount` stays empty), and reads are measured by the
+consent-gated Besucher-Statistik (`tds-shared/analytics`, panel `/statistik`).
 `authorHref(lang, slug)` is in `nav.ts`. Indexable, with a JSON-LD `ProfilePage` + `Person`.
 
 ## Cookie banner and AdSense

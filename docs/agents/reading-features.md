@@ -33,7 +33,7 @@ draws the same artwork. Change drawings there. A photo cover is used when `cover
 ## Article page (`src/pages/[slug].astro`, EN twin)
 
 Both are wrappers over `src/components/Article.astro`: drop cap, marginalia (date, reading time, author), related
-strip, reading-progress bar, prev/next, and the inline interest-cookie script.
+strip, reading-progress bar, prev/next, and the consent-gated interest script (`lib/interests.ts`).
 
 - **`ArticleSidebar.astro`:** fixed collapsible left nav (lg+), a 64 px icon rail when collapsed. **Collapsed by
   default**; only `reader_sidenav` = `"open"` (tds-shared prefs; old key `tds-blog-sidenav`) opens it. The pre-paint
@@ -81,8 +81,9 @@ Wrappers over `src/components/PrintDoc.astro`, rendered `bare` + `noindex`, excl
 
 - **`/aktuelles`** (`aktuelles.astro`, EN twin): curated topics (`listTopics`) as `.topic-card`s, then the newest ~6
   posts (`BlogPostCard`). A missing topics block leaves just the list.
-- **"Für dich"** (`islands/ForYou.tsx`): reads the `tds-interests` cookie (topic → weight, written by an inline script on
-  article pages from category and tags; 180 days, SameSite=Lax, ≤ 12 topics), fetches `interests-index.json`, scores by
+- **"Für dich"** (`islands/ForYou.tsx`): reads the `tds-interests` cookie (topic → weight, written by `lib/interests.ts`
+  on article pages from category and tags; 180 days, SameSite=Lax, ≤ 12 topics). **Written only with the "Komfort"
+  (`functional`) consent**; without it, or on withdrawal, the cookie is deleted and the strip stays generic. Fetches `interests-index.json`, scores by
   overlap and recency, renders the top 3 with a transparency note and a reset. Renders nothing without a profile.
 - **Newsletter** (`islands/NewsletterSignup.tsx`): posts a message to the contact endpoint (no newsletter backend);
   shows tds-shared's `<Spinner size="sm" />` while sending.
