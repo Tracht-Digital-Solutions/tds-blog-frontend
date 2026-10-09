@@ -122,7 +122,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
               {t.done}
             </p>
           ) : (
-            <form onSubmit={submit} className="newsletter-form">
+            <form onSubmit={submit} className="newsletter-form" data-track-form="newsletter">
               <input
                 className="newsletter-input"
                 type="email"

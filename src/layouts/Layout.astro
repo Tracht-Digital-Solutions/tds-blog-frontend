@@ -159,7 +159,8 @@ const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off"
  * the site stores disappeared exactly when the site started storing more.
  *
  * One component now, and `categories` decides whether it asks a question or
- * states a fact. Advertising is the only optional purpose this site has.
+ * states a fact. Two optional purposes: the site's own statistics
+ * (`analytics`, always) and advertising (`marketing`, only while ads run).
  *
  * The old informational variant was additionally gated behind
  * `cookieBannerEnabled()`, a CMS toggle — fine for a notice, wrong for a gate,
@@ -167,7 +168,8 @@ const adsActive = !!ads && ads.enabled && (adsMode ?? ads.defaultMode) !== "off"
  * toggle still silences the purely informational case; it can no longer
  * suppress a real question.
  */
-const consentCategories: readonly "marketing"[] = !!ads && ads.enabled ? ["marketing"] : [];
+const consentCategories: readonly ("analytics" | "marketing")[] =
+  !!ads && ads.enabled ? ["analytics", "marketing"] : ["analytics"];
 const showConsent =
   !bare && (consentCategories.length > 0 || (await cookieBannerEnabled()));
 ---
@@ -302,7 +304,7 @@ const showConsent =
     {/* Near-instant navigation: prerender a link once the reader shows intent. */}
     <script is:inline type="speculationrules" set:html={speculationRules(["/og/", "/rss"])} />
   </head>
-  <body>
+  <body data-bare={bare ? "" : undefined}>
     <a href="#main" class="absolute -top-full left-0 z-50 px-6 py-3 bg-[var(--color-surface-navy)] text-white text-sm font-semibold focus:top-0 transition-all">
       {lang === "de" ? "Zum Inhalt springen" : "Skip to content"}
     </a>
@@ -378,6 +380,19 @@ const showConsent =
       void startAccountPrefsSync();
       // Installable + offline reading (src/pages/sw.js.ts).
       registerServiceWorker();
+    </script>
+
+    {/* Besucher-Statistik: nothing until the reader agrees to "Statistik" in
+        the banner; withdrawing deletes the ids. A bare page opts out on <body>. */}
+    <script>
+      import { startAnalytics } from "@tracht-digital-solutions/tds-shared/analytics";
+
+      if (import.meta.env.PUBLIC_DEMO_MODE !== "true" && !document.body.hasAttribute("data-bare")) {
+        startAnalytics({
+          site: "blog",
+          lang: document.documentElement.lang.startsWith("en") ? "en" : "de",
+        });
+      }
     </script>
 
     {/* Floating support widget — self-hides unless the live-chat-cta extension
