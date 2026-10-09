@@ -241,13 +241,6 @@ const jsonLd = [
   ]),
 ];
 
-import { contentApiBase } from "~/lib/connection";
-
-// Public, fire-and-forget view beacon. The server resolves the paired API base
-// for each render and writes only that public URL into the inline script. The
-// site key and cache token never enter the browser. Disabled on demo builds.
-const beaconBase = contentApiBase();
-const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
 ---
 
 <Layout
@@ -798,67 +791,19 @@ const beaconDisabled = import.meta.env.PUBLIC_DEMO_MODE === "true";
     }
   </script>
 
-  <script is:inline define:vars={{ interestTopics }}>
-    (function () {
-      try {
-        var match = document.cookie.match(/(?:^|; )tds-interests=([^;]*)/);
-        var weights = {};
-        if (match) {
-          try {
-            weights = JSON.parse(decodeURIComponent(match[1])) || {};
-          } catch (e) {
-            weights = {};
-          }
-        }
-        interestTopics.forEach(function (t) {
-          weights[t] = Math.min((weights[t] || 0) + 1, 50);
-        });
-        var trimmed = {};
-        Object.keys(weights)
-          .sort(function (a, b) {
-            return weights[b] - weights[a];
-          })
-          .slice(0, 12)
-          .forEach(function (k) {
-            trimmed[k] = weights[k];
-          });
-        document.cookie =
-          "tds-interests=" +
-          encodeURIComponent(JSON.stringify(trimmed)) +
-          "; Max-Age=" + 180 * 24 * 3600 +
-          "; Path=/; SameSite=Lax";
-      } catch (e) {
-        /* cookies disabled — recommendations simply stay generic */
-      }
-    })();
+  {/* Topics for "Für dich", counted only with the "Komfort" consent —
+      see lib/interests.ts. The data rides in an attribute because a
+      bundled script cannot take `define:vars`. */}
+  <div hidden data-interest-topics={JSON.stringify(interestTopics)}></div>
+  <script>
+    import { trackInterests } from "~/lib/interests";
+
+    const host = document.querySelector<HTMLElement>("[data-interest-topics]");
+    try {
+      trackInterests(JSON.parse(host?.dataset.interestTopics ?? "[]") as string[]);
+    } catch {
+      /* malformed topics — recommendations stay generic */
+    }
   </script>
 
-  {/* Fire-and-forget view beacon — bumps the post's view_count so the
-      hero's "Populär" tab reflects real reads. Once per session per post,
-      best-effort, never blocks. */}
-  <script is:inline define:vars={{ viewSlug: post.slug, viewLang: lang, viewApiBase: beaconBase, viewDisabled: beaconDisabled }}>
-    (function () {
-      if (viewDisabled) return;
-      try {
-        var key = "tds-viewed:" + viewLang + ":" + viewSlug;
-        if (sessionStorage.getItem(key)) return;
-        sessionStorage.setItem(key, "1");
-      } catch (e) {
-        /* no sessionStorage — fall through and count the view anyway */
-      }
-      try {
-        var url =
-          viewApiBase + "/blog/" + encodeURIComponent(viewSlug) + "/view?lang=" + viewLang;
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(url);
-        } else {
-          // The try above only catches synchronous throws; a rejected fetch
-          // would surface as an unhandled rejection in the console.
-          fetch(url, { method: "POST", keepalive: true, mode: "no-cors" }).catch(function () {});
-        }
-      } catch (e) {
-        /* best-effort analytics — ignore failures */
-      }
-    })();
-  </script>
 </Layout>
