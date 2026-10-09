@@ -12,6 +12,10 @@ field drives it via `tds-blog-search` events; elsewhere Enter navigates to `/?q=
 A carousel track rotating up to three sets (Empfohlen / Aktuelles / Populär), all rendered side by side in
 `.hero-track`; the component translates the track by `-activeIndex * 100%` plus live drag pixels.
 
+**Populär** and the author pages' "Aufrufe" sort read `listReads()` (`/content/analytics/reads`, site key): page views per
+article over 90 days from the Besucher-Statistik, so only consented visitors count — a ranking, not an audience size.
+Empty statistics fall back to blog-cms's newest-first `/blog/popular`.
+
 - Pointer drag follows the cursor; past `DRAG_THRESHOLD` (64 px) it snaps to the neighbour, else springs back; the ends
   rubber-band (overscroll ÷ 3); a real drag swallows the trailing click (`suppressClick`). Off-screen slides are
   `inert` + `aria-hidden`.

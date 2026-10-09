@@ -12,8 +12,9 @@ import { PostCover } from "../Covers";
  *     only appears once a reading profile exists, so first-time
  *     visitors never see an empty set.
  *   • Aktuelles — the newest posts (baked in at build time).
- *   • Populär  — most-viewed posts from /blog/popular (baked in at
- *     build time; views are tallied by the article-page beacon).
+ *   • Populär  — most-read posts of the last 90 days, ranked by the
+ *     Besucher-Statistik (`listReads`, consented visitors only); newest-
+ *     first from /blog/popular until it has reads.
  *
  * Everything is build-time data except the recommendation scoring,
  * which stays in the browser — no runtime content-api call. Nothing
