@@ -2,6 +2,7 @@
 import Layout from "~/layouts/Layout.astro";
 import AuthorPostList from "~/components/islands/AuthorPostList.tsx";
 import { byAuthor } from "~/lib/routes";
+import { listReads } from "~/lib/content-api";
 import {
   asGraph,
   authorPersonId,
@@ -82,6 +83,9 @@ const jsonLd = asGraph(
   ]),
 );
 
+// Reads from the Besucher-Statistik (consented visitors only); empty when
+// it has none, and the "Aufrufe" sort then keeps the published order.
+const reads = await listReads("de");
 const cards = posts.map((p) => ({
   slug: p.slug,
   category: p.category,
@@ -89,7 +93,7 @@ const cards = posts.map((p) => ({
   excerpt: p.excerpt,
   publishedAt: p.publishedAt,
   coverHint: p.coverHint,
-  viewCount: p.viewCount ?? 0,
+  viewCount: reads.get(p.slug) ?? p.viewCount ?? 0,
   author,
 }));
 ---

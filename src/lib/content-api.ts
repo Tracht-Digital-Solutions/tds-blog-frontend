@@ -156,15 +156,61 @@ export async function listAllPosts(lang?: "de" | "en"): Promise<ListResponse["po
   }
 }
 
+/** Article path → slug: `/{slug}` for German, `/en/{slug}` for English. */
+const ARTICLE_PATH: Record<"de" | "en", RegExp> = {
+  de: /^\/([a-z0-9-]+)\/?$/,
+  en: /^\/en\/([a-z0-9-]+)\/?$/,
+};
+
 /**
- * Most-viewed published posts for the blog hero's "Populär" tab. Baked
- * at build time (the popularity ordering refreshes on each rebuild);
- * view counts themselves accrue at runtime via the article-page beacon.
- * Falls back to the newest demo/posts on a DEMO build or a build-time
- * outage so the slider always has a populated tab.
+ * Reads per article over the last 90 days, from the Besucher-Statistik
+ * (`/content/analytics/reads`, a site-key read). Day totals per path only —
+ * and only visitors who agreed to "Statistik" are in them, so these are a
+ * ranking, not an audience size. Any failure answers an empty map: the
+ * callers then keep their newest-first order.
+ */
+export async function listReads(lang: "de" | "en"): Promise<Map<string, number>> {
+  const reads = new Map<string, number>();
+  if (DEMO_MODE) return reads;
+  const url = new URL(`${contentApiBase()}/analytics/reads`);
+  url.searchParams.set("site", "blog");
+  url.searchParams.set("days", "90");
+  url.searchParams.set("limit", "500");
+  url.searchParams.set("prefix", lang === "en" ? "/en/" : "/");
+  try {
+    const data = await readContentJson<{ reads?: Array<{ path: string; views: number }> }>(url);
+    for (const r of data.reads ?? []) {
+      const slug = ARTICLE_PATH[lang].exec(r.path)?.[1];
+      if (slug && typeof r.views === "number") reads.set(slug, (reads.get(slug) ?? 0) + r.views);
+    }
+  } catch {
+    /* statistics unavailable — rankings fall back to newest-first */
+  }
+  return reads;
+}
+
+/**
+ * Most-read published posts for the blog hero's "Populär" tab, ranked by
+ * {@link listReads}. Until the statistics hold reads for the language, the
+ * tab falls back to blog-cms's newest-first list; on a DEMO build or an
+ * outage to the newest demo posts, so the slider always has a populated tab.
  */
 export async function listPopular(lang: "de" | "en", limit = 6): Promise<ListResponse["posts"]> {
   if (DEMO_MODE) return demoPostList(lang).slice(0, limit);
+
+  const reads = await listReads(lang);
+  if (reads.size > 0) {
+    try {
+      const ranked = (await listAllPosts(lang))
+        .filter((p) => reads.has(p.slug))
+        .map((p) => ({ ...p, viewCount: reads.get(p.slug) ?? 0 }))
+        .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
+        .slice(0, limit);
+      if (ranked.length > 0) return ranked;
+    } catch {
+      /* fall through to the CMS order */
+    }
+  }
 
   const url = new URL(`${contentApiBase()}/blog/popular`);
   url.searchParams.set("lang", lang);
