@@ -21,7 +21,15 @@ Two placements read the same public endpoints, fail-soft, memoised per cache gen
 
 - **Inline:** the `product` block (tds-shared's `BlogBlockSchema`, `integration: "shop"`), rendered by
   `ProductEmbed.astro` outside the prose flow.
-- **Fixed slot:** `ProductSlot.astro` (`blog-article-end`) before `RelatedArticles`, inside `focus-hide`.
+- **Inline in markdown:** a paragraph of its own reading `{{produkt:<slug>}}` (or `{{product:…}}`, optional
+  `card|inline|list`) is split out by `src/lib/productShortcodes.ts` and rendered by the same `ProductEmbed`. The slug is
+  the shop slug **in the article's language** (DE and EN slugs differ). A shortcode inside running text stays prose;
+  word count and print view strip embeds. The seeded journal guides (tds-ext-blog-cms `20260728000012`+) use it.
+- **Fixed slot:** `ProductSlot.astro` (`blog-article-end`) before `RelatedArticles`, inside `focus-hide`. Its strip
+  scrolls sideways; `.jnl-article-end` needs `minmax(0, 1fr)` columns or the strip widens every end panel on phones.
+
+A markdown article's `## Häufige Fragen` / `## Frequently asked questions` section becomes a `FAQPage` node
+(`src/lib/articleFaq.ts`): each `###` is a question, built from the rendered HTML so markup and page never differ.
 
 Decisions, not details:
 

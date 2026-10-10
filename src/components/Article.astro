@@ -12,8 +12,11 @@ import ProductSlot from "~/components/ProductSlot.astro";
 import TagList from "~/components/TagList.astro";
 import AdSlot from "~/components/AdSlot.astro";
 import BlockRenderer from "~/components/BlockRenderer.astro";
+import ProductEmbed from "~/components/ProductEmbed.astro";
 import { adsConfig, effectiveAdsMode, blogSnippets } from "~/lib/content-api";
-import { blogPostingSchema, breadcrumbSchema, organizationSchema } from "~/lib/jsonld";
+import { blogPostingSchema, breadcrumbSchema, faqPageSchema, organizationSchema } from "~/lib/jsonld";
+import { splitProductShortcodes, stripProductShortcodes } from "~/lib/productShortcodes";
+import { faqFromSections } from "~/lib/articleFaq";
 import { splitSections } from "~/lib/sections";
 import { splitBlockSections } from "~/lib/blockSections";
 import { authorHref, categoryHref } from "~/lib/nav";
@@ -58,6 +61,12 @@ const sections = isBlocks
   ? blkSplit.sections.map((s) => ({ id: s.id, heading: s.heading }))
   : mdSplit.sections.map((s) => ({ id: s.id, heading: s.heading }));
 const intro = mdSplit.intro;
+// `{{produkt:slug}}` paragraphs become product cards between the prose parts
+// (see productShortcodes.ts); everything else renders exactly as before.
+const introParts = splitProductShortcodes(intro);
+const sectionParts = mdSplit.sections.map((sec) => ({ ...sec, parts: splitProductShortcodes(sec.html) }));
+// The article's own FAQ section, as FAQPage — from the rendered text only.
+const faq = isBlocks ? [] : faqFromSections(mdSplit.sections);
 const showToc = sections.length >= 2;
 
 // Chronological neighbours over the distinct-slug list (every post is
@@ -97,7 +106,7 @@ const plain = isBlocks
         return "";
       })
       .join(" ")
-  : bodyHtml.replace(/<[^>]+>/g, " ");
+  : stripProductShortcodes(bodyHtml).replace(/<[^>]+>/g, " ");
 const wordCount = plain.split(/\s+/).filter(Boolean).length;
 const readingMinutes = Math.max(1, Math.round(wordCount / 220));
 
@@ -239,6 +248,7 @@ const jsonLd = [
     },
     { name: post.title, url: postUrl },
   ]),
+  ...(faq.length > 0 ? [faqPageSchema(faq)] : []),
 ];
 
 ---
@@ -457,8 +467,12 @@ const jsonLd = [
               <BlockRenderer blocks={blkSplit.intro} ads={ads} showAds={showBlockAds} lang={lang} snippets={snippets} dropCap />
             )
           ) : (
-            intro.trim().length > 0 && (
-              <div class="tds-prose drop-cap" set:html={intro}></div>
+            introParts.map((part, i) =>
+              part.kind === "html" ? (
+                <div class:list={["tds-prose", i === 0 && "drop-cap"]} set:html={part.html}></div>
+              ) : (
+                <ProductEmbed slug={part.slug} variant={part.variant} lang={lang} />
+              ),
             )
           )}
           {showManualAds && ads.slotInArticle && (
@@ -480,7 +494,7 @@ const jsonLd = [
                   </div>
                 </section>
               ))
-            : mdSplit.sections.map((sec) => (
+            : sectionParts.map((sec) => (
                 <section class="article-sec">
                   <h2 id={sec.id}>
                     <button class="sec-head" aria-expanded="true" aria-controls={`${sec.id}-body`}>
@@ -490,7 +504,13 @@ const jsonLd = [
                   </h2>
                   <div class="sec-body" id={`${sec.id}-body`}>
                     <div class="sec-body-inner">
-                      <div class="tds-prose" set:html={sec.html}></div>
+                      {sec.parts.map((part) =>
+                        part.kind === "html" ? (
+                          <div class="tds-prose" set:html={part.html}></div>
+                        ) : (
+                          <ProductEmbed slug={part.slug} variant={part.variant} lang={lang} />
+                        ),
+                      )}
                     </div>
                   </div>
                 </section>
