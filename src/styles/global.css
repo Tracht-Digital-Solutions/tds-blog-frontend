@@ -183,6 +183,10 @@ body {
    keeps two tint panels apart when the sand one between them renders nothing. */
 .jnl-article-end {
   display: grid;
+  /* An implicit `auto` track grows to its widest item's min-content: a
+     product strip (three 14rem cards) widened every panel to ~744px on a
+     390px phone, and body's overflow clipped the rest unseen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1px;
 }
 

@@ -358,6 +358,22 @@ export function breadcrumbSchema(
 }
 
 /**
+ * The article's own FAQ section as `FAQPage` (see `articleFaq.ts`). Built from
+ * the same rendered text the reader sees, so markup and page cannot disagree.
+ */
+export function faqPageSchema(items: readonly { q: string; a: string }[]): WithContext {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+}
+
+/**
  * Wrap nodes into a single `@graph` document.
  *
  * The members are stripped of their own `@context` on the way in. Several
