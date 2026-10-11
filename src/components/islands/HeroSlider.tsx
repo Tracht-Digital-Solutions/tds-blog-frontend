@@ -366,7 +366,7 @@ export default function HeroSlider({
     : { prev: "Previous set", next: "Next set" };
 
   return (
-    <section style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
+    <section className="hero-band" style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
       <div
         // The navy band stays full-bleed on the <section> above; only its
         // CONTENT is shelled. It used to be `w-full` with its own padding
