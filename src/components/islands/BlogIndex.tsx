@@ -18,6 +18,20 @@ import HeroSlider from "./HeroSlider";
 
 export interface IndexPost extends CardPost {
   tags?: string | null;
+  /** Reads (Besucher-Statistik, else the CMS counter): the "most read" order. */
+  viewCount?: number;
+}
+
+/** Reading-time bands of the filter bar. A post without a length is in none. */
+type LengthBand = "all" | "short" | "medium" | "long";
+type SortKey = "new" | "popular";
+
+function inBand(minutes: number | null | undefined, band: LengthBand): boolean {
+  if (band === "all") return true;
+  if (!minutes) return false;
+  if (band === "short") return minutes <= 3;
+  if (band === "medium") return minutes > 3 && minutes <= 8;
+  return minutes > 8;
 }
 
 interface Labels {
@@ -40,6 +54,13 @@ interface Labels {
   empty: string;
   older: string;
   minRead: string;
+  filter: string;
+  length: string;
+  lengths: Record<LengthBand, string>;
+  sort: string;
+  sorts: Record<SortKey, string>;
+  resetFilters: string;
+  shown: readonly [string, string];
 }
 
 /** Pick the singular for exactly one, the plural for everything else. */
@@ -58,10 +79,17 @@ const LABELS: Record<"de" | "en", Labels> = {
     results: ["Treffer für", "Treffer für"],
     inCategory: ["Beitrag in der Kategorie", "Beiträge in der Kategorie"],
     clear: "Zurücksetzen",
-    noResults: "Keine Beiträge gefunden. Versuchen Sie einen anderen Suchbegriff.",
+    noResults: "Keine Beiträge gefunden. Versuchen Sie einen anderen Suchbegriff oder Filter.",
     empty: "Noch keine Artikel veröffentlicht.",
     older: "Ältere Artikel",
     minRead: "Min. Lesezeit",
+    filter: "Filter",
+    length: "Lesezeit",
+    lengths: { all: "Alle", short: "Kurz (bis 3 Min.)", medium: "Mittel (4–8 Min.)", long: "Lang (ab 9 Min.)" },
+    sort: "Sortierung",
+    sorts: { new: "Neueste", popular: "Meistgelesen" },
+    resetFilters: "Filter zurücksetzen",
+    shown: ["Beitrag", "Beiträge"],
   },
   en: {
     featured: "Featured",
@@ -73,10 +101,17 @@ const LABELS: Record<"de" | "en", Labels> = {
     results: ["result for", "results for"],
     inCategory: ["post in category", "posts in category"],
     clear: "Clear",
-    noResults: "No posts found. Try a different search term.",
+    noResults: "No posts found. Try a different search term or filter.",
     empty: "No articles published yet.",
     older: "Older articles",
     minRead: "min read",
+    filter: "Filter",
+    length: "Reading time",
+    lengths: { all: "All", short: "Short (up to 3 min)", medium: "Medium (4–8 min)", long: "Long (9+ min)" },
+    sort: "Sort",
+    sorts: { new: "Newest", popular: "Most read" },
+    resetFilters: "Reset filters",
+    shown: ["post", "posts"],
   },
 };
 
@@ -198,6 +233,8 @@ export default function BlogIndex({
   const [cat, setCat] = useState("all");
   const [catsCollapsed, setCatsCollapsed] = useState(false);
   const [q, setQ] = useState("");
+  const [band, setBand] = useState<LengthBand>("all");
+  const [sort, setSort] = useState<SortKey>("new");
 
   // A deliberate filter change (a category, "clear search") runs as a native
   // View Transition: cards that stay glide to their new slot, the rest fade.
@@ -206,6 +243,16 @@ export default function BlogIndex({
   // the index, and an animation runtime there would sit on the first load.
   const pickCat = (next: string) => transitionUpdate(() => flushSync(() => setCat(next)));
   const clearSearch = () => transitionUpdate(() => flushSync(() => setQ("")));
+  const pickBand = (next: LengthBand) => transitionUpdate(() => flushSync(() => setBand(next)));
+  const pickSort = (next: SortKey) => transitionUpdate(() => flushSync(() => setSort(next)));
+  const resetFilters = () =>
+    transitionUpdate(() =>
+      flushSync(() => {
+        setBand("all");
+        setSort("new");
+      }),
+    );
+  const activeFilters = (band !== "all" ? 1 : 0) + (sort !== "new" ? 1 : 0);
 
   // Category list — shared by the desktop sidebar and the mobile/tablet
   // chip strip (the sidebar is lg-only, so small screens need their own).
@@ -236,15 +283,23 @@ export default function BlogIndex({
   }, [q]);
 
   const searching = q.trim().length > 0;
-  const filtering = searching || cat !== "all";
+  // Any filter-bar choice lifts the pagination like a category does: a band
+  // or an order over page 1 alone would hide most of the answer.
+  const filtering = searching || cat !== "all" || activeFilters > 0;
   const featured = posts[0];
 
   const matches = useMemo(
     () =>
-      posts
+    {
+      const list = posts
         .filter((p) => (cat === "all" ? true : p.category === cat))
-        .filter((p) => matchesQuery(p, q)),
-    [posts, cat, q],
+        .filter((p) => inBand(p.readingMinutes, band))
+        .filter((p) => matchesQuery(p, q));
+      // Array.prototype.sort is stable: equal reads keep newest-first.
+      if (sort === "popular") list.sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0));
+      return list;
+    },
+    [posts, cat, q, band, sort],
   );
 
   // Unfiltered default view mirrors the static pagination: the hero
@@ -266,7 +321,9 @@ export default function BlogIndex({
     ? `${matches.length} ${plural(t.results, matches.length)} ${quoted}`
     : cat !== "all"
       ? `${matches.length} ${plural(t.inCategory, matches.length)} ${cat}`
-      : "";
+      : activeFilters > 0
+        ? `${matches.length} ${plural(t.shown, matches.length)}`
+        : "";
 
   const GridHeading = searching ? "h1" : "h2";
 
@@ -344,6 +401,41 @@ export default function BlogIndex({
               </div>
             )}
 
+            {/* The shared collapsible filter bar (.tds-filterbar, tds-shared
+                0.52): closed it is one button with the number of active
+                filters; categories stay in the rail and the strip above. */}
+            <details className="tds-disclosure tds-filterbar blog-filterbar">
+              <summary className="tds-filterbar__toggle">
+                {t.filter}
+                <span className="tds-filterbar__count">{activeFilters > 0 ? activeFilters : ""}</span>
+              </summary>
+              <div className="tds-filterbar__panel">
+                <fieldset className="tds-filterbar__group">
+                  <legend className="tds-filterbar__legend">{t.length}</legend>
+                  <div className="tds-toolbar">
+                    {(["all", "short", "medium", "long"] as const).map((b) => (
+                      <button type="button" key={b} className="chip" aria-pressed={band === b} onClick={() => pickBand(b)}>
+                        {t.lengths[b]}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="tds-filterbar__group">
+                  <legend className="tds-filterbar__legend">{t.sort}</legend>
+                  <div className="tds-toolbar">
+                    {(["new", "popular"] as const).map((k) => (
+                      <button type="button" key={k} className="chip" aria-pressed={sort === k} onClick={() => pickSort(k)}>
+                        {t.sorts[k]}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <button type="button" className="tds-filterbar__reset" disabled={activeFilters === 0} onClick={resetFilters}>
+                  {t.resetFilters}
+                </button>
+              </div>
+            </details>
+
             {/* The page's only <h1> lives in HeroSlider — and the hero is not
                 rendered while a search is running, so the results view shipped
                 with no top-level heading at all. This heading takes the rank
@@ -376,7 +468,7 @@ export default function BlogIndex({
 
             {gridPosts.length === 0 ? (
               <p style={{ padding: "48px 0", color: "var(--color-muted)" }}>
-                {searching ? t.noResults : t.empty}
+                {filtering ? t.noResults : t.empty}
               </p>
             ) : (
               // Intrinsic grid: no breakpoint at any width. `auto-fill` derives

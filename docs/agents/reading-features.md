@@ -7,6 +7,11 @@ search, all in the `BlogIndex` island (posts as props, client-side filtering, `?
 field drives it via `tds-blog-search` events; elsewhere Enter navigates to `/?q=…`. Pages 2..N:
 `src/pages/page/[num].astro` and the EN twin. `pagination.ts` slices page windows.
 
+**Filter bar** (tds-shared ≥ 0.52 `.tds-filterbar`, closed by default) above the grid: reading time (bis 3 / 4–8 /
+ab 9 Min., from `readingMinutes`; posts without a length only under "Alle") and order (Neueste / Meistgelesen by
+`viewCount`, which the index pages fill from `listReads()`). Client state only, never in the URL; any choice lifts the
+pagination like a category. Categories stay in the rail and the phone strip. `.blog-filterbar` sets only its tokens.
+
 ## Hero slider (`src/components/islands/HeroSlider.tsx`)
 
 A carousel track rotating up to three sets (Empfohlen / Aktuelles / Populär), all rendered side by side in
