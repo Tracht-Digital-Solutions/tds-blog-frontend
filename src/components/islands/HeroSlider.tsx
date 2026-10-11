@@ -105,7 +105,10 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,.6)" }}>{lead.category}</span>
         </div>
         <a href={hrefFor(lang, lead.slug)} style={{ textDecoration: "none", color: "inherit" }}>
-          <h2 className="display" style={{ fontSize: "clamp(2rem, 1.6rem + 1.9vw, 3.25rem)", margin: 0, textWrap: "balance" }}>
+          {/* The shared display leading (0.96) is set for one-line heads; at the
+              blog's 800 weight a two-line hero title let the descenders of
+              line one touch the ascenders of line two. 1.05 matches .page-title. */}
+          <h2 className="display" style={{ fontSize: "clamp(2rem, 1.6rem + 1.9vw, 3.25rem)", lineHeight: 1.05, margin: 0, textWrap: "balance" }}>
             {lead.title}
           </h2>
         </a>
@@ -125,7 +128,10 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
         >
           {lead.excerpt}
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 18 }}>
+        {/* Each item stays on one line and the row wraps between items; in a
+            narrow two-column hero (768px) the items used to break inside
+            themselves ("Julian / Tracht", "7. Oktober / 2026"). */}
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 18, rowGap: 8, marginTop: 18, whiteSpace: "nowrap" }}>
           <AuthorChip inverse name={lead.author?.name ?? fallbackAuthorName(lang)} avatarUrl={lead.author?.avatarUrl} />
           {bookLabel(lead.readingMinutes, lang) && (
             <span className="tabular hidden sm:inline" style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
