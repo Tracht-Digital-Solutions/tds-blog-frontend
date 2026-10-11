@@ -566,13 +566,19 @@ a.jnl-tile:focus-visible {
   display: none;
 }
 
-/* The shared filter bar on the index (tds-shared .tds-filterbar). Only its
-   tokens are set here: on the tint band the toggle and panel are tiles in the
+/* The grid's heading row: heading left, the shared filter toggle right
+   (tds-shared .tds-filterbar__toggle); the panel opens below it. */
+.blog-grid-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding-bottom: 18px;
+}
+/* Only a token for the shared panel: on the tint band it is a tile in the
    band's counter-tone, like every other block in it. */
-.blog-filterbar {
+#blog-index-island .tds-filterbar__panel {
   --tds-flat-tint: var(--jnl-tile);
-  --tds-flat-hover: var(--jnl-tile-hover);
-  margin-bottom: 1.25rem;
 }
 
 /* ---- Flat post cards (index grid, related strip) ----
