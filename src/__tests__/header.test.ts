@@ -102,6 +102,18 @@ describe("the property bar", () => {
     expect(css).not.toMatch(/\.nav-divider\b/);
   });
 
+  it("splits the bar into two corner islands: brand and nav, then the actions", () => {
+    const islands = source.split('<div class="tds-sitebar__island">');
+    expect(islands, "exactly two islands").toHaveLength(3);
+    const [, first, second] = islands as [string, string, string];
+    expect(first).toContain('class="tds-sitebar__brand brand-wordmark"');
+    expect(first).toContain('<nav class="tds-sitebar__nav"');
+    expect(first).not.toContain("tds-sitebar__actions");
+    expect(second).toContain('<div class="tds-sitebar__desktop">');
+    expect(second).toContain('<div class="tds-sitebar__actions">');
+    expect(second).toContain('role="search"');
+  });
+
   it("lists the properties in the shared order, with Entdecken after the journal", async () => {
     const { primaryNav } = await import("../lib/nav");
     for (const lang of ["de", "en"] as const) {
@@ -123,7 +135,9 @@ describe("the property bar", () => {
 
   it("resolves the bar in the INSTALLED tds-shared", () => {
     const shared = join(process.cwd(), "node_modules", "@tracht-digital-solutions", "tds-shared");
-    expect(readFileSync(join(shared, "styles", "primitives.css"), "utf8")).toContain(".tds-sitebar__wide");
+    const primitives = readFileSync(join(shared, "styles", "primitives.css"), "utf8");
+    expect(primitives).toContain(".tds-sitebar__wide");
+    expect(primitives).toContain(".tds-sitebar__island");
     expect(readFileSync(join(shared, "styles", "surfaces", "blog.css"), "utf8")).toMatch(
       /--tds-shell-max:\s*120rem/,
     );
