@@ -25,8 +25,8 @@ Jakarta Sans (body), JetBrains Mono.
 
 Nothing sits on white:
 
-- **The ground is soft:** `body` paints `--color-soft`; the sticky bar mixes soft (a blog-only override on
-  `.brand-header`). Not in `surfaces/blog.css`, because the tools site and the shop render the same surface.
+- **The ground is soft:** `body` paints `--color-soft`; the desktop header islands are soft (a blog-only
+  `--tds-sitebar-fill` on `.brand-header`). Not in `surfaces/blog.css`, because the tools site and the shop render the same surface.
 - **Every section is a band** (`.jnl-band` = `padding-block`) in one tone: `.jnl-tone-sand`, `-tint`, `-accent`
   (bordeaux), `-navy`, `-ink`. Index: navy hero → tint grid → bordeaux tools promo → sand "Für dich" → ink newsletter →
   navy footer.

@@ -252,12 +252,12 @@ a.jnl-tile:focus-visible {
   --tds-eyebrow-color: #ffffff;
 }
 
-/* The sticky bar on soft instead of paper. The shared rule mixes paper; the
-   journal changes only this property and only here, because the tools site and
-   the shop keep their light bar. Its search field and language switch become
-   tint tiles so they still read on it. */
+/* The header islands on soft instead of card. tds-shared reads the fill from
+   `--tds-sitebar-fill`; the journal sets only that, because the tools site and
+   the shop keep their light islands. Its search field and language switch
+   become tint tiles so they still read on it. */
 .brand-header {
-  background: color-mix(in oklab, var(--color-soft) 92%, transparent);
+  --tds-sitebar-fill: var(--color-soft);
   --jnl-tile: var(--jnl-tint);
   --jnl-tile-hover: color-mix(in srgb, var(--jnl-tint) 92%, var(--color-ink));
 }

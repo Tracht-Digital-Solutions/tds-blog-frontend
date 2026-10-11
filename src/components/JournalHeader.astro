@@ -79,125 +79,133 @@ const currentFor = (node: { key: string; href: string }): "page" | "true" | unde
       voice, list and order on all three. The journal adds only what is its
       own — Entdecken and the search field. */}
   <div class="tds-shell tds-sitebar">
-    <a
-      href={home}
-      aria-label="Tracht Journal"
-      class="tds-sitebar__brand brand-wordmark"
-    >
-      <span class="brand-logo" aria-hidden="true"></span>
-      <span class="accent-italic">Journal</span>
-    </a>
-    <span class="tds-sitebar__divider" aria-hidden="true"></span>
+    {/* Two corner islands from 64rem (`.tds-sitebar__island`, tds-shared):
+        the wordmark and the property list in the first, everything the
+        reader acts with in the second. Below 64rem the wrappers vanish
+        from layout. */}
+    <div class="tds-sitebar__island">
+      <a
+        href={home}
+        aria-label="Tracht Journal"
+        class="tds-sitebar__brand brand-wordmark"
+      >
+        <span class="brand-logo" aria-hidden="true"></span>
+        <span class="accent-italic">Journal</span>
+      </a>
+      <span class="tds-sitebar__divider" aria-hidden="true"></span>
 
-    <nav class="tds-sitebar__nav" aria-label="Navigation">
-      {nav.map((node) =>
-        node.kind === "link" ? (
-          <a
-            href={node.href}
-            class="tds-sitebar__link"
-            aria-current={currentFor(node)}
-          >
-            {node.label}
-          </a>
-        ) : (
-          <div class="jnav-dd" id="jnl-entdecken">
-            <button
-              type="button"
-              id="jnl-entdecken-btn"
-              class="tds-sitebar__link jnav-dd-btn"
-              aria-expanded="false"
-              aria-controls="jnl-entdecken-panel"
-              aria-current={entdeckenActive ? "true" : undefined}
+      <nav class="tds-sitebar__nav" aria-label="Navigation">
+        {nav.map((node) =>
+          node.kind === "link" ? (
+            <a
+              href={node.href}
+              class="tds-sitebar__link"
+              aria-current={currentFor(node)}
             >
-              <span>{node.label}</span>
-              <svg class="jnav-dd-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-            </button>
-            <div id="jnl-entdecken-panel" class="jnav-dropdown" data-open="false" role="group" aria-label={node.label}>
-              <div class="jnav-dd-col">
-                <p class="jnav-dd-head">{labels.categories}</p>
-                {categories.length === 0 ? (
-                  <p class="jnav-dd-empty">—</p>
-                ) : (
-                  <div class="jnav-dd-links">
-                    {categories.map((c) => (
-                      <a href={categoryHref(lang, c.slug)} class="jnav-dd-link">
-                        <span>{c.name}</span>
-                        <span class="jnav-dd-count">{c.count}</span>
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div class="jnav-dd-col">
-                <p class="jnav-dd-head">{labels.tags}</p>
-                {topTags.length === 0 ? (
-                  <p class="jnav-dd-empty">—</p>
-                ) : (
-                  <div class="jnav-dd-chips">
-                    {topTags.map((t) => (
-                      <a href={tagHref(lang, t.name)} class="chip-flat chip-flat--sm">#{t.name}</a>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div class="jnav-dd-col">
-                <p class="jnav-dd-head">{labels.topics}</p>
-                <a href={topicsHref(lang)} class="jnav-dd-link jnav-dd-link--lead">
-                  <span>{labels.topics}</span>
-                  <span aria-hidden="true">→</span>
-                </a>
+              {node.label}
+            </a>
+          ) : (
+            <div class="jnav-dd" id="jnl-entdecken">
+              <button
+                type="button"
+                id="jnl-entdecken-btn"
+                class="tds-sitebar__link jnav-dd-btn"
+                aria-expanded="false"
+                aria-controls="jnl-entdecken-panel"
+                aria-current={entdeckenActive ? "true" : undefined}
+              >
+                <span>{node.label}</span>
+                <svg class="jnav-dd-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+              <div id="jnl-entdecken-panel" class="jnav-dropdown" data-open="false" role="group" aria-label={node.label}>
+                <div class="jnav-dd-col">
+                  <p class="jnav-dd-head">{labels.categories}</p>
+                  {categories.length === 0 ? (
+                    <p class="jnav-dd-empty">—</p>
+                  ) : (
+                    <div class="jnav-dd-links">
+                      {categories.map((c) => (
+                        <a href={categoryHref(lang, c.slug)} class="jnav-dd-link">
+                          <span>{c.name}</span>
+                          <span class="jnav-dd-count">{c.count}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div class="jnav-dd-col">
+                  <p class="jnav-dd-head">{labels.tags}</p>
+                  {topTags.length === 0 ? (
+                    <p class="jnav-dd-empty">—</p>
+                  ) : (
+                    <div class="jnav-dd-chips">
+                      {topTags.map((t) => (
+                        <a href={tagHref(lang, t.name)} class="chip-flat chip-flat--sm">#{t.name}</a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div class="jnav-dd-col">
+                  <p class="jnav-dd-head">{labels.topics}</p>
+                  <a href={topicsHref(lang)} class="jnav-dd-link jnav-dd-link--lead">
+                    <span>{labels.topics}</span>
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-        )
-      )}
-    </nav>
-
-    <div class="nav-search hidden lg:flex" role="search">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
-        <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-      </svg>
-      <input
-        type="search"
-        id="jnl-search"
-        class="js-blog-search"
-        placeholder={searchPlaceholder}
-        aria-label={searchPlaceholder}
-        data-index-url={home}
-      />
+          )
+        )}
+      </nav>
     </div>
 
-    {/* Language, theme and the CTA only from lg up; below that they live in
-        the sheet and just the account menu and the hamburger remain. The CTA
-        yields once more below 80rem through its `.tds-sitebar__wide` wrapper:
-        this row, with five nav entries and the search field, is the one that
-        runs out of room first, and all three bars follow it. */}
-    <div class="tds-sitebar__desktop">
-      <div class="tds-lang-toggle" role="group" aria-label="Sprache / Language">
-        <a href="/" data-locale-link="de" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
-        <a href="/en/" data-locale-link="en" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+    <div class="tds-sitebar__island">
+      <div class="nav-search hidden lg:flex" role="search">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M10.8 10.8L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <input
+          type="search"
+          id="jnl-search"
+          class="js-blog-search"
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
+          data-index-url={home}
+        />
       </div>
 
-      <ThemeToggle
-        client:idle
-        labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
-        labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
-      />
+      {/* Language, theme and the CTA only from lg up; below that they live in
+          the sheet and just the account menu and the hamburger remain. The CTA
+          yields once more below 80rem through its `.tds-sitebar__wide` wrapper:
+          this row, with five nav entries and the search field, is the one that
+          runs out of room first, and all three bars follow it. */}
+      <div class="tds-sitebar__desktop">
+        <div class="tds-lang-toggle" role="group" aria-label="Sprache / Language">
+          <a href="/" data-locale-link="de" class={lang === "de" ? "on" : ""} aria-current={lang === "de" ? "true" : undefined}>DE</a>
+          <a href="/en/" data-locale-link="en" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
+        </div>
 
-      <div class="tds-sitebar__wide">
-        <a href={contact} class="btn btn-primary no-underline">
-          {cta}
-        </a>
+        <ThemeToggle
+          client:idle
+          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
+          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+        />
+
+        <div class="tds-sitebar__wide">
+          <a href={contact} class="btn btn-primary no-underline">
+            {cta}
+          </a>
+        </div>
       </div>
-    </div>
 
-    {/* Outside the desktop cluster on purpose: who you are is not desktop
-        chrome, and below `lg` this is the only thing beside the hamburger. It
-        renders NOTHING for a signed-out reader — the blog is public and a login
-        CTA next to the contact button would be noise. */}
-    <div class="tds-sitebar__actions">
-      <AccountMenu client:idle lang={lang} />
+      {/* Outside the desktop cluster on purpose: who you are is not desktop
+          chrome, and below `lg` this is the only thing beside the hamburger. It
+          renders NOTHING for a signed-out reader — the blog is public and a login
+          CTA next to the contact button would be noise. */}
+      <div class="tds-sitebar__actions">
+        <AccountMenu client:idle lang={lang} />
+      </div>
     </div>
   </div>
 
