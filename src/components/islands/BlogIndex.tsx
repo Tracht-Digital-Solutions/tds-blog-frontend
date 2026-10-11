@@ -235,6 +235,7 @@ export default function BlogIndex({
   const [q, setQ] = useState("");
   const [band, setBand] = useState<LengthBand>("all");
   const [sort, setSort] = useState<SortKey>("new");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // A deliberate filter change (a category, "clear search") runs as a native
   // View Transition: cards that stay glide to their new slot, the rest fade.
@@ -401,70 +402,81 @@ export default function BlogIndex({
               </div>
             )}
 
-            {/* The shared collapsible filter bar (.tds-filterbar, tds-shared
-                0.52): closed it is one button with the number of active
-                filters; categories stay in the rail and the strip above. */}
-            <details className="tds-disclosure tds-filterbar blog-filterbar">
-              <summary className="tds-filterbar__toggle">
-                {t.filter}
-                <span className="tds-filterbar__count">{activeFilters > 0 ? activeFilters : ""}</span>
-              </summary>
-              <div className="tds-filterbar__panel">
-                <fieldset className="tds-filterbar__group">
-                  <legend className="tds-filterbar__legend">{t.length}</legend>
-                  <div className="tds-toolbar">
-                    {(["all", "short", "medium", "long"] as const).map((b) => (
-                      <button type="button" key={b} className="chip" aria-pressed={band === b} onClick={() => pickBand(b)}>
-                        {t.lengths[b]}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-                <fieldset className="tds-filterbar__group">
-                  <legend className="tds-filterbar__legend">{t.sort}</legend>
-                  <div className="tds-toolbar">
-                    {(["new", "popular"] as const).map((k) => (
-                      <button type="button" key={k} className="chip" aria-pressed={sort === k} onClick={() => pickSort(k)}>
-                        {t.sorts[k]}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-                <button type="button" className="tds-filterbar__reset" disabled={activeFilters === 0} onClick={resetFilters}>
-                  {t.resetFilters}
-                </button>
-              </div>
-            </details>
-
-            {/* The page's only <h1> lives in HeroSlider — and the hero is not
-                rendered while a search is running, so the results view shipped
-                with no top-level heading at all. This heading takes the rank
-                over in exactly that state. Nothing moves: no shared rule
-                targets a bare h1/h2, Tailwind's preflight normalises both, and
-                the size is set inline either way. */}
-            <GridHeading
-              className="display-tight"
-              style={{ fontSize: "1.625rem", margin: 0, paddingBottom: 18, display: "flex", alignItems: "center", gap: 10 }}
-            >
-              <svg
-                className="head-ico"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+            {/* Heading row: the listing's heading on the left, the filter
+                toggle (tds-shared .tds-filterbar__toggle, a brand button) on
+                the right; its panel opens below the row. Categories stay in
+                the rail and the strip above. */}
+            <div className="blog-grid-head">
+              {/* The page's only <h1> lives in HeroSlider — and the hero is not
+                  rendered while a search is running, so the results view shipped
+                  with no top-level heading at all. This heading takes the rank
+                  over in exactly that state. Nothing moves: no shared rule
+                  targets a bare h1/h2, Tailwind's preflight normalises both, and
+                  the size is set inline either way. */}
+              <GridHeading
+                className="display-tight"
+                style={{ fontSize: "1.625rem", margin: 0, display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}
               >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-              </svg>
-              {cat === "all" ? t.all : cat}
-            </GridHeading>
+                <svg
+                  className="head-ico"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                {cat === "all" ? t.all : cat}
+              </GridHeading>
+              <button
+                type="button"
+                className="btn btn-primary tds-filterbar__toggle"
+                data-filter-toggle=""
+                aria-expanded={filterOpen}
+                aria-controls="blog-filter"
+                onClick={() => setFilterOpen((v) => !v)}
+              >
+                <svg className="tds-filterbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
+                  <path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4" />
+                </svg>
+                <span className="tds-filterbar__label">{t.filter}</span>
+                <span className="tds-filterbar__count">{activeFilters > 0 ? activeFilters : ""}</span>
+              </button>
+            </div>
+            <div className="tds-filterbar__panel" id="blog-filter" hidden={!filterOpen}>
+              <fieldset className="tds-filterbar__group">
+                <legend className="tds-filterbar__legend">{t.length}</legend>
+                <div className="tds-toolbar">
+                  {(["all", "short", "medium", "long"] as const).map((b) => (
+                    <button type="button" key={b} className="chip" aria-pressed={band === b} onClick={() => pickBand(b)}>
+                      {t.lengths[b]}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="tds-filterbar__group">
+                <legend className="tds-filterbar__legend">{t.sort}</legend>
+                <div className="tds-toolbar">
+                  {(["new", "popular"] as const).map((k) => (
+                    <button type="button" key={k} className="chip" aria-pressed={sort === k} onClick={() => pickSort(k)}>
+                      {t.sorts[k]}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <button type="button" className="tds-filterbar__reset" disabled={activeFilters === 0} onClick={resetFilters}>
+                {t.resetFilters}
+              </button>
+            </div>
+
 
             {gridPosts.length === 0 ? (
               <p style={{ padding: "48px 0", color: "var(--color-muted)" }}>
