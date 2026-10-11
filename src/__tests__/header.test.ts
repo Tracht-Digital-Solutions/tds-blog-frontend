@@ -156,7 +156,7 @@ describe("the account menu", () => {
 
   it("comes from tds-shared, not from a local copy", () => {
     expect(source).toMatch(
-      /import \{[^}]*\bAccountMenu\b[^}]*\} from "@tracht-digital-solutions\/tds-shared\/components"/,
+      /import \{[^}]*\bAccountMenu\b[^}]*\} from "@tracht-digital-solutions\/tds-shared\/(?:components|islands\/account-menu)"/,
     );
   });
 
