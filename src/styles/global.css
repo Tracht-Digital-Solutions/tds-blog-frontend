@@ -566,6 +566,15 @@ a.jnl-tile:focus-visible {
   display: none;
 }
 
+/* The shared filter bar on the index (tds-shared .tds-filterbar). Only its
+   tokens are set here: on the tint band the toggle and panel are tiles in the
+   band's counter-tone, like every other block in it. */
+.blog-filterbar {
+  --tds-flat-tint: var(--jnl-tile);
+  --tds-flat-hover: var(--jnl-tile-hover);
+  margin-bottom: 1.25rem;
+}
+
 /* ---- Flat post cards (index grid, related strip) ----
    The card is a CONTAINER: it re-composes itself from the width it is given,
    not from the viewport. That is what lets one component serve a narrow

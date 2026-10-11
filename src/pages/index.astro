@@ -3,7 +3,7 @@ import Layout from "~/layouts/Layout.astro";
 import BlogIndex from "~/components/islands/BlogIndex.tsx";
 import ForYou from "~/components/islands/ForYou.tsx";
 import ToolsPromo from "~/components/ToolsPromo.astro";
-import { listAllPosts, listPopular } from "~/lib/content-api";
+import { listAllPosts, listPopular, listReads } from "~/lib/content-api";
 import { PAGE_SIZE } from "~/lib/pagination";
 import { asGraph, blogSchema, itemListSchema, organizationSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
@@ -11,7 +11,11 @@ import { siteConfig } from "~/lib/seo";
 let allPosts: Awaited<ReturnType<typeof listAllPosts>> = [];
 let popular: Awaited<ReturnType<typeof listPopular>> = [];
 try {
-  [allPosts, popular] = await Promise.all([listAllPosts("de"), listPopular("de", 6)]);
+  let reads: Map<string, number>;
+  [allPosts, popular, reads] = await Promise.all([listAllPosts("de"), listPopular("de", 6), listReads("de")]);
+  // The filter bar's "Meistgelesen" order ranks by real reads, as the author
+  // pages do; without statistics the CMS counter stays.
+  if (reads.size > 0) allPosts = allPosts.map((p) => ({ ...p, viewCount: reads.get(p.slug) ?? 0 }));
 } catch (err) {
   console.error("[tds-blog] failed to fetch posts at build time:", err);
 }
