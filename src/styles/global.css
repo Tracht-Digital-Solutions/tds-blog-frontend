@@ -542,6 +542,14 @@ a.jnl-tile:focus-visible {
 .blog-cat-rail.is-collapsed {
   width: 1.875rem;
 }
+/* The rail stands beside a shelf of books, not a mosaic: it keeps the shelf's
+   own gutter. The old 1px seam put the first book's spine flush against the
+   rail while every other book had air around it. */
+@media (min-width: 1024px) {
+  .blog-index-row {
+    column-gap: calc(var(--tds-gutter) * 0.9);
+  }
+}
 
 /* The mobile category strip bleeds to both page edges so the chips can be
    scrolled from the very edge of the screen. The bleed has to be derived from
@@ -1536,18 +1544,24 @@ a.topic-card:focus-visible {
        to 1920px, and the band flattened into a letterbox. Growing the cap with
        the WIDTH (not only the height) keeps the lead image in proportion to
        the column it sits beside. */
-    height: clamp(360px, 34vh + 6vw, 560px);
+    min-height: clamp(360px, 34vh + 6vw, 560px);
+    /* A floor, not a fixed height. A fixed height squeezed the text column
+       whenever a title ran to three or four lines: the clamped excerpt shrank
+       first (cut mid-line), then the rest spilled past the stage. Now the
+       stage grows with the tallest set, so every set keeps the same height and
+       switching sets never jumps. */
+    align-items: stretch;
   }
-  .hero-stage .hero-track,
+  /* The slide is a grid so the hero grid inside stretches to the track
+     height (a stretched flex item's height, which is the stage's). */
   .hero-stage .hero-track > .hero-slide {
-    height: 100%;
+    display: grid;
   }
-  /* Single full-height row so the columns actually fill the stage (a plain
-     height on the grid leaves the implicit row at content height); minmax(0,…)
-     lets children shrink so overflow:hidden can clip the cover. */
+  /* The cover column stretches with the row; the cover itself has no
+     intrinsic height (an absolutely positioned drawing), so it takes exactly
+     what the text column leaves. */
   .hero-stage .hero-grid {
-    height: 100%;
-    grid-template-rows: minmax(0, 1fr);
+    grid-template-rows: auto;
   }
   /* Image fills the column height instead of scaling with the (now full-bleed)
      width — that was making the cover huge and the hero tall. */

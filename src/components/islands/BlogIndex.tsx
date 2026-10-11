@@ -285,10 +285,10 @@ export default function BlogIndex({
       )}
 
       {/* A tint band flush under the navy hero. Its spacing is the band's own
-          padding; the rail, the cards and the "older" link meet at 1px seams
-          that show the band, with no margin between any of them. */}
+          padding; the rail stands one shelf gutter beside the books
+          (.blog-index-row), and the "older" link hangs on a 1px seam. */}
       <section className="jnl-band jnl-tone-tint">
-        <div className="tds-shell lg:flex lg:items-start lg:gap-px">
+        <div className="tds-shell blog-index-row lg:flex lg:items-start">
           <div
             // Width changes instantly. Animating `width` reflows the article
             // grid beside it on every frame, so the 320ms transition made the
