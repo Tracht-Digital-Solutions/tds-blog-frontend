@@ -1478,6 +1478,35 @@ a.topic-card:focus-visible {
 .hero-track > .hero-slide {
   flex: 0 0 100%; /* one viewport-width per set */
   min-width: 0; /* let the inner grid shrink so overflow:hidden can clip */
+  /* Each set paints only inside its own slot. The cover sits at the slot's
+     right edge and its page block (book--5 + hover = 23px) spilled into the
+     NEXT set: with "Für dich" first, a white page edge ran down over the
+     start of the "Aktuelles" headline. */
+  overflow: clip;
+}
+@media (min-width: 640px) {
+  /* Room for the cover's page block inside the slot, so clipping the slot
+     never cuts the visible set's own book. */
+  .hero-track > .hero-slide {
+    padding-right: 24px;
+  }
+}
+/* Desktop: the header is a transparent strip with two islands, in flow above
+   the hero. Its 84px showed the soft page ground as a light bar above the
+   navy band. The band now starts under the header (pulled up by more than the
+   header is tall; anything above the page top is never painted) and pads its
+   content back down to where it was. */
+@media (min-width: 64rem) {
+  .hero-band {
+    margin-top: -7rem;
+    padding-top: 7rem;
+  }
+  /* The islands now open on navy, where their navy offset vanished. They take
+     the dark bands' black ink (as .hero-stage does) on this page. */
+  body:has(.hero-band) .brand-header {
+    --tds-shadow-ink: rgb(0 0 0 / 0.5);
+    --tds-shadow-hard-sm: 3px 3px 0 0 var(--tds-shadow-ink);
+  }
 }
 
 /* Slider controls — a centred bar of prev/next arrows flanking a dot rail,
