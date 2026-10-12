@@ -190,6 +190,10 @@ const showConsent =
         without it warms a second request that nothing uses. */}
     <link rel="preload" href={bodyFont} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
+    {/* The header's logo mark is a CSS mask, so the browser only asks for it
+        once the stylesheet is parsed — on a first visit the bar showed its
+        name without the mark for a beat. Fetched alongside the CSS instead. */}
+    <link rel="preload" href="/brand/td-logomark.webp" as="image" type="image/webp" fetchpriority="high" />
     <!-- The cross-page transition switch, as early as it can be: Chrome decides the
          incoming page's opt-in at its first render, and the stylesheet linked at the
          end of this head often arrives later (tds-shared pageTransitionOptIn). -->
