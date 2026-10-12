@@ -74,18 +74,20 @@ Options -Indexes
   #     for debugging.
   RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
   RewriteCond %{QUERY_STRING} !(^|&)nocache=
-  #     BUILD GATE: a hit only while the booted app has flushed the previous
+  #     BUILD + DAY GATE: a hit only while the booted app has flushed the previous
   #     build's pages and laid down its marker; pack-release puts this build's
   #     fingerprint in place of the placeholder (tds-shared >= 0.55.2). After a
   #     deploy every request goes to Node until then, instead of handing out
   #     cached HTML that names the old build's deleted CSS (an unstyled page).
-  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@ -f
+  #     The date part (tds-shared >= 0.55.3) ends every entry at midnight: the
+  #     first request of a day reaches Node, which empties the cache.
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@-%{TIME_YEAR}%{TIME_MON}%{TIME_DAY} -f
   RewriteCond %{DOCUMENT_ROOT}/_tds-cache/index.html -f
   RewriteRule ^$ /_tds-cache/index.html [L]
 
   RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
   RewriteCond %{QUERY_STRING} !(^|&)nocache=
-  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@ -f
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@-%{TIME_YEAR}%{TIME_MON}%{TIME_DAY} -f
   RewriteCond %{DOCUMENT_ROOT}/_tds-cache/$1/index.html -f
   RewriteRule ^(.+?)/?$ /_tds-cache/$1/index.html [L]
 
@@ -95,7 +97,7 @@ Options -Indexes
   #      index.html would hand every reader XML labelled text/html.
   RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
   RewriteCond %{QUERY_STRING} !(^|&)nocache=
-  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@ -f
+  RewriteCond %{DOCUMENT_ROOT}/_tds-cache/.build-@TDS_BUILD@-%{TIME_YEAR}%{TIME_MON}%{TIME_DAY} -f
   RewriteCond %{DOCUMENT_ROOT}/_tds-cache/$1 -f
   RewriteRule ^(.+\.[A-Za-z0-9]+)$ /_tds-cache/$1 [L]
 
