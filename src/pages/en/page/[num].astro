@@ -5,7 +5,7 @@ import { translations } from "@tracht-digital-solutions/tds-shared/i18n";
 import { archivePage } from "~/lib/routes";
 import { paginate } from "~/lib/pagination";
 import { archiveDescription } from "~/lib/metaDescription";
-import { asGraph, blogSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
+import { asGraph, breadcrumbSchema, blogSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
 import { archiveAlternate } from "~/lib/alternates";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { PAGE_SIZE } from "~/lib/pagination";
@@ -45,6 +45,11 @@ const jsonLd = asGraph(
       (page - 1) * PAGE_SIZE + 1,
     ),
   }),
+  // The trail every other listing declares: journal, then this archive page.
+  breadcrumbSchema([
+    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name: `Archive · page ${page}`, url: pageUrl },
+  ]),
 );
 ---
 
