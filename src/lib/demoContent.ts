@@ -9,6 +9,7 @@
  *
  * **These mirror the launch articles seeded by `tds-ext-blog-cms-pkg`'s
  * `BlogCmsSeedPosts` migration** — same slugs, same titles, condensed bodies.
+ * Titles and excerpts follow the 2026-10 rewrite (`*_blog_cms_rewrite_*`).
  * The point of a fallback is that a visitor cannot tell it apart from the real
  * thing; three developer-topic articles about SSG and design tokens (what used
  * to be here) advertised something the business does not sell. The canonical
@@ -75,9 +76,9 @@ const SEEDS: DemoSeed[] = [
     publishedAt: date(-4),
     de: {
       category: "Digitalisierung",
-      title: "Digitalisierung fängt nicht beim Großprojekt an",
+      title: "Digitalisierung im kleinen Betrieb: mit einem Ablauf anfangen",
       excerpt:
-        "Sie fängt bei dem einen Ablauf an, der jede Woche Stunden kostet — und den außer Ihnen niemand sieht.",
+        "Kein Großprojekt, keine neue Software für alles: Digitalisierung beginnt mit dem einen Ablauf, der jede Woche Zeit frisst. So finden Sie ihn.",
       tags: "digitalisierung,prozesse,kleine-unternehmen",
       body: [
         "Wenn von Digitalisierung die Rede ist, denken viele sofort an ein großes Vorhaben: neue Software für den ganzen Betrieb, Schulungen, Umstellung, monatelang Unruhe. Das schreckt zu Recht ab. Und es ist meistens gar nicht der richtige Anfang.",
@@ -96,9 +97,9 @@ const SEEDS: DemoSeed[] = [
     },
     en: {
       category: "Digitalization",
-      title: "Digitalization doesn't start with a big project",
+      title: "Digitalization for small businesses: start with one workflow",
       excerpt:
-        "It starts with the one routine that costs hours every week — the one nobody but you can see.",
+        "No big project, no new software for everything: digitalization starts with the one routine that eats time every week. Here is how to find it.",
       tags: "digitalization,workflows,small-business",
       body: [
         "When digitalization comes up, most people picture something large: new software for the whole company, training, migration, months of disruption. That is off-putting for good reason. It is also, usually, the wrong place to start.",
@@ -121,9 +122,9 @@ const SEEDS: DemoSeed[] = [
     publishedAt: date(-18),
     de: {
       category: "Webshop",
-      title: "Lohnt sich ein Webshop für mein Ladengeschäft?",
+      title: "Lohnt sich ein Webshop für mein Ladengeschäft? Vier Fragen",
       excerpt:
-        "Nicht für jedes Sortiment. Vier Fragen, die die Antwort meist schon vorwegnehmen.",
+        "Ein Webshop ist nie fertig: Bestände, Preise und Bestellungen wollen gepflegt werden. Vier Fragen zeigen, ob sich das für Ihren Laden rechnet.",
       tags: "webshop,onlineverkauf,lokaler-handel",
       body: [
         "Ein Webshop wird oft als naheliegender nächster Schritt gehandelt: Sie haben Produkte, also verkaufen Sie sie eben auch online. In der Praxis ist die Entscheidung weniger eindeutig, weil ein Shop etwas mitbringt, was eine Website nicht hat — **laufende Arbeit**.",
@@ -142,9 +143,9 @@ const SEEDS: DemoSeed[] = [
     },
     en: {
       category: "Online shop",
-      title: "Is an online shop worth it for my local business?",
+      title: "Is an online shop worth it for my local store? Four questions",
       excerpt:
-        "Not for every range of products. Four questions that usually answer it for you.",
+        "An online shop is never finished: stock, prices and orders need constant care. Four questions show whether that adds up for your store.",
       tags: "online-shop,ecommerce,local-retail",
       body: [
         "An online shop gets treated as the obvious next step: you have products, so sell them online as well. In practice the decision is less clear-cut, because a shop brings something a website doesn't — **ongoing work**.",
@@ -167,9 +168,9 @@ const SEEDS: DemoSeed[] = [
     publishedAt: date(-33),
     de: {
       category: "Werkzeuge",
-      title: "Excel-Tabelle oder eigenes Werkzeug? Eine ehrliche Entscheidungshilfe",
+      title: "Excel oder eigenes Werkzeug? Drei Kipppunkte für den Wechsel",
       excerpt:
-        "Eine Tabelle trägt erstaunlich weit. Es gibt aber drei Punkte, an denen sie zuverlässig kippt.",
+        "Eine Tabelle trägt erstaunlich weit. An drei Punkten kippt sie zuverlässig. Woran Sie diese erkennen und wie der Umstieg ohne Abtippen gelingt.",
       tags: "excel,werkzeuge,auswertung",
       body: [
         "Excel bekommt zu Unrecht einen schlechten Ruf. Eine Tabelle ist sofort verfügbar, kostet nichts extra, jeder kann sie bedienen, und für erstaunlich viele Aufgaben ist sie schlicht die richtige Antwort. Ich habe schon Kunden davon abgeraten, eine gut funktionierende Tabelle zu ersetzen.",
@@ -188,9 +189,9 @@ const SEEDS: DemoSeed[] = [
     },
     en: {
       category: "Tools",
-      title: "Spreadsheet or a tool of your own? An honest way to decide",
+      title: "Spreadsheet or a tool of your own? Three tipping points",
       excerpt:
-        "A spreadsheet carries you surprisingly far. There are three points, though, where it reliably tips over.",
+        "A spreadsheet carries you surprisingly far. At three points it reliably tips over. How to spot them and how to switch without retyping anything.",
       tags: "spreadsheets,tools,reporting",
       body: [
         "Spreadsheets get an unfairly bad name. One is available immediately, costs nothing extra, everybody can use it, and for a surprising number of jobs it is simply the right answer. I have talked clients out of replacing a spreadsheet that was working fine.",
@@ -215,7 +216,7 @@ const SEEDS: DemoSeed[] = [
       category: "Webshop",
       title: "Wenn der Baukasten-Shop nicht mehr mitwächst",
       excerpt:
-        "Ein gehosteter Shop-Baukasten trägt die ersten Jahre zuverlässig. Woran man merkt, dass er es nicht mehr tut — und was ein Umzug wirklich bedeutet.",
+        "Ein Shop-Baukasten trägt die ersten Jahre zuverlässig. Vier Warnzeichen zeigen, wann er zu eng wird, und warum beim Umzug die Produktdaten entscheiden.",
       tags: "webshop,produktdaten,preispflege",
       body: [
         "Ein gehosteter Shop-Baukasten ist für den Start eine vernünftige Entscheidung. Er kostet wenig, läuft ohne eigenen Server und bringt Zahlungsarten, Versandregeln und eine Bestellabwicklung mit. Irgendwann kippt das Verhältnis: Der Shop läuft weiter wie immer, aber jede Änderung daran kostet mehr Zeit als früher.",
@@ -233,7 +234,7 @@ const SEEDS: DemoSeed[] = [
       category: "Online shop",
       title: "When the hosted shop builder stops keeping up",
       excerpt:
-        "A hosted shop builder carries you reliably for the first few years. How to tell when it no longer does — and what a migration actually involves.",
+        "A hosted shop builder carries you reliably for the first years. Four warning signs show when it gets too tight, and why the product data decides a move.",
       tags: "online-shop,product-data,pricing",
       body: [
         "A hosted shop builder is a sensible decision at the start. It costs little, runs without a server of your own, and brings payment methods, shipping rules and order handling with it. At some point the balance tips: the shop keeps running exactly as before, but every change to it costs more time than it used to.",
