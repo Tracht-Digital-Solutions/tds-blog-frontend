@@ -2452,3 +2452,25 @@ a.book.jnl-tile:is(:hover, :focus-visible),
   .tds-app body:has(.hero-stage) .tds-app-header .brand-wordmark .accent-italic { color: #fff; }
   .tds-app body:has(.hero-stage) .tds-app-header .brand-wordmark .accent-italic { color: var(--color-accent-pink, #ff8fab); }
 }
+
+/* === Tap targets on touch (2026-10-12) ==================================
+   Measured at 360/390px: the footer links were 18px high, the tools promo's
+   links 21px and the hero dots 9x9 — under WCAG 2.2's 24px. Lifted on coarse
+   pointers only, so the desktop density stays (the shop does the same). */
+@media (pointer: coarse) {
+  .blog-footer a,
+  .tools-promo__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /* The dot stays a dot; its hit area grows around it. */
+  .hero-dot {
+    position: relative;
+  }
+  .hero-dot::after {
+    content: "";
+    position: absolute;
+    inset: -10px -6px;
+  }
+}

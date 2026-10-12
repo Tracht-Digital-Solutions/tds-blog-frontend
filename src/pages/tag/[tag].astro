@@ -23,7 +23,10 @@ const { posts, allPosts } = group;
 const altPath = await tagAlternate("de", tag);
 
 const pageUrl = `${siteConfig.url}/tag/${tag}`;
-const title = pageTitle(`#${tag}`);
+// The language in the title as well: "#nas" alone made the German and the
+// English tag page the same document title, which search engines read as a
+// duplicate pair.
+const title = pageTitle(`Beiträge zu #${tag}`);
 const description = tagDescription(tag, "de");
 
 // The ItemList sits inside the CollectionPage rather than beside it: on its
