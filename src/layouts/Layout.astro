@@ -110,7 +110,10 @@ const resolvedOgImage =
   ogImage ?? (article?.slug ? `/og/${lang}/${article.slug}.png` : "/og-default.png");
 
 const site = Astro.site?.origin ?? "https://blog.tracht-digital.de";
-const url = canonical ?? new URL(Astro.url.pathname, site).toString();
+// One spelling per page (public/.htaccess rule 0a): no trailing slash except
+// on the two roots, so the canonical and hreflang URLs match the sitemap.
+const pathname = Astro.url.pathname.replace(/(.)\/+$/, "$1").replace(/^\/en$/, "/en/");
+const url = canonical ?? new URL(pathname, site).toString();
 const ogImageAbs = resolvedOgImage.startsWith("http")
   ? resolvedOgImage
   : new URL(resolvedOgImage, site).toString();
@@ -120,16 +123,16 @@ const ogImageAbs = resolvedOgImage.startsWith("http")
 // `altUrl={null}` suppresses the links (see Props.altUrl).
 const autoAltPath =
   lang === "de"
-    ? Astro.url.pathname.replace(/^\//, "/en/")
+    ? pathname.replace(/^\//, "/en/")
     // `(\/|$)`: a bare `/en` used to keep itself as its own alternate.
-    : Astro.url.pathname.replace(/^\/en(\/|$)/, "/");
+    : pathname.replace(/^\/en(\/|$)/, "/");
 // A page the panel excluded from the sitemap is also served `noindex`, and
 // loses its alternates with it. Both halves are required: a sitemap omission is
 // a hint a crawler may ignore, while `noindex` beside an alternate tells it to
 // follow a link it is simultaneously told to disregard. `noindex` (the prop)
 // stays the local override for pages that are never public — `/install`, the
 // print views, the error pages.
-const hidden = noindex || (await isExcluded(Astro.url.pathname));
+const hidden = noindex || (await isExcluded(pathname));
 
 const altUrl =
   altUrlProp === null || hidden
@@ -140,7 +143,7 @@ const altLang = lang === "de" ? "en" : "de";
 // language's home. Unlike `altUrl` this exists for every page.
 const appAltHref = altUrl ? new URL(altUrl).pathname : lang === "de" ? "/en/" : "/";
 // Only the two homes send a returning visitor to their saved language.
-const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "/en/" || Astro.url.pathname === "/en";
+const isHome = pathname === "/" || pathname === "/en/" || pathname === "/en";
 
 // Language-matched RSS autodiscovery (the EN feed carries EN posts).
 const rssHref = lang === "en" ? "/en/rss.xml" : "/rss.xml";
