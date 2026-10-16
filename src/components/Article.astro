@@ -421,6 +421,17 @@ const jsonLd = [
           </p>
         )}
       </header>
+      {explicitCover && (
+        <img
+          src={explicitCover}
+          alt=""
+          width="1440"
+          height="960"
+          loading="lazy"
+          decoding="async"
+          class="w-full aspect-[3/2] object-cover mb-7"
+        />
+      )}
       </div>
 
       {/* Floating reading tools. A zero-height sticky anchor: on lg+ the bar
