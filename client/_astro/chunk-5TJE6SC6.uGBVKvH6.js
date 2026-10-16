@@ -1,0 +1,1 @@
+var e=[`neutral`,`success`,`warning`,`danger`,`info`],t=[`cat-violet`,`cat-teal`,`cat-amber`,`cat-rose`,`cat-cyan`],n=[...e,...t];new Set(n);var r=`tds-theme`,i=`data-theme`,a=`tds:theme-change`;export{r as i,i as n,a as r,t};
