@@ -1,5 +1,23 @@
 # Image swap guide
 
+## Editorial series — 2026-10-16
+
+`src/lib/editorialCovers.json` assigns all 15 published journal articles to
+the coordinated editorial image series hosted on `https://tracht-digital.de/images/`.
+The identical catalog lives in the landing-page repository; the URLs are shared
+so a journal card has the same image on both sites. Uploaded CMS covers always
+win. Unknown article slugs retain the abstract brand cover.
+
+The data layer resolves the fallback for lists, articles, feeds, sitemaps and
+social metadata. Demo posts use the same catalog. Article pages display a lazy
+cover below the byline, with reserved space to avoid layout shifts.
+Generated images are illustrative scenes, never evidence of a customer project.
+
+Original PNGs, WebP exports and full prompts are sorted in the workspace under
+`stuff/03-Materialien/Bildserie-2026-10-16/`. Publish the landing-page release
+before this frontend so all image URLs already exist. The historical notes
+below predate the current asset and runtime implementation.
+
 Static blog rendered from `tds-content-api`. Most image surface is
 either (a) inside the published post content itself (handled by
 content authors via the CMS) or (b) generated programmatically at

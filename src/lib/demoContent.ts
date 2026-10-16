@@ -22,6 +22,7 @@
  * warning anywhere.
  */
 import type { BlogPost } from "@tracht-digital-solutions/tds-shared";
+import { editorialCover } from './editorialCovers';
 
 export const DEMO_MODE = import.meta.env.PUBLIC_DEMO_MODE === "true";
 
@@ -260,7 +261,7 @@ function summaryFor(seed: DemoSeed, id: number, lang: "de" | "en"): PostSummary 
     category: v.category,
     title: v.title,
     excerpt: v.excerpt,
-    coverHint: null,
+    coverHint: editorialCover(seed.slug),
     tags: v.tags,
     publishedAt: seed.publishedAt,
     // Spread the view counts so the author page's views/trend sort is visibly
@@ -348,7 +349,7 @@ export function demoPost(slug: string, lang: "de" | "en"): BlogPost | null {
     title: v.title,
     excerpt: v.excerpt,
     body: v.body,
-    coverHint: null,
+    coverHint: editorialCover(seed.slug),
     tags: v.tags,
     publishedAt: seed.publishedAt,
     draft: false,

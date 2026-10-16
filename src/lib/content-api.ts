@@ -25,6 +25,7 @@ import type { BlogPost, AdsMode } from "@tracht-digital-solutions/tds-shared";
 import { contentCache } from "./cache";
 import { DEMO_MODE, demoPost, demoPostList, demoTopics, type TopicsBlock } from "./demoContent";
 import { contentApiBase } from "./connection";
+import { postCover } from './editorialCovers';
 import { ContentHttpError, isConnectionFailure, memoisedOr, readContentJson } from "./contentFetch";
 
 export type { TopicItem, TopicsBlock } from "./demoContent";
@@ -95,8 +96,8 @@ function withResolvedAuthor<T extends { author?: BlogPost["author"] }>(post: T):
   return { ...post, author: { ...post.author, avatarUrl: resolveAvatar(post.author.avatarUrl) } };
 }
 
-function withResolvedCovers<T extends { coverHint?: string | null; author?: BlogPost["author"] }>(posts: T[]): T[] {
-  return posts.map((p) => withResolvedAuthor({ ...p, coverHint: resolveCoverHint(p.coverHint) }));
+function withResolvedCovers<T extends { slug: string; coverHint?: string | null; author?: BlogPost["author"] }>(posts: T[]): T[] {
+  return posts.map((p) => withResolvedAuthor({ ...p, coverHint: postCover(p.slug, resolveCoverHint(p.coverHint)) }));
 }
 
 /**
@@ -405,7 +406,7 @@ export async function getPost(slug: string, lang: "de" | "en"): Promise<FullPost
 
   try {
     const { post } = await readContentJson<{ post: FullPost }>(url);
-    return withResolvedAuthor({ ...post, coverHint: resolveCoverHint(post.coverHint) });
+    return withResolvedAuthor({ ...post, coverHint: postCover(post.slug, resolveCoverHint(post.coverHint)) });
   } catch (err) {
     // A 404 is an ANSWER: the post does not exist.
     if (err instanceof ContentHttpError && err.status === 404) return null;
