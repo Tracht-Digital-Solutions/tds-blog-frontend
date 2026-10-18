@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AuthorChip, fallbackAuthorName, formatPostDate, type CardPost } from "../PostCard";
 import { bookClass, bookLabel } from "../../lib/book";
+import { imageHints } from "../../lib/imageCatalog";
 import { PostCover } from "../Covers";
 
 /**
@@ -178,7 +179,7 @@ function Slide({ posts, meta, lang, t }: { posts: SliderPost[]; meta: SetMeta; l
           tabIndex={-1}
           style={{ overflow: "hidden", position: "relative", display: "block" }}
         >
-          <PostCover slug={lead.slug} coverHint={lead.coverHint} title={lead.title} style={{ position: "absolute", inset: 0 }} />
+          <PostCover slug={lead.slug} coverHint={lead.coverHint} image={{...imageHints(lead.coverHint, lang, "(min-width: 48rem) 50vw, 100vw"), loading: "eager", fetchPriority: "high"}} title={lead.title} style={{ position: "absolute", inset: 0 }} />
         </a>
         {secondary.length > 0 && (
           <ul className="list-none p-0 m-0" style={{ display: "grid", gap: 8 }}>

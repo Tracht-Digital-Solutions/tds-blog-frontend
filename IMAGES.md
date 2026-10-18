@@ -74,3 +74,12 @@ post layout when present.
 See [`../tds-landingpage/IMAGES.md`](https://github.com/Tracht-Digital-Solutions/tds-landingpage-frontend/blob/main/IMAGES.md)
 for the bigger image-swap guide — the OG-card Satori pipeline and
 favicon recommendations there apply 1:1 to this repo.
+
+
+## Image semantics – 2026-10-18
+
+The editorial catalog matches the landing image host and supplies true dimensions,
+responsive sources and bilingual descriptions to cards, hero slides and article
+photos. Article ImageObject and Open Graph metadata use the same source. The
+43 own shop services have paired DE/EN product artwork; merchant images and
+custom CMS uploads retain priority. Shared card image attributes require 0.56.1.

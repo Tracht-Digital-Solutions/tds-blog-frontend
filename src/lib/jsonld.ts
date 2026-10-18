@@ -1,3 +1,4 @@
+import { imageObject } from "./imageCatalog";
 /**
  * Schema.org JSON-LD generators for the journal.
  *
@@ -243,7 +244,7 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
     // it can only ever name something a reader can see and follow — there is
     // nothing here to invent.
     ...(post.citations && post.citations.length > 0 ? { citation: post.citations } : {}),
-    image: {
+    image: imageObject(post.imageUrl, post.lang, pageUrl) ?? {
       "@type": "ImageObject",
       url: post.imageUrl,
       width: 1200,

@@ -1,4 +1,5 @@
 ---
+import { imageHints } from "~/lib/imageCatalog";
 /**
  * Full article view, shared by the DE (`/[slug]`) and EN (`/en/[slug]`)
  * routes. Receives an already-localized post (authored or machine-
@@ -424,10 +425,12 @@ const jsonLd = [
       {explicitCover && (
         <img
           src={explicitCover}
-          alt=""
-          width="1440"
-          height="960"
-          loading="lazy"
+          alt={imageHints(explicitCover, lang)?.alt ?? post.title}
+          srcset={imageHints(explicitCover, lang)?.srcSet}
+          sizes="(min-width: 64rem) 65vw, 100vw"
+          width={imageHints(explicitCover, lang)?.width ?? 1440}
+          height={imageHints(explicitCover, lang)?.height ?? 960}
+          loading="eager"
           decoding="async"
           class="w-full aspect-[3/2] object-cover mb-7"
         />
