@@ -1,0 +1,698 @@
+{
+  "/images/services/04-webauftritt-editorial.webp": {
+    "src": "/images/services/04-webauftritt-editorial.webp",
+    "width": 1536,
+    "height": 960,
+    "alt": {
+      "de": "Laptop, Telefon und Layoutkarten als Symbol für Webauftritte und Onlineshops.",
+      "en": "Laptop, phone and layout cards illustrating websites and online shops."
+    },
+    "variants": [
+      {
+        "src": "/images/services/04-webauftritt-editorial-480.webp",
+        "width": 480,
+        "height": 300,
+        "hash": "60f5b6478bf8",
+        "bytes": 19936
+      },
+      {
+        "src": "/images/services/04-webauftritt-editorial-800.webp",
+        "width": 800,
+        "height": 500,
+        "hash": "39435f9b3ea9",
+        "bytes": 38584
+      },
+      {
+        "src": "/images/services/04-webauftritt-editorial-960.webp",
+        "width": 960,
+        "height": 600,
+        "hash": "a566c32dfcda",
+        "bytes": 48868
+      },
+      {
+        "src": "/images/services/04-webauftritt-editorial-1440.webp",
+        "width": 1440,
+        "height": 900,
+        "hash": "d0b35926e427",
+        "bytes": 81590
+      },
+      {
+        "src": "/images/services/04-webauftritt-editorial.webp",
+        "width": 1536,
+        "height": 960,
+        "hash": "b7c19dfb25c7",
+        "bytes": 88872
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/services/01-beratung-editorial.webp": {
+    "src": "/images/services/01-beratung-editorial.webp",
+    "width": 1536,
+    "height": 960,
+    "alt": {
+      "de": "Hände und Planungskarten als Symbol für Beratung und Konzeption.",
+      "en": "Hands and planning cards illustrating consulting and planning."
+    },
+    "variants": [
+      {
+        "src": "/images/services/01-beratung-editorial-480.webp",
+        "width": 480,
+        "height": 300,
+        "hash": "c96a5c5b6190",
+        "bytes": 20724
+      },
+      {
+        "src": "/images/services/01-beratung-editorial-800.webp",
+        "width": 800,
+        "height": 500,
+        "hash": "ae2317dc601b",
+        "bytes": 41964
+      },
+      {
+        "src": "/images/services/01-beratung-editorial-960.webp",
+        "width": 960,
+        "height": 600,
+        "hash": "0f0f4762e72e",
+        "bytes": 53052
+      },
+      {
+        "src": "/images/services/01-beratung-editorial-1440.webp",
+        "width": 1440,
+        "height": 900,
+        "hash": "a5acf2608937",
+        "bytes": 94196
+      },
+      {
+        "src": "/images/services/01-beratung-editorial.webp",
+        "width": 1536,
+        "height": 960,
+        "hash": "ea83ab5c2f1b",
+        "bytes": 104394
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/services/02-prozesse-editorial.webp": {
+    "src": "/images/services/02-prozesse-editorial.webp",
+    "width": 1536,
+    "height": 960,
+    "alt": {
+      "de": "Geordnete Ablagen und Paket als Symbol für betriebliche Prozessoptimierung.",
+      "en": "Organised trays and a parcel illustrating business process optimisation."
+    },
+    "variants": [
+      {
+        "src": "/images/services/02-prozesse-editorial-480.webp",
+        "width": 480,
+        "height": 300,
+        "hash": "f828d102d4bc",
+        "bytes": 25666
+      },
+      {
+        "src": "/images/services/02-prozesse-editorial-800.webp",
+        "width": 800,
+        "height": 500,
+        "hash": "abd69aa2bc41",
+        "bytes": 53876
+      },
+      {
+        "src": "/images/services/02-prozesse-editorial-960.webp",
+        "width": 960,
+        "height": 600,
+        "hash": "ca405e056fcc",
+        "bytes": 69158
+      },
+      {
+        "src": "/images/services/02-prozesse-editorial-1440.webp",
+        "width": 1440,
+        "height": 900,
+        "hash": "b9bb140329b7",
+        "bytes": 126318
+      },
+      {
+        "src": "/images/services/02-prozesse-editorial.webp",
+        "width": 1536,
+        "height": 960,
+        "hash": "c0083d387fbb",
+        "bytes": 140234
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/services/03-loesungen-editorial.webp": {
+    "src": "/images/services/03-loesungen-editorial.webp",
+    "width": 1536,
+    "height": 960,
+    "alt": {
+      "de": "Verbundene Geräte als Symbol für individuelle digitale Lösungen.",
+      "en": "Connected devices illustrating tailored digital solutions."
+    },
+    "variants": [
+      {
+        "src": "/images/services/03-loesungen-editorial-480.webp",
+        "width": 480,
+        "height": 300,
+        "hash": "79252947ebee",
+        "bytes": 18048
+      },
+      {
+        "src": "/images/services/03-loesungen-editorial-800.webp",
+        "width": 800,
+        "height": 500,
+        "hash": "c2b80de7d62c",
+        "bytes": 35080
+      },
+      {
+        "src": "/images/services/03-loesungen-editorial-960.webp",
+        "width": 960,
+        "height": 600,
+        "hash": "2be9a41555f2",
+        "bytes": 44272
+      },
+      {
+        "src": "/images/services/03-loesungen-editorial-1440.webp",
+        "width": 1440,
+        "height": 900,
+        "hash": "a17d1dc12dae",
+        "bytes": 74422
+      },
+      {
+        "src": "/images/services/03-loesungen-editorial.webp",
+        "width": 1536,
+        "height": 960,
+        "hash": "a629dd4011fb",
+        "bytes": 81458
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/sections/hero-editorial.webp": {
+    "src": "/images/sections/hero-editorial.webp",
+    "width": 1642,
+    "height": 924,
+    "alt": {
+      "de": "Ruhiger digitaler Arbeitsplatz als redaktionelles Symbolbild.",
+      "en": "A calm digital workspace as an editorial illustration."
+    },
+    "variants": [
+      {
+        "src": "/images/sections/hero-editorial-480.webp",
+        "width": 480,
+        "height": 270,
+        "hash": "b85e2de66e2c",
+        "bytes": 10466
+      },
+      {
+        "src": "/images/sections/hero-editorial-800.webp",
+        "width": 800,
+        "height": 450,
+        "hash": "4d8d5e84e591",
+        "bytes": 23228
+      },
+      {
+        "src": "/images/sections/hero-editorial-960.webp",
+        "width": 960,
+        "height": 540,
+        "hash": "69f1e6f51c3a",
+        "bytes": 30538
+      },
+      {
+        "src": "/images/sections/hero-editorial-1440.webp",
+        "width": 1440,
+        "height": 810,
+        "hash": "f63677c76ccb",
+        "bytes": 57630
+      },
+      {
+        "src": "/images/sections/hero-editorial.webp",
+        "width": 1642,
+        "height": 924,
+        "hash": "e5f5aab461ca",
+        "bytes": 70074
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/sections/why-me-editorial.webp": {
+    "src": "/images/sections/why-me-editorial.webp",
+    "width": 1860,
+    "height": 840,
+    "alt": {
+      "de": "Bücher und Notizbuch als Symbol für sorgfältige digitale Arbeit.",
+      "en": "Books and a notebook illustrating careful digital work."
+    },
+    "variants": [
+      {
+        "src": "/images/sections/why-me-editorial-480.webp",
+        "width": 480,
+        "height": 217,
+        "hash": "2a5ccfdbf1c5",
+        "bytes": 11394
+      },
+      {
+        "src": "/images/sections/why-me-editorial-800.webp",
+        "width": 800,
+        "height": 361,
+        "hash": "8434d65dbfa1",
+        "bytes": 24146
+      },
+      {
+        "src": "/images/sections/why-me-editorial-960.webp",
+        "width": 960,
+        "height": 434,
+        "hash": "e78232600815",
+        "bytes": 32518
+      },
+      {
+        "src": "/images/sections/why-me-editorial-1440.webp",
+        "width": 1440,
+        "height": 650,
+        "hash": "e49416a74857",
+        "bytes": 72534
+      },
+      {
+        "src": "/images/sections/why-me-editorial.webp",
+        "width": 1860,
+        "height": 840,
+        "hash": "157cf2cbf983",
+        "bytes": 110768
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/sections/contact-editorial.webp": {
+    "src": "/images/sections/contact-editorial.webp",
+    "width": 1860,
+    "height": 840,
+    "alt": {
+      "de": "Telefon und Notizbuch als Symbol für ein Projektgespräch.",
+      "en": "Phone and notebook illustrating a project conversation."
+    },
+    "variants": [
+      {
+        "src": "/images/sections/contact-editorial-480.webp",
+        "width": 480,
+        "height": 217,
+        "hash": "d230c8706ef2",
+        "bytes": 6158
+      },
+      {
+        "src": "/images/sections/contact-editorial-800.webp",
+        "width": 800,
+        "height": 361,
+        "hash": "ed6272bf21b0",
+        "bytes": 11294
+      },
+      {
+        "src": "/images/sections/contact-editorial-960.webp",
+        "width": 960,
+        "height": 434,
+        "hash": "288f00ebc757",
+        "bytes": 14250
+      },
+      {
+        "src": "/images/sections/contact-editorial-1440.webp",
+        "width": 1440,
+        "height": 650,
+        "hash": "6db10079139a",
+        "bytes": 24616
+      },
+      {
+        "src": "/images/sections/contact-editorial.webp",
+        "width": 1860,
+        "height": 840,
+        "hash": "1c3384c084ae",
+        "bytes": 35340
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/power-2026.webp": {
+    "src": "/images/editorial/power-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Notstromgerät und Steckdosenleiste als Symbol für Stromschutz im Büro.",
+      "en": "Backup power unit and power strip illustrating office power protection."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/power-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "d7d784fd1a74",
+        "bytes": 23748
+      },
+      {
+        "src": "/images/editorial/power-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "5e6bdc0dddfe",
+        "bytes": 48930
+      },
+      {
+        "src": "/images/editorial/power-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "68c39a3ea19d",
+        "bytes": 62758
+      },
+      {
+        "src": "/images/editorial/power-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "642c15deea08",
+        "bytes": 107984
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/mobile-2026.webp": {
+    "src": "/images/editorial/mobile-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Laptop und Zubehör am Zugfenster als Symbol für mobiles Arbeiten.",
+      "en": "Laptop and accessories beside a train window illustrating mobile work."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/mobile-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "974e4b65c144",
+        "bytes": 20622
+      },
+      {
+        "src": "/images/editorial/mobile-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "6228bc1db9c6",
+        "bytes": 43988
+      },
+      {
+        "src": "/images/editorial/mobile-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "0d186e209549",
+        "bytes": 57432
+      },
+      {
+        "src": "/images/editorial/mobile-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "29b802a6bbb9",
+        "bytes": 99894
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/paper-2026.webp": {
+    "src": "/images/editorial/paper-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Dokumentenscanner und Ablage als Symbol für ein papierloses Büro.",
+      "en": "Document scanner and filing folder illustrating a paperless office."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/paper-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "0ce3319555c0",
+        "bytes": 19424
+      },
+      {
+        "src": "/images/editorial/paper-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "d30174e3d275",
+        "bytes": 37118
+      },
+      {
+        "src": "/images/editorial/paper-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "afe10fa2153d",
+        "bytes": 48562
+      },
+      {
+        "src": "/images/editorial/paper-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "1aa58949cda4",
+        "bytes": 84206
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/video-2026.webp": {
+    "src": "/images/editorial/video-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Kamera, Mikrofon und Bildschirm als Symbol für Videocalls und Homeoffice.",
+      "en": "Camera, microphone and monitor illustrating video calls and home working."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/video-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "af9bd6a52ad9",
+        "bytes": 24514
+      },
+      {
+        "src": "/images/editorial/video-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "e69c48f9024b",
+        "bytes": 52054
+      },
+      {
+        "src": "/images/editorial/video-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "5924499c51ad",
+        "bytes": 68362
+      },
+      {
+        "src": "/images/editorial/video-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "ea5797b08b7b",
+        "bytes": 121580
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/keys-2026.webp": {
+    "src": "/images/editorial/keys-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "USB-Sicherheitsschlüssel als Symbol für Passkeys und sichere Anmeldung.",
+      "en": "USB security keys illustrating passkeys and secure sign-in."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/keys-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "20834be31ba0",
+        "bytes": 21128
+      },
+      {
+        "src": "/images/editorial/keys-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "ab2100c24f76",
+        "bytes": 51312
+      },
+      {
+        "src": "/images/editorial/keys-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "222a82cb2467",
+        "bytes": 69380
+      },
+      {
+        "src": "/images/editorial/keys-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "873c586892da",
+        "bytes": 128932
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/backup-2026.webp": {
+    "src": "/images/editorial/backup-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Separate Datenträger als Symbol für betriebliche Datensicherung.",
+      "en": "Separate storage drives illustrating business backups."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/backup-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "d405f4bd64d8",
+        "bytes": 19032
+      },
+      {
+        "src": "/images/editorial/backup-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "a217dab7afd4",
+        "bytes": 38504
+      },
+      {
+        "src": "/images/editorial/backup-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "3ae1fe347856",
+        "bytes": 51218
+      },
+      {
+        "src": "/images/editorial/backup-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "050426db9d20",
+        "bytes": 93992
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/wifi-2026.webp": {
+    "src": "/images/editorial/wifi-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Netzwerkgerät und Kabel als Symbol für Büro-WLAN.",
+      "en": "Network device and cable illustrating office Wi-Fi."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/wifi-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "3d4d63b8bc7b",
+        "bytes": 19572
+      },
+      {
+        "src": "/images/editorial/wifi-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "7b6501d118a3",
+        "bytes": 39786
+      },
+      {
+        "src": "/images/editorial/wifi-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "f79cec252daf",
+        "bytes": 51660
+      },
+      {
+        "src": "/images/editorial/wifi-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "deefaf77136c",
+        "bytes": 101872
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/inventory-2026.webp": {
+    "src": "/images/editorial/inventory-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Smartphone am Warenregal als Symbol für mobile Produktpflege.",
+      "en": "Smartphone beside a product shelf illustrating mobile inventory management."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/inventory-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "46c40b23427a",
+        "bytes": 19154
+      },
+      {
+        "src": "/images/editorial/inventory-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "4c80e50ecce2",
+        "bytes": 37068
+      },
+      {
+        "src": "/images/editorial/inventory-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "2bb5aa995d36",
+        "bytes": 47028
+      },
+      {
+        "src": "/images/editorial/inventory-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "177d5f30a803",
+        "bytes": 79974
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/services/05-kundenportale-editorial.webp": {
+    "src": "/images/services/05-kundenportale-editorial.webp",
+    "width": 1536,
+    "height": 960,
+    "alt": {
+      "de": "Geordnete Unterlagen und Geräte als Symbol für Kundenportale.",
+      "en": "Organised documents and devices illustrating customer portals."
+    },
+    "variants": [
+      {
+        "src": "/images/services/05-kundenportale-editorial-480.webp",
+        "width": 480,
+        "height": 300,
+        "hash": "1ce9f0a7d5c8",
+        "bytes": 22124
+      },
+      {
+        "src": "/images/services/05-kundenportale-editorial-800.webp",
+        "width": 800,
+        "height": 500,
+        "hash": "8ed3bd85e3d5",
+        "bytes": 47446
+      },
+      {
+        "src": "/images/services/05-kundenportale-editorial-960.webp",
+        "width": 960,
+        "height": 600,
+        "hash": "49e09738d2ec",
+        "bytes": 62984
+      },
+      {
+        "src": "/images/services/05-kundenportale-editorial-1440.webp",
+        "width": 1440,
+        "height": 900,
+        "hash": "bf3fe4109e85",
+        "bytes": 113342
+      },
+      {
+        "src": "/images/services/05-kundenportale-editorial.webp",
+        "width": 1536,
+        "height": 960,
+        "hash": "9390500621fd",
+        "bytes": 125462
+      }
+    ],
+    "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  }
+}

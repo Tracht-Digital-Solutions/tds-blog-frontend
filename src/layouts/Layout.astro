@@ -1,4 +1,5 @@
 ---
+import { imageHints } from "~/lib/imageCatalog";
 // Font faces must be imported here (not via @import in global.css):
 // @tailwindcss/postcss inlines CSS @imports without rebasing their
 // relative url(./files/*.woff2) refs, so Vite never emits the fonts.
@@ -132,6 +133,7 @@ const autoAltPath =
 // follow a link it is simultaneously told to disregard. `noindex` (the prop)
 // stays the local override for pages that are never public — `/install`, the
 // print views, the error pages.
+const artworkHints = imageHints(ogImageAbs, lang);
 const hidden = noindex || (await isExcluded(pathname));
 
 const altUrl =
@@ -212,7 +214,7 @@ const showConsent =
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Journal" />
-    {hidden && <meta name="robots" content="noindex,nofollow" />}
+    <meta name="robots" content={hidden ? "noindex,nofollow,max-image-preview:large" : "index,follow,max-image-preview:large"} />
     <link rel="icon" type="image/png" href="/favicon-tds-2026.png" sizes="64x64" />
 
         {/* No-flash theme bootstrap — shared with the landingpage and the frontend
@@ -291,9 +293,9 @@ const showConsent =
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageAbs} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={title} />
+    <meta property="og:image:width" content={String(artworkHints?.width ?? 1200)} />
+    <meta property="og:image:height" content={String(artworkHints?.height ?? 630)} />
+    <meta property="og:image:alt" content={artworkHints?.alt ?? title} />
     <meta property="og:locale" content={lang === "de" ? "de_DE" : "en_GB"} />
     <meta property="og:site_name" content="TDS Journal" />
 
@@ -310,6 +312,7 @@ const showConsent =
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageAbs} />
+    <meta name="twitter:image:alt" content={artworkHints?.alt ?? title} />
 
     {jsonLd && <JsonLd data={jsonLd} />}
     {/* Near-instant navigation: prerender a link once the reader shows intent. */}

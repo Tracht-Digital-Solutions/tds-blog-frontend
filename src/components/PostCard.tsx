@@ -1,3 +1,4 @@
+import { imageHints } from "../lib/imageCatalog";
 import { PostCover } from "./Covers";
 import { bookClass, bookLabel } from "../lib/book";
 
@@ -144,6 +145,7 @@ export default function PostCard({
         <PostCover
           slug={post.slug}
           coverHint={post.coverHint}
+          image={imageHints(post.coverHint, lang, "(min-width: 64rem) 33vw, 100vw")}
           title={post.title}
           style={{ position: "absolute", inset: 0, height: "100%" }}
         />

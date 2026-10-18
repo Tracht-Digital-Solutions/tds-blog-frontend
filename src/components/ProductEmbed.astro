@@ -1,4 +1,5 @@
 ---
+import { withProductImage, productImageAttributes } from "../lib/productImages";
 import { ProductCard } from "@tracht-digital-solutions/tds-shared/components";
 
 import { attributeOffers, getShopProduct } from "../lib/shop-api";
@@ -36,7 +37,8 @@ interface Props {
 
 const { slug, variant, lang = "de" } = Astro.props;
 
-const product = await getShopProduct(slug, lang);
+const fetched = await getShopProduct(slug, lang);
+const product = fetched ? withProductImage(fetched) : null;
 const shown = product
   ? attributeOffers(
       {
@@ -56,7 +58,7 @@ const shown = product
 {
   shown ? (
     <div class="tds-block-product">
-      <ProductCard product={shown} lang={lang} variant={variant} />
+      <ProductCard image={productImageAttributes(shown,lang)} product={shown} lang={lang} variant={variant} />
     </div>
   ) : null
 }
