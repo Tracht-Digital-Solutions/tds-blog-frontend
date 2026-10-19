@@ -24,6 +24,7 @@ import { LiveChatCta } from "@tracht-digital-solutions/tds-shared/islands/live-c
 import { ConsentBanner } from "@tracht-digital-solutions/tds-shared/consent";
 import {
   errorBounceScript,
+  hoverTipScript,
   offscreenAnimationScript,
   pageDirectionScript,
   pageTransitionOptIn,
@@ -226,6 +227,8 @@ const showConsent =
     <script is:inline set:html={errorBounceScript} />
     {/* Endless animations rest while they are off screen (tds-shared >= 0.54). */}
     <script is:inline set:html={offscreenAnimationScript} />
+    {/* A tip on a control the mouse rests on (tds-shared >= 0.58). */}
+    <script is:inline set:html={hoverTipScript} />
     {focusable && (
       <script is:inline>
         /* No-flash restore of the reading settings. Gated behind `focusable` so

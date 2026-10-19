@@ -118,7 +118,7 @@ describe("the property bar", () => {
     const { primaryNav } = await import("../lib/nav");
     for (const lang of ["de", "en"] as const) {
       const nav = primaryNav(lang);
-      expect(nav.map((node) => node.key)).toEqual(["journal", "entdecken", "tools", "shop", "main"]);
+      expect(nav.map((node) => node.key)).toEqual(["main", "journal", "entdecken", "tools", "shop"]);
       for (const node of nav) {
         if (node.kind !== "link" || node.key === "journal") continue;
         // Siblings are absolute and stay in the reader's language.
