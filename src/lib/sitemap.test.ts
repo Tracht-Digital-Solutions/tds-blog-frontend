@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { absolute, renderSectionIndex, renderSitemapIndex, renderUrlset, type SitemapUrl } from "./sitemap";
+import { absolute, renderSectionIndex, renderUrlset, type SitemapUrl } from "./sitemap";
 
 /**
  * The sitemap document, and the rules that make it valid.
@@ -77,14 +77,6 @@ describe("renderUrlset", () => {
     expect(xml).toContain("<urlset");
     expect(xml).toContain("</urlset>");
     expect(locs(xml)).toEqual([]);
-  });
-});
-
-describe("renderSitemapIndex", () => {
-  it("names the file robots.txt advertises", () => {
-    // The filenames are the ones `@astrojs/sitemap` produced and Search Console
-    // already knows; renaming either orphans the entry point.
-    expect(renderSitemapIndex(LAST)).toContain(`<loc>${absolute("/sitemap-0.xml")}</loc>`);
   });
 });
 

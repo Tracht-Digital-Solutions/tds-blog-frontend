@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 import { AuthorChip, fallbackAuthorName, formatPostDate, type CardPost } from "../PostCard";
 import { bookClass, bookLabel } from "../../lib/book";
 import { imageHints } from "../../lib/imageCatalog";
-import { PostCover } from "../Covers";
+import { PostCover } from "@tracht-digital-solutions/tds-shared/components";
 
 /**
  * Journal hero slider — the navy featured block on the blog index, now

@@ -39,7 +39,6 @@ interface ListResponse {
 }
 
 /** A post as it appears in list/get responses (author + covers resolved). */
-export type ListPost = ListResponse["posts"][number];
 
 /**
  * A full-post read, plus the one field tds-shared's `BlogPost` does not carry.

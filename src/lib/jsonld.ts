@@ -52,17 +52,6 @@ export function organizationRef() {
   };
 }
 
-export function personRef() {
-  return {
-    "@type": "Person",
-    "@id": personId,
-    name: siteConfig.founder.name,
-    jobTitle: siteConfig.founder.jobTitle,
-    url: siteConfig.marketingUrl,
-    worksFor: { "@id": orgId },
-  };
-}
-
 /**
  * The Organization node itself, not just a reference.
  *

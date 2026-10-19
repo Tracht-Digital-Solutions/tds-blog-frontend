@@ -35,10 +35,13 @@
  * too, neither end would go red.
  */
 
+import { canonicalPath, createSitemapExclusions } from "@tracht-digital-solutions/tds-shared/site";
 import { memoisedOr, readContentJson } from "./contentFetch";
 import { contentApiBase } from "./connection";
 import { DEMO_MODE } from "./demoContent";
 import type { Lang } from "./routes";
+
+export { groupExcluded, matchesPattern } from "@tracht-digital-solutions/tds-shared/site";
 
 /** This site's id in the panel's site registry. */
 export const SITE_ID = "blog";
@@ -52,42 +55,6 @@ const SEGMENTS: Record<Lang, { category: string; author: string }> = {
   de: { category: "kategorie", author: "autor" },
   en: { category: "category", author: "author" },
 };
-
-interface ExclusionsResponse {
-  site?: string;
-  paths?: unknown;
-}
-
-/** Trailing slash folded away, root kept — `trailingSlash: "ignore"` in the Astro config. */
-function canonical(path: string): string {
-  const value = path.trim();
-  if (value === "" || value === "/") return "/";
-  return value.replace(/\/+$/, "") || "/";
-}
-
-/**
- * One pattern against one path.
- *
- * Deliberately the same two rules the API validates and documents: an exact
- * path, or a trailing `*` making it a raw prefix. Kept dumb on purpose — a
- * glob library here would accept patterns the API rejects, and the
- * disagreement would only ever show as a page that quietly stayed indexed.
- */
-export function matchesPattern(path: string, pattern: string): boolean {
-  const value = pattern.trim();
-  if (value === "") return false;
-
-  if (value.endsWith("*")) {
-    const prefix = value.slice(0, -1);
-    return prefix === "" || canonical(path).startsWith(prefix);
-  }
-  return canonical(value) === canonical(path);
-}
-
-/** Does any pattern hit any member of this hreflang group? */
-export function groupExcluded(paths: readonly string[], patterns: readonly string[]): boolean {
-  return paths.some((path) => patterns.some((pattern) => matchesPattern(path, pattern)));
-}
 
 /** Translate one tree's taxonomy segment into the other's. */
 function translateSegment(rest: string, from: Lang, to: Lang): string {
@@ -110,24 +77,24 @@ function translateSegment(rest: string, from: Lang, to: Lang): string {
  * property of the PAGE, so excluding via either URL has to mean the same thing.
  */
 export function hreflangGroup(pathname: string): string[] {
-  const path = canonical(pathname);
+  const path = canonicalPath(pathname);
   const isEn = path === "/en" || path.startsWith("/en/");
 
-  const de = isEn ? canonical(translateSegment(path.slice(3) || "/", "en", "de")) : path;
+  const de = isEn ? canonicalPath(translateSegment(path.slice(3) || "/", "en", "de")) : path;
   const rest = translateSegment(de, "de", "en");
   const en = rest === "/" ? "/en/" : `/en${rest}`;
 
-  return [de, canonical(en) === "/en" ? "/en/" : en];
+  return [de, canonicalPath(en) === "/en" ? "/en/" : en];
 }
 
-async function load(): Promise<string[]> {
-  const url = new URL(`${contentApiBase()}/sitemap-exclusions`);
-  url.searchParams.set("site", SITE_ID);
-  // Throws on failure — `exclusionPatterns` decides what that renders as.
-  const data = await readContentJson<ExclusionsResponse>(url);
-  if (!Array.isArray(data.paths)) return [];
-  return data.paths.filter((p): p is string => typeof p === "string" && p.trim() !== "");
-}
+const exclusions = createSitemapExclusions({
+  siteId: SITE_ID,
+  contentBase: contentApiBase,
+  read: (url) => readContentJson(new URL(url)),
+  memo: memoisedOr,
+  hreflangGroup,
+  disabled: DEMO_MODE,
+});
 
 /**
  * The patterns, memoised for the render generation.
@@ -136,14 +103,7 @@ async function load(): Promise<string[]> {
  * live as long as the server under SSR, so an exclusion added in the panel
  * would never reach a visitor and nothing would log.
  */
-export function exclusionPatterns(): Promise<string[]> {
-  if (DEMO_MODE) return Promise.resolve([]);
-  return memoisedOr("sitemap:exclusions", load, [], "sitemap exclusions (nothing excluded)");
-}
+export const exclusionPatterns = exclusions.exclusionPatterns;
 
 /** Is this page excluded — counting its twin in the other tree as the same page? */
-export async function isExcluded(pathname: string): Promise<boolean> {
-  const patterns = await exclusionPatterns();
-  if (patterns.length === 0) return false;
-  return groupExcluded(hreflangGroup(pathname), patterns);
-}
+export const isExcluded = exclusions.isExcluded;

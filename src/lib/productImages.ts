@@ -24,11 +24,3 @@ export function productImageAttributes(product:Pick<CatalogProduct,'slug'|'image
 export function productImageSrcset(src:string,format='webp'):string {
   return [480,960,1440].map(w=>`${origin}${src.replace('.webp',(w===1440?'':'-'+w)+'.'+format)} ${w}w`).join(', ');
 }
-export function productImageSchema(product:Pick<CatalogProduct,'slug'|'imageUrl'|'url'|'title'>,lang:Lang) {
-  const image=productImage(product.slug);
-  if(!image || product.imageUrl!==origin+image.src)return null;
-  return {'@type':'ImageObject','@id':product.url+'#product-image',contentUrl:product.imageUrl,url:product.imageUrl,
-    name:product.title,caption:image.alt[lang],description:lang==='de'?`KI-generiertes Symbolbild zur Leistung: ${product.title}.`:`AI-generated illustration of the service: ${product.title}.`,
-    width:image.width,height:image.height,encodingFormat:'image/webp',representativeOfPage:true,
-    creditText:'Tracht Digital Solutions',digitalSourceType:image.digitalSourceType,about:{'@id':product.url}};
-}
