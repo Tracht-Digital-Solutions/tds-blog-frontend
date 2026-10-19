@@ -29,6 +29,7 @@
 
 import { archivePage, byAuthor, byCategory, byTag, corpus, type Lang } from "./routes";
 import { categorySlug } from "./taxonomy";
+import { isIndexedTag } from "./tagIndexing";
 
 /** The other tree. */
 export function otherLang(lang: Lang): Lang {
@@ -45,7 +46,8 @@ const SEGMENTS: Record<Lang, { category: string; author: string }> = {
 export async function tagAlternate(lang: Lang, tag: string): Promise<string | null> {
   const other = otherLang(lang);
   const group = await byTag(other, tag);
-  if (!group || group.posts.length === 0) return null;
+  // A counterpart below the threshold is `noindex`: never an alternate.
+  if (!group || !isIndexedTag(group.posts.length)) return null;
   return `${PREFIX[other]}/tag/${encodeURIComponent(tag.trim().toLowerCase())}`;
 }
 

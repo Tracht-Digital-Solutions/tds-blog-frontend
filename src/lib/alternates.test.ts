@@ -43,7 +43,7 @@ describe("otherLang", () => {
 
 describe("tagAlternate", () => {
   it("points at the other tree when that tag really exists there", async () => {
-    vi.mocked(routes.byTag).mockResolvedValue({ posts: [post], allPosts: [post] });
+    vi.mocked(routes.byTag).mockResolvedValue({ posts: [post, post], allPosts: [post, post] });
     await expect(tagAlternate("de", "webshop")).resolves.toBe("/en/tag/webshop");
     await expect(tagAlternate("en", "webshop")).resolves.toBe("/tag/webshop");
     expect(routes.byTag).toHaveBeenCalledWith("en", "webshop");
@@ -59,8 +59,13 @@ describe("tagAlternate", () => {
     await expect(tagAlternate("de", "webshop")).resolves.toBeNull();
   });
 
-  it("normalises and encodes the tag it emits", async () => {
+  it("never points at a one-article tag page, which is noindex", async () => {
     vi.mocked(routes.byTag).mockResolvedValue({ posts: [post], allPosts: [post] });
+    await expect(tagAlternate("de", "webshop")).resolves.toBeNull();
+  });
+
+  it("normalises and encodes the tag it emits", async () => {
+    vi.mocked(routes.byTag).mockResolvedValue({ posts: [post, post], allPosts: [post, post] });
     await expect(tagAlternate("de", "  Lokaler-Handel ")).resolves.toBe(
       "/en/tag/lokaler-handel",
     );

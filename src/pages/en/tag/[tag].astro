@@ -5,6 +5,7 @@ import TagList from "~/components/TagList.astro";
 import { byTag } from "~/lib/routes";
 import { asGraph, blogSchema, breadcrumbSchema, collectionPageSchema, itemListSchema, websiteSchema } from "~/lib/jsonld";
 import { tagAlternate } from "~/lib/alternates";
+import { isIndexedTag } from "~/lib/tagIndexing";
 import { pageTitle, siteConfig } from "~/lib/seo";
 import { tagDescription } from "~/lib/metaDescription";
 
@@ -51,6 +52,7 @@ const jsonLd = asGraph(
   description={description}
   lang="en"
   jsonLd={jsonLd}
+  noindex={!isIndexedTag(posts.length)}
   altUrl={altPath ? new URL(altPath, siteConfig.url).toString() : null}
 >
   <main id="main">
