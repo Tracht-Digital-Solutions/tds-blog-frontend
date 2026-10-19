@@ -28,7 +28,7 @@ export async function GET(context: APIContext) {
     .at(-1);
 
   return rss({
-    title: "TDS Journal",
+    title: "Ratgeber von Tracht Digital Solutions",
     description: siteConfig.description.de,
     site: context.site ?? "https://blog.tracht-digital.de",
     items: posts.map((p) => ({

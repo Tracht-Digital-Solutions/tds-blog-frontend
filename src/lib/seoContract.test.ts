@@ -30,7 +30,7 @@ const root = path.resolve(__dirname, "../..");
 
 describe("pageTitle", () => {
   it("appends the brand when the whole thing fits", () => {
-    expect(pageTitle("Webshop")).toBe("Webshop — Journal");
+    expect(pageTitle("Webshop")).toBe("Webshop — Ratgeber");
     expect(pageTitle("Webshop").length).toBeLessThanOrEqual(RENDERED_TITLE_LENGTH);
   });
 
@@ -39,7 +39,7 @@ describe("pageTitle", () => {
     const long = "Fünf Dinge, die auf fast jeder Unternehmenswebsite fehlen — und wie";
     const title = pageTitle(long);
     expect(title).toBe(long);
-    expect(title).not.toContain("— Journal");
+    expect(title).not.toContain("— Ratgeber");
   });
 
   it("never cuts mid-word when a title is long enough to need clamping", () => {
@@ -53,7 +53,7 @@ describe("pageTitle", () => {
   });
 
   it("normalises whitespace and survives an empty subject", () => {
-    expect(pageTitle("  Zwei   Wörter  ")).toBe("Zwei Wörter — Journal");
+    expect(pageTitle("  Zwei   Wörter  ")).toBe("Zwei Wörter — Ratgeber");
     expect(pageTitle("   ")).toBe(siteConfig.blogName.de);
   });
 
@@ -86,11 +86,11 @@ describe("postDescription", () => {
     const de = postDescription(short, "");
     expect(de.startsWith(short)).toBe(true);
     expect(de.length).toBeGreaterThanOrEqual(MIN_META_LENGTH);
-    expect(de).toContain("TDS Journal");
+    expect(de).toContain("Ratgeber von Tracht Digital Solutions");
 
     const en = postDescription("Not for every range of products.", "", "en");
     expect(en.startsWith("Not for every range of products.")).toBe(true);
-    expect(en).toContain("From the TDS Journal");
+    expect(en).toContain("From the Ratgeber");
   });
 
   it("still produces something usable when both sources are empty", () => {
@@ -343,7 +343,7 @@ describe("collectionPageSchema", () => {
     const itemList = itemListSchema(["https://x/a", "https://x/b"], 11);
     const schema = collectionPageSchema({
       url: "https://blog.tracht-digital.de/kategorie/webshop",
-      name: "Webshop — Journal",
+      name: "Webshop — Ratgeber",
       description: "Beiträge zur Kategorie Webshop.",
       lang: "de",
       itemList,
@@ -362,7 +362,7 @@ describe("asGraph", () => {
     // breadcrumbSchema and blogPostingSchema are also used standalone (the
     // article page passes an array of independent documents), so they keep
     // their own context — nesting them must not declare it twice.
-    const crumbs = breadcrumbSchema([{ name: "Journal", url: "https://x/" }]);
+    const crumbs = breadcrumbSchema([{ name: "Ratgeber", url: "https://x/" }]);
     expect(crumbs["@context"]).toBe("https://schema.org");
 
     const graph = asGraph(websiteSchema("de"), crumbs);
@@ -375,7 +375,7 @@ describe("asGraph", () => {
   });
 
   it("keeps every other property of a wrapped node", () => {
-    const graph = asGraph(breadcrumbSchema([{ name: "Journal", url: "https://x/" }]));
+    const graph = asGraph(breadcrumbSchema([{ name: "Ratgeber", url: "https://x/" }]));
     expect((graph["@graph"] as Record<string, unknown>[])[0]["@type"]).toBe("BreadcrumbList");
   });
 });

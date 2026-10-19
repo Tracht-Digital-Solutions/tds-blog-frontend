@@ -38,7 +38,7 @@ export const TOOLS_URL = PROPERTY_ORIGINS.tools;
 /**
  * The shop. Same rule as `TOOLS_URL`, same tab, for the same reason.
  *
- * The label is "Shop" in both languages: it is the property's name here, and
+ * The label is "Digitalmarkt" in both languages: it is the property's name here, and
  * translating it to "Store" for the English edition would name a second site
  * that does not exist.
  */

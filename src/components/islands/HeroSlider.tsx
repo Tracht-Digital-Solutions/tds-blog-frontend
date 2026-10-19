@@ -367,7 +367,7 @@ export default function HeroSlider({
     : { prev: "Previous set", next: "Next set" };
 
   return (
-    <section className="hero-band" style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Journal">
+    <section className="hero-band" style={{ background: "var(--color-surface-navy)", color: "#fff" }} aria-roledescription="carousel" aria-label="Ratgeber">
       <div
         // The navy band stays full-bleed on the <section> above; only its
         // CONTENT is shelled. It used to be `w-full` with its own padding
@@ -383,7 +383,7 @@ export default function HeroSlider({
         >
           <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
             <h1 className="display" style={{ fontSize: 17, letterSpacing: "0.14em", textTransform: "uppercase", margin: 0 }}>
-              Journal
+              Ratgeber
             </h1>
             <span style={{ fontSize: 14, color: "rgba(255,255,255,.55)" }}>{current.meta.blurb}</span>
           </div>
@@ -391,7 +391,7 @@ export default function HeroSlider({
           {sets.length > 1 && (
             <div
               role="tablist"
-              aria-label={lang === "de" ? "Journal-Auswahl" : "Journal selection"}
+              aria-label={lang === "de" ? "Ratgeber-Auswahl" : "Ratgeber selection"}
               className="flex items-center"
               style={{ gap: 4 }}
               onKeyDown={(e) => {

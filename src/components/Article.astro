@@ -160,7 +160,7 @@ const imageUrl = ogImagePath.startsWith("http")
   ? ogImagePath
   : new URL(ogImagePath, siteConfig.url).toString();
 
-const journalLabel = "Journal";
+const journalLabel = "Ratgeber";
 const journalHomeUrl = `${siteConfig.url}${pfx}/`;
 const postUrl = new URL(postHref(post.slug), siteConfig.url).toString();
 

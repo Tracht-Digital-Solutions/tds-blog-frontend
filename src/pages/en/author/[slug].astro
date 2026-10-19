@@ -30,7 +30,7 @@ const pageUrl = `${siteConfig.url}/en/author/${author.slug}`;
 // exists; the fallback only has to work for an author who has not written one.
 // See the German page: without a language-specific lead the CMS bio made the
 // two author pages duplicates of each other rather than a locale pair.
-const roleLead = "Author at the TDS Journal.";
+const roleLead = "Author at the Ratgeber.";
 const description = author.bio
   ? // A CMS bio is the better description, but it is written as a biography,
     // not to a length limit — clamp it the same way every generated one is.
@@ -76,7 +76,7 @@ const jsonLd = asGraph(
   }),
   itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
   breadcrumbSchema([
-    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name: "Ratgeber", url: `${siteConfig.url}/en/` },
     { name: author.name, url: pageUrl },
   ]),
 );
@@ -111,7 +111,7 @@ const cards = posts.map((p) => ({
         <a href="/en/" class="btn-back">
           <span aria-hidden="true">←</span> All posts
         </a>
-        <p class="section-num mb-4 mt-6">Journal · Author</p>
+        <p class="section-num mb-4 mt-6">Ratgeber · Author</p>
         <div class="flex items-center gap-5">
           {author.avatarUrl ? (
             <img

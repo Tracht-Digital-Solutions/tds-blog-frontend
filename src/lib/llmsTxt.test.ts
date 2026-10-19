@@ -87,7 +87,7 @@ describe("llms.txt", () => {
     // An unreachable API answers an empty corpus. The file must still be a
     // valid, truthful document rather than a half-written one.
     const empty = renderLlmsTxt({ de: [], en: [] });
-    expect(empty).toContain("# TDS Journal");
+    expect(empty).toContain("# Ratgeber von Tracht Digital Solutions");
     expect(empty).not.toContain("## Artikel");
     expect(empty).toContain("## Maschinenlesbare Quellen");
   });

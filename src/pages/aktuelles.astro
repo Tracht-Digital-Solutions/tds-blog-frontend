@@ -27,7 +27,7 @@ const latest = [...posts]
 const pageUrl = `${siteConfig.url}/aktuelles`;
 const title = pageTitle("Aktuelles");
 const description =
-  "Die neuesten Beiträge aus dem TDS Journal: aktuelle Themen rund um Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Betrieb.";
+  "Die neuesten Beiträge aus dem Ratgeber: aktuelle Themen rund um Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Betrieb.";
 
 // This route lists the six newest posts and was the only listing page that
 // named none of them in its graph.
@@ -42,7 +42,7 @@ const jsonLd = asGraph(
     itemList: itemListSchema(latest.map((p) => `${siteConfig.url}/${p.slug}`)),
   }),
   breadcrumbSchema([
-    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: "Ratgeber", url: `${siteConfig.url}/` },
     { name: "Aktuelles", url: pageUrl },
   ]),
 );
@@ -59,7 +59,7 @@ const jsonLd = asGraph(
         of the same journal, just statically (no slider). */}
     <section class="jnl-tone-navy">
       <div class="tds-shell py-14 md:py-20">
-        <p class="eyebrow" style="color: var(--color-accent-pink);">Journal · Aktuelles</p>
+        <p class="eyebrow" style="color: var(--color-accent-pink);">Ratgeber · Aktuelles</p>
         <h1 class="display page-title mt-3">
           Aktuelle <span class="accent-italic">Themen</span>
         </h1>

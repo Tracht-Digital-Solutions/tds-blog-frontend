@@ -32,7 +32,7 @@ const pageUrl = `${siteConfig.url}/autor/${author.slug}`;
 // this the German and the English author page shipped the SAME description —
 // and the same title — which makes them duplicates of each other for a search
 // engine rather than a locale pair.
-const roleLead = "Autor im TDS Journal.";
+const roleLead = "Autor im Ratgeber.";
 const description = author.bio
   ? // A CMS bio is the better description, but it is written as a biography,
     // not to a length limit — clamp it the same way every generated one is.
@@ -78,7 +78,7 @@ const jsonLd = asGraph(
   }),
   itemListSchema(posts.map((p) => `${siteConfig.url}/${p.slug}`)),
   breadcrumbSchema([
-    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: "Ratgeber", url: `${siteConfig.url}/` },
     { name: author.name, url: pageUrl },
   ]),
 );
@@ -113,7 +113,7 @@ const cards = posts.map((p) => ({
         <a href="/" class="btn-back">
           <span aria-hidden="true">←</span> Alle Beiträge
         </a>
-        <p class="section-num mb-4 mt-6">Journal · Autor</p>
+        <p class="section-num mb-4 mt-6">Ratgeber · Autor</p>
         <div class="flex items-center gap-5">
           {author.avatarUrl ? (
             <img

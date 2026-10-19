@@ -32,7 +32,7 @@ const COPY = {
     error: "Das hat leider nicht geklappt. Bitte versuchen Sie es später noch einmal.",
     legal:
       "Mit dem Absenden stimmen Sie zu, dass wir Sie per E-Mail kontaktieren. Abmeldung jederzeit möglich.",
-    message: "Newsletter-Anmeldung über das Journal (blog.tracht-digital.de).",
+    message: "Newsletter-Anmeldung über den Ratgeber (blog.tracht-digital.de).",
   },
   en: {
     eyebrow: "Newsletter",
@@ -43,7 +43,7 @@ const COPY = {
     done: "Thank you — we received your signup and will be in touch shortly.",
     error: "That didn't work. Please try again later.",
     legal: "By submitting you agree that we may contact you by email. Unsubscribe anytime.",
-    message: "Newsletter signup via the Journal (blog.tracht-digital.de).",
+    message: "Newsletter signup via the Ratgeber (blog.tracht-digital.de).",
   },
 } as const;
 
@@ -62,7 +62,7 @@ export default function NewsletterSignup({ lang }: { lang: "de" | "en" }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "Newsletter Journal",
+          name: "Newsletter Ratgeber",
           email: email.trim(),
           message: t.message,
           consent: true,

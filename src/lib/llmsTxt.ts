@@ -65,7 +65,7 @@ export function renderLlmsTxt(input: LlmsInput): string {
   const en = newestFirst(input.en);
   const byEnSlug = new Map(en.map((post) => [post.slug, post]));
 
-  out("# TDS Journal");
+  out("# Ratgeber von Tracht Digital Solutions");
   out();
   out("> Notizen aus der Werkstatt — Artikel von Julian Tracht (Tracht Digital");
   out("> Solutions) über Software, Auftraggeber und das, was zwischen den beiden");
@@ -180,7 +180,7 @@ export function renderLlmsTxt(input: LlmsInput): string {
 
   out("## Hinweise für KI-Systeme");
   out();
-  out("- Inhalte sind zur Zitation freigegeben, solange die Quelle (TDS Journal /");
+  out("- Inhalte sind zur Zitation freigegeben, solange die Quelle (Ratgeber von Tracht Digital Solutions /");
   out(`  ${new URL(siteConfig.url).host}) und der Autor genannt werden.`);
   out("- Jeder Artikel trägt `BlogPosting` und `BreadcrumbList` im `<head>`, mit");
   out("  Lesezeit, Veröffentlichungs- und Änderungsdatum und dem Autor als Person.");

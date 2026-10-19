@@ -50,31 +50,31 @@ export type Lang = "de" | "en";
 export function categoryDescription(name: string, lang: Lang): string {
   return lang === "de"
     ? fit(
-        `Beiträge im TDS Journal zur Kategorie „${name}“: praxisnahe Artikel über Webentwicklung, Automatisierung und Software für Unternehmen.`,
-        `Alle Beiträge im TDS Journal zur Kategorie „${name}“.`,
+        `Beiträge im Ratgeber zur Kategorie „${name}“: praxisnahe Artikel über Webentwicklung, Automatisierung und Software für Unternehmen.`,
+        `Alle Beiträge im Ratgeber zur Kategorie „${name}“.`,
       )
     : fit(
-        `Posts in the TDS Journal filed under “${name}” — hands-on articles on web development, automation and software for businesses.`,
-        `All posts in the TDS Journal filed under “${name}”.`,
+        `Posts in the Ratgeber filed under “${name}” — hands-on articles on web development, automation and software for businesses.`,
+        `All posts in the Ratgeber filed under “${name}”.`,
       );
 }
 
 export function tagDescription(tag: string, lang: Lang): string {
   return lang === "de"
     ? fit(
-        `Alle Beiträge im TDS Journal mit dem Tag „${tag}“ — praxisnahe Artikel über Digitalisierung und Software-Entwicklung für Unternehmen.`,
-        `Alle Beiträge im TDS Journal mit dem Tag „${tag}“.`,
+        `Alle Beiträge im Ratgeber mit dem Tag „${tag}“ — praxisnahe Artikel über Digitalisierung und Software-Entwicklung für Unternehmen.`,
+        `Alle Beiträge im Ratgeber mit dem Tag „${tag}“.`,
       )
     : fit(
-        `All posts in the TDS Journal tagged “${tag}” — hands-on articles on digitalization and software development for businesses.`,
-        `All posts in the TDS Journal tagged “${tag}”.`,
+        `All posts in the Ratgeber tagged “${tag}” — hands-on articles on digitalization and software development for businesses.`,
+        `All posts in the Ratgeber tagged “${tag}”.`,
       );
 }
 
 export function archiveDescription(page: number, lang: Lang): string {
   return lang === "de"
-    ? `Seite ${page} des TDS-Journal-Archivs: ältere Beiträge über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Arbeitsalltag.`
-    : `Page ${page} of the TDS Journal archive: older posts on digitalization for businesses, web development and everyday automation.`;
+    ? `Seite ${page} des Ratgeber-Archivs: ältere Beiträge über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung im Arbeitsalltag.`
+    : `Page ${page} of the Ratgeber archive: older posts on digitalization for businesses, web development and everyday automation.`;
 }
 
 /**
@@ -84,11 +84,11 @@ export function archiveDescription(page: number, lang: Lang): string {
 export function authorDescription(name: string, lang: Lang): string {
   return lang === "de"
     ? fit(
-        `Beiträge von ${name} im TDS Journal — Artikel über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung.`,
-        `Beiträge von ${name} im Journal von Tracht Digital Solutions.`,
+        `Beiträge von ${name} im Ratgeber — Artikel über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung.`,
+        `Beiträge von ${name} im Ratgeber von Tracht Digital Solutions.`,
       )
     : fit(
-        `Posts by ${name} in the TDS Journal — articles on digitalization for businesses, web development and automation.`,
+        `Posts by ${name} in the Ratgeber — articles on digitalization for businesses, web development and automation.`,
         `Posts by ${name} in the Tracht Digital Solutions journal.`,
       );
 }
@@ -134,7 +134,7 @@ export function postDescription(
   // Long enough that the result clears the floor even from nothing at all.
   const topUp =
     lang === "de"
-      ? "Aus dem TDS Journal von Tracht Digital Solutions — Artikel über Digitalisierung für Unternehmen."
-      : "From the TDS Journal by Tracht Digital Solutions — articles on digitalization for businesses.";
+      ? "Aus dem Ratgeber von Tracht Digital Solutions — Artikel über Digitalisierung für Unternehmen."
+      : "From the Ratgeber by Tracht Digital Solutions — articles on digitalization for businesses.";
   return clampToWord(chosen ? `${chosen} ${topUp}` : topUp);
 }
