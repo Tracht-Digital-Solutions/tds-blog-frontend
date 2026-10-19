@@ -20,6 +20,7 @@ import { ConsentLink } from "@tracht-digital-solutions/tds-shared/consent";
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
 import { entdeckenLabels, categoryHref, topicsHref, TOOLS_URL, SHOP_URL } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
+import { LEGAL_LINKS } from "@tracht-digital-solutions/tds-shared/nav";
 
 interface Props {
   lang?: "de" | "en";
@@ -67,8 +68,8 @@ const groups =
         {
           head: "Rechtliches",
           items: [
-            { label: "Impressum", href: "https://tracht-digital.de/legal/impressum" },
-            { label: "Datenschutz", href: "https://tracht-digital.de/legal/datenschutz" },
+            { label: "Impressum", href: LEGAL_LINKS.imprint },
+            { label: "Datenschutz", href: LEGAL_LINKS.privacy },
           ],
         },
       ]
@@ -94,8 +95,8 @@ const groups =
         {
           head: "Legal",
           items: [
-            { label: "Imprint", href: "https://tracht-digital.de/legal/impressum" },
-            { label: "Privacy", href: "https://tracht-digital.de/legal/datenschutz" },
+            { label: "Imprint", href: LEGAL_LINKS.imprint },
+            { label: "Privacy", href: LEGAL_LINKS.privacy },
           ],
         },
       ];

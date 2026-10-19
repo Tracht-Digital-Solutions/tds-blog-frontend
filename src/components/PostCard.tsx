@@ -1,5 +1,5 @@
 import { imageHints } from "../lib/imageCatalog";
-import { PostCover } from "./Covers";
+import { PostCover } from "@tracht-digital-solutions/tds-shared/components";
 import { bookClass, bookLabel } from "../lib/book";
 
 /**

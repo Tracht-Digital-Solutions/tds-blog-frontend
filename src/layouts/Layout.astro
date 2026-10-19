@@ -34,6 +34,7 @@ import {
 import { siteConfig } from "~/lib/seo";
 import { isExcluded } from "~/lib/sitemapExclusions";
 import { cookieBannerEnabled, adsConfig } from "~/lib/content-api";
+import { LEGAL_LINKS } from "@tracht-digital-solutions/tds-shared/nav";
 
 interface Props {
   title: string;
@@ -379,8 +380,8 @@ const showConsent =
         client:idle
         lang={lang}
         categories={consentCategories}
-        privacyUrl="https://tracht-digital.de/legal/datenschutz"
-        imprintUrl="https://tracht-digital.de/legal/impressum"
+        privacyUrl={LEGAL_LINKS.privacy}
+        imprintUrl={LEGAL_LINKS.imprint}
       />
     )}
 

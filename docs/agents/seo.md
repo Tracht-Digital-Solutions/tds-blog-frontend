@@ -67,8 +67,8 @@ the renderer from a runtime island. `npm run og:smoke` after changes; `npm run o
   (`seoContract.test.ts`).
 - `/llms.txt` is a generated route (`src/lib/llmsTxt.ts`, `src/pages/llms.txt.ts`); never add a static
   `public/llms.txt` (it would shadow the route).
-- `npm run audit:geo -- <url>` runs the shared geo audit (`scripts/geo-audit.mjs`, `src/lib/geoAudit.test.ts`); the
-  generic body is maintained in the landing page repo.
+- `npm run audit:geo -- <url>` runs tds-shared's geo audit (`tds-geo-audit`) with this site's
+  `scripts/geo-audit.profile.mjs`; `src/lib/geoAudit.test.ts` checks the profile against robots.txt.
 - **One-article tag pages are `noindex`** (2026-10-19, `src/lib/tagIndexing.ts`, `MIN_INDEXED_TAG_POSTS = 2`): they
   still answer, but stay out of the sitemap and are never another tag page's hreflang alternate. A tag without a
   counterpart in the other tree has no hreflang by design; the audit's "no hreflang" warning on those is expected.

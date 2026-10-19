@@ -1,3 +1,5 @@
+import { clampToWord } from "@tracht-digital-solutions/tds-shared/format";
+
 /**
  * Meta descriptions for the blog's GENERATED pages (category, tag, archive
  * page, author).
@@ -28,17 +30,11 @@
 export const RENDERED_META_LENGTH = 160;
 
 /**
- * Last-resort clamp. Cuts on a word boundary so the result never ends
- * mid-word; only reached when even the short form overflows, i.e. when a
- * taxonomy name is itself pathologically long.
+ * Last-resort clamp, only reached when even the short form overflows (a
+ * pathologically long taxonomy name). Cuts on a word boundary, never mid-word;
+ * tds-shared's, shared with the shop.
  */
-export function clampToWord(text: string, max = RENDERED_META_LENGTH): string {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max - 1);
-  const lastSpace = cut.lastIndexOf(" ");
-  const body = lastSpace > max * 0.5 ? cut.slice(0, lastSpace) : cut;
-  return `${body.trimEnd().replace(/[\s.,;:—–-]+$/, "")}…`;
-}
+export { clampToWord };
 
 /** Pick the rich sentence when it fits, else the short one. */
 function fit(rich: string, short: string): string {

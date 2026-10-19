@@ -25,7 +25,7 @@ import { categorySlug } from "./taxonomy";
 import { isIndexedTag } from "./tagIndexing";
 import { siteConfig } from "./seo";
 import { exclusionPatterns, groupExcluded, hreflangGroup } from "./sitemapExclusions";
-import { escapeXml, renderSectionedSitemapIndex } from "@tracht-digital-solutions/tds-shared/site";
+import { renderSectionedSitemapIndex, renderUrlset as renderUrlsetXml } from "@tracht-digital-solutions/tds-shared/site";
 import { SITEMAP_SECTIONS, sectionPath, type SitemapSection } from "./sitemapSections";
 
 const PREFIX: Record<Lang, string> = { de: "", en: "/en" };
@@ -234,57 +234,15 @@ export function newestLastmod(urls: readonly SitemapUrl[]): string | undefined {
 
 /** `lastmod` is the fallback for entries that carry no date of their own. */
 export function renderUrlset(urls: SitemapUrl[], lastmod: string): string {
-  const body = urls
-    .map((url) => {
-      const alternates = url.alternate
-        ? [
-            `<xhtml:link rel="alternate" hreflang="de-DE" href="${escapeXml(absolute(url.alternate.de))}"/>`,
-            `<xhtml:link rel="alternate" hreflang="en-GB" href="${escapeXml(absolute(url.alternate.en))}"/>`,
-            `<xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(absolute(url.alternate.de))}"/>`,
-          ].join("")
-        : "";
-      const image = url.image
-        ? `<image:image><image:loc>${escapeXml(absolute(url.image.loc))}</image:loc>` +
-          `<image:title>${escapeXml(url.image.title)}</image:title></image:image>`
-        : "";
-      return [
-        "<url>",
-        `<loc>${escapeXml(absolute(url.path))}</loc>`,
-        alternates,
-        image,
-        `<lastmod>${escapeXml(url.lastmod ?? lastmod)}</lastmod>`,
-        `<changefreq>${url.changefreq}</changefreq>`,
-        `<priority>${url.priority.toFixed(1)}</priority>`,
-        "</url>",
-      ].join("");
-    })
-    .join("");
-
-  return (
-    '<?xml version="1.0" encoding="UTF-8"?>' +
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' +
-    'xmlns:xhtml="http://www.w3.org/1999/xhtml" ' +
-    'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' +
-    body +
-    "</urlset>"
-  );
-}
-
-/**
- * The index document.
- *
- * The filenames are the ones `@astrojs/sitemap` produced and `public/robots.txt`
- * advertises; changing them would orphan the entry point Search Console knows.
- */
-export function renderSitemapIndex(lastmod: string): string {
-  return (
-    '<?xml version="1.0" encoding="UTF-8"?>' +
-    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-    "<sitemap>" +
-    `<loc>${escapeXml(absolute("/sitemap-0.xml"))}</loc>` +
-    `<lastmod>${escapeXml(lastmod)}</lastmod>` +
-    "</sitemap>" +
-    "</sitemapindex>"
+  return renderUrlsetXml(
+    urls.map((url) => ({
+      loc: absolute(url.path),
+      alternates: url.alternate ? { de: absolute(url.alternate.de), en: absolute(url.alternate.en) } : undefined,
+      image: url.image ? { loc: absolute(url.image.loc), title: url.image.title } : undefined,
+      lastmod: url.lastmod ?? lastmod,
+      changefreq: url.changefreq,
+      priority: url.priority,
+    })),
   );
 }
 
