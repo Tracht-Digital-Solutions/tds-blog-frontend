@@ -22,6 +22,7 @@
 import { corpus, type Lang } from "./routes";
 import { PAGE_SIZE } from "./pagination";
 import { categorySlug } from "./taxonomy";
+import { isIndexedTag } from "./tagIndexing";
 import { siteConfig } from "./seo";
 import { exclusionPatterns, groupExcluded, hreflangGroup } from "./sitemapExclusions";
 import { escapeXml, renderSectionedSitemapIndex } from "@tracht-digital-solutions/tds-shared/site";
@@ -163,6 +164,8 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
     });
   }
   for (const tag of [...tags.keys()].sort()) {
+    // A one-article tag page is served `noindex` (`tagIndexing.ts`).
+    if (!isIndexedTag(tags.get(tag)!.length)) continue;
     urls.push({
       path: `${p}/tag/${encodeURIComponent(tag)}`,
       section: "tags",
