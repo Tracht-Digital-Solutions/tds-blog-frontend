@@ -1,6 +1,6 @@
 # AGENTS.md — tds-blog-frontend
 
-The public journal at `blog.tracht-digital.de` (DE at `/`, EN at `/en/`). Astro 7, `output: "server"`
+The public journal — named **Ratgeber** since 2026-10-19 (was "Tracht Journal") — at `blog.tracht-digital.de` (DE at `/`, EN at `/en/`). Astro 7, `output: "server"`
 (`@astrojs/node`, standalone, under Passenger) behind a file-backed page cache: a page renders on demand
 and is stored as a file Apache serves directly. Posts come from the composed content API (`/content/blog`,
 served by `tds-ext-blog-cms-pkg`). It is the `blog` surface of tds-shared: flat, square, in colour bands.

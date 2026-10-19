@@ -95,7 +95,7 @@ export async function renderOgPng(opts: OgOptions): Promise<Buffer> {
       : "Draft";
 
   const wordmark =
-    opts.lang === "de" ? "Tracht Digital · Journal" : "Tracht Digital · Journal";
+    opts.lang === "de" ? "Tracht Digital · Ratgeber" : "Tracht Digital · Ratgeber";
 
   const svg = await satori(
     {

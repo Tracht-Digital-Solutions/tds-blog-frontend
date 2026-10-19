@@ -11,8 +11,8 @@ export const GET: APIRoute = () =>
   new Response(
     JSON.stringify(
       buildManifest({
-        name: "Tracht Journal",
-        shortName: "Journal",
+        name: "Ratgeber von Tracht Digital Solutions",
+        shortName: "Ratgeber",
         description: "Wissen für deinen Betrieb: Digitalisierung, Websites, Werkzeuge.",
         lang: "de",
         themeColor: "#fafaf7",

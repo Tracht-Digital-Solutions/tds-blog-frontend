@@ -11,15 +11,15 @@ import { siteConfig } from "~/lib/seo";
 const jsonLd = asGraph(
   websiteSchema("de"),
   breadcrumbSchema([
-    { name: "Journal", url: `${siteConfig.url}/` },
+    { name: "Ratgeber", url: `${siteConfig.url}/` },
     { name: "RSS", url: `${siteConfig.url}/rss` },
   ]),
 );
 ---
 
 <Layout
-  title="RSS abonnieren — Journal"
-  description="Das TDS Journal per RSS abonnieren: die Feed-Adresse, empfohlene RSS-Programme und was dich in den Beiträgen erwartet."
+  title="RSS abonnieren — Ratgeber"
+  description="Den Ratgeber per RSS abonnieren: die Feed-Adresse, empfohlene RSS-Programme und was dich in den Beiträgen erwartet."
   jsonLd={jsonLd}
   lang="de"
 >

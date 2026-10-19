@@ -40,7 +40,7 @@ const jsonLd = asGraph(
     itemList: itemListSchema(posts.map((p) => `${siteConfig.url}/en/${p.slug}`)),
   }),
   breadcrumbSchema([
-    { name: "Journal", url: `${siteConfig.url}/en/` },
+    { name: "Ratgeber", url: `${siteConfig.url}/en/` },
     { name: `#${tag}`, url: `${siteConfig.url}/en/tag/${tag}` },
   ]),
 );
@@ -61,7 +61,7 @@ const jsonLd = asGraph(
         <a href="/en/" class="btn-back">
           <span aria-hidden="true">←</span> All posts
         </a>
-        <p class="section-num mb-4 mt-6">Journal · Tag</p>
+        <p class="section-num mb-4 mt-6">Ratgeber · Tag</p>
         <h1 class="display page-title">
           #<span class="accent-italic">{tag}</span>
         </h1>

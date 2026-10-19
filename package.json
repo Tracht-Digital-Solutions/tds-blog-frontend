@@ -1,7 +1,7 @@
 {
   "name": "tds-blog-frontend",
   "license": "UNLICENSED",
-  "version": "0.48.0",
+  "version": "0.49.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,7 +26,7 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@fontsource/lato": "^5.2.7",
     "@tailwindcss/postcss": "~4.3.3",
-    "@tracht-digital-solutions/tds-shared": "^0.56.1",
+    "@tracht-digital-solutions/tds-shared": "^0.57.1",
     "astro": "^7.2.5",
     "marked": "^18.0.0",
     "react": "^19.0.0",

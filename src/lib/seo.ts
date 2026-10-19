@@ -28,12 +28,12 @@ export const siteConfig = {
    * it to the business it belongs to. Trim the topic list before either.
    */
   description: {
-    de: "Praxisnahe Artikel über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung — das Journal von Tracht Digital Solutions aus Schwarzenbek.",
-    en: "Hands-on articles on digitalization for businesses, web development and automation — the journal of Tracht Digital Solutions, Schwarzenbek near Hamburg.",
+    de: "Praxisnahe Artikel über Digitalisierung für Unternehmen, Webentwicklung und Automatisierung — der Ratgeber von Tracht Digital Solutions aus Schwarzenbek.",
+    en: "Hands-on articles on digitalization for businesses, web development and automation — the Ratgeber by Tracht Digital Solutions, Schwarzenbek near Hamburg.",
   },
   blogName: {
-    de: "TDS Journal",
-    en: "TDS Journal",
+    de: "Ratgeber von Tracht Digital Solutions",
+    en: "Ratgeber von Tracht Digital Solutions",
   },
   email: "kontakt@tracht-digital.de",
   legalName: "Julian Tracht",
@@ -68,7 +68,7 @@ export type SiteConfig = typeof siteConfig;
 export const RENDERED_TITLE_LENGTH = 60;
 
 /** The brand half of a page title, appended when there is room for it. */
-const TITLE_SUFFIX = " — Journal";
+const TITLE_SUFFIX = " — Ratgeber";
 
 /**
  * Compose a page `<title>`.

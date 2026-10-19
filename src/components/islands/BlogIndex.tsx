@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import { transitionUpdate } from "@tracht-digital-solutions/tds-shared/motion";
 import PostCard, { type CardPost } from "../PostCard";
@@ -60,6 +60,7 @@ interface Labels {
   sort: string;
   sorts: Record<SortKey, string>;
   resetFilters: string;
+  closeFilters: string;
   shown: readonly [string, string];
 }
 
@@ -89,6 +90,7 @@ const LABELS: Record<"de" | "en", Labels> = {
     sort: "Sortierung",
     sorts: { new: "Neueste", popular: "Meistgelesen" },
     resetFilters: "Filter zurücksetzen",
+    closeFilters: "Filter schließen",
     shown: ["Beitrag", "Beiträge"],
   },
   en: {
@@ -111,6 +113,7 @@ const LABELS: Record<"de" | "en", Labels> = {
     sort: "Sort",
     sorts: { new: "Newest", popular: "Most read" },
     resetFilters: "Reset filters",
+    closeFilters: "Close filters",
     shown: ["post", "posts"],
   },
 };
@@ -236,6 +239,21 @@ export default function BlogIndex({
   const [band, setBand] = useState<LengthBand>("all");
   const [sort, setSort] = useState<SortKey>("new");
   const [filterOpen, setFilterOpen] = useState(false);
+  // The toggle steps aside while the panel is open (tds-shared ≥ 0.57, the
+  // same on the Online-Tools and the Digitalmarkt): focus moves into the
+  // panel on open and back to the toggle on close, never onto a hidden button.
+  const filterToggle = useRef<HTMLButtonElement>(null);
+  const filterPanel = useRef<HTMLDivElement>(null);
+  const filterMoved = useRef(false);
+  useEffect(() => {
+    if (!filterMoved.current) return;
+    if (filterOpen) filterPanel.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    else filterToggle.current?.focus({ preventScroll: true });
+  }, [filterOpen]);
+  const openFilter = (open: boolean) => {
+    filterMoved.current = true;
+    setFilterOpen(open);
+  };
 
   // A deliberate filter change (a category, "clear search") runs as a native
   // View Transition: cards that stay glide to their new slot, the rest fade.
@@ -440,9 +458,11 @@ export default function BlogIndex({
                 type="button"
                 className="btn btn-primary tds-filterbar__toggle"
                 data-filter-toggle=""
+                ref={filterToggle}
+                hidden={filterOpen}
                 aria-expanded={filterOpen}
                 aria-controls="blog-filter"
-                onClick={() => setFilterOpen((v) => !v)}
+                onClick={() => openFilter(true)}
               >
                 <svg className="tds-filterbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
                   <path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4" />
@@ -451,7 +471,18 @@ export default function BlogIndex({
                 <span className="tds-filterbar__count">{activeFilters > 0 ? activeFilters : ""}</span>
               </button>
             </div>
-            <div className="tds-filterbar__panel" id="blog-filter" hidden={!filterOpen}>
+            <div
+              className="tds-filterbar__panel"
+              id="blog-filter"
+              ref={filterPanel}
+              hidden={!filterOpen}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  openFilter(false);
+                }
+              }}
+            >
               <fieldset className="tds-filterbar__group">
                 <legend className="tds-filterbar__legend">{t.length}</legend>
                 <div className="tds-toolbar">
@@ -475,6 +506,13 @@ export default function BlogIndex({
               <button type="button" className="tds-filterbar__reset" disabled={activeFilters === 0} onClick={resetFilters}>
                 {t.resetFilters}
               </button>
+              <button
+                type="button"
+                className="tds-filterbar__close"
+                aria-label={t.closeFilters}
+                title={t.closeFilters}
+                onClick={() => openFilter(false)}
+              />
             </div>
 
 

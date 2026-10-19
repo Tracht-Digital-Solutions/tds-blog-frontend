@@ -328,7 +328,7 @@ export function demoTopics(lang: "de" | "en"): TopicsBlock {
   }
   return {
     headline: "Themen im Überblick",
-    intro: "Drei Einstiege ins Journal — nach dem Thema, wegen dem Sie hier sind.",
+    intro: "Drei Einstiege in den Ratgeber — nach dem Thema, wegen dem Sie hier sind.",
     items: [
       { title: "Digitalisierung", description: "Mit einem Ablauf anfangen statt mit einem Großprojekt.", href: "/tag/digitalisierung" },
       { title: "Webshops", description: "Online verkaufen, ohne den Ladenalltag zu verkomplizieren.", href: "/tag/webshop" },
