@@ -178,7 +178,6 @@ src/
 │   ├── Article.astro               # shared full article view for /[slug] + /en/[slug] (lang-prefixed links)
 │   ├── ArticleSidebar.astro        # fixed collapsible left nav on /[slug] (lg+), phone icon when collapsed
 │   ├── BlogPostCard.astro          # flat editorial list row (pagination + tag pages)
-│   ├── Covers.tsx                  # 6 abstract brand-geometry covers (slug-hashed) + photo cover
 │   ├── PostCard.tsx                # flat post card (island + static render in RelatedArticles)
 │   ├── JournalHeader.astro         # flat top nav with live search, DE/EN toggle, CTA
 │   ├── JournalFooter.astro         # newsletter frontend + navy footer block

@@ -37,7 +37,7 @@ Empty statistics fall back to blog-cms's newest-first `/blog/popular`.
 ## Cards and covers
 
 `src/components/PostCard.tsx` (also static inside `RelatedArticles.astro`). The six abstract covers live in
-**tds-shared** (`Covers.tsx` re-exports them): the variant is a hash of the slug, and the landing page's journal row
+**tds-shared** (`PostCover` from `./components`, imported directly): the variant is a hash of the slug, and the landing page's journal row
 draws the same artwork. Change drawings there. A photo cover is used when `coverHint` is an http URL.
 
 ## Article page (`src/pages/[slug].astro`, EN twin)
