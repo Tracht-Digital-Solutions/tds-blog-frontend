@@ -37,8 +37,8 @@ exist), because one dangling alternate invalidates the whole set.
   with its newest date; posts carry `image:image` (cover or OG card). `/sitemap-0.xml` still lists everything.
   `cache.ts` rebuilds all via `SITEMAP_PATHS`. Panel exclusions apply (`sitemapExclusions.ts`).
 - Only article slugs get alternates.
-- **`lastmod` is per URL** from the newest post it shows (`newestDate`), using `publishedAt` (the list payload has no
-  `updatedAt`).
+- **`lastmod` is per URL** from the newest post it shows (`newestDate`, `publishedAt`). A post's own URL uses
+  `modifiedDate` — the later of `publishedAt` and the list's `updatedAt` (sent since tds-ext-blog-cms 0.3.x).
 
 ## JSON-LD (`src/lib/jsonld.ts`)
 
