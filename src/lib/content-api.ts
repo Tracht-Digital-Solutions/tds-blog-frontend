@@ -33,8 +33,10 @@ export type { TopicItem, TopicsBlock } from "./demoContent";
 interface ListResponse {
   // `readingMinutes`: sent by tds-ext-blog-cms ≥ 0.3.0 (from LENGTH(body)),
   // absent on older APIs. Widened here, not in tds-shared — read by this repo
-  // alone (the books, src/lib/book.ts).
-  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode"> & { readingMinutes?: number }>;
+  // alone (the books, src/lib/book.ts). `updatedAt` likewise: the list has
+  // carried it only since the blog-cms release after 0.3.x's first, and the
+  // sitemap's per-post `lastmod` is its one reader.
+  posts: Array<Pick<BlogPost, "id" | "slug" | "lang" | "category" | "title" | "excerpt" | "coverHint" | "tags" | "publishedAt" | "viewCount" | "authorId" | "author" | "adsMode"> & { readingMinutes?: number; updatedAt?: string }>;
   nextCursor: number | null;
 }
 

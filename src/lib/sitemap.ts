@@ -57,12 +57,18 @@ export interface SitemapUrl {
    * change. Omitted when a URL has no post behind it; `renderUrlset` then falls
    * back to the document date.
    *
-   * The source is `publishedAt`, not a modification timestamp: the list payload
-   * from the content-API carries no `updatedAt` (`BlogCmsModule` sets it only
-   * on the full-post read). Publication date understates an edited article,
-   * which is the harmless direction — overstating is what "today" did.
+   * A post's own URL takes the later of `publishedAt` and `updatedAt`, so an
+   * edited article reports its edit. Listings stay on `publishedAt`: what they
+   * show changes when a post appears, not when one is reworded. An API that
+   * sends no `updatedAt` in the list falls back to publication, which
+   * understates — the harmless direction; overstating is what "today" did.
    */
   lastmod?: string;
+}
+
+/** `YYYY-MM-DD` a post last changed: the later of publication and edit. */
+export function modifiedDate(post: { publishedAt?: string | null; updatedAt?: string | null }): string | undefined {
+  return newestDate([post, { publishedAt: post.updatedAt }]);
 }
 
 /** `YYYY-MM-DD` of the newest post in a set, or undefined for an empty one. */
@@ -140,7 +146,7 @@ async function urlsFor(lang: Lang): Promise<SitemapUrl[]> {
       // Slugs are shared across both trees — a post authored in one language
       // is machine-translated into the other, so both URLs always exist.
       alternate: { de: `/${post.slug}`, en: `/en/${post.slug}` },
-      lastmod: newestDate([post]),
+      lastmod: modifiedDate(post),
     });
 
     const category = post.category?.trim();

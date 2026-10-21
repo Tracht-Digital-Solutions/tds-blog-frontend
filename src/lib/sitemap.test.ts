@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { absolute, renderSectionIndex, renderUrlset, type SitemapUrl } from "./sitemap";
+import { absolute, modifiedDate, renderSectionIndex, renderUrlset, type SitemapUrl } from "./sitemap";
 
 /**
  * The sitemap document, and the rules that make it valid.
@@ -177,5 +177,20 @@ describe("the sectioned index (2026-10-06)", () => {
     expect(xml).toContain('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"');
     expect(xml).toContain(`<image:loc>${absolute("/og/de/a.png")}</image:loc>`);
     expect(xml).toContain("<image:title>A &amp; B</image:title>");
+  });
+});
+
+describe("modifiedDate", () => {
+  it("reports an edit after publication", () => {
+    expect(modifiedDate({ publishedAt: "2026-09-01T08:00:00Z", updatedAt: "2026-10-12 14:03:00" })).toBe("2026-10-12");
+  });
+
+  it("falls back to publication when the list sends no updatedAt", () => {
+    expect(modifiedDate({ publishedAt: "2026-09-01T08:00:00Z" })).toBe("2026-09-01");
+  });
+
+  it("never goes back before publication", () => {
+    // A row created as a draft and published later carries an older updated_at.
+    expect(modifiedDate({ publishedAt: "2026-09-01T08:00:00Z", updatedAt: "2026-08-20 10:00:00" })).toBe("2026-09-01");
   });
 });
