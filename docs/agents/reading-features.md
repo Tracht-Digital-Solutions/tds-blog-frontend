@@ -3,7 +3,7 @@
 ## Index (`src/pages/index.astro`, `src/pages/en/index.astro`)
 
 Featured-post hero (fixed navy), category sidebar with counters (collapsible), flat card grid and live full-text
-search, all in the `BlogIndex` island (posts as props, client-side filtering, `?q=` round-trips). The header's search
+search, all in the `BlogIndex` island (posts as props, projected by `toIndexPost` to the fields the island reads, client-side filtering, `?q=` round-trips). The header's search
 field drives it via `tds-blog-search` events; elsewhere Enter navigates to `/?q=…`. Pages 2..N:
 `src/pages/page/[num].astro` and the EN twin. `pagination.ts` slices page windows.
 
