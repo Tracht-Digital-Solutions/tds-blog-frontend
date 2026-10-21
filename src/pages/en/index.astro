@@ -4,6 +4,7 @@ import BlogIndex from "~/components/islands/BlogIndex.tsx";
 import ForYou from "~/components/islands/ForYou.tsx";
 import ToolsPromo from "~/components/ToolsPromo.astro";
 import { listAllPosts, listPopular, listReads } from "~/lib/content-api";
+import { toIndexPost } from "~/lib/indexPosts";
 import { PAGE_SIZE } from "~/lib/pagination";
 import { asGraph, blogSchema, itemListSchema, organizationSchema, websiteSchema } from "~/lib/jsonld";
 import { siteConfig } from "~/lib/seo";
@@ -40,7 +41,7 @@ const jsonLd = asGraph(
     {/* Hero + category sidebar + card grid + live search — the
         design-system blog index. Posts are baked in at build time;
         the island only filters client-side. */}
-    <BlogIndex posts={allPosts} popular={popular} lang="en" pageSize={PAGE_SIZE} client:load />
+    <BlogIndex posts={allPosts.map(toIndexPost)} popular={popular.map(toIndexPost)} lang="en" pageSize={PAGE_SIZE} client:load />
 
     {/* Both render their own full-bleed band and shell — see the DE page. */}
     <ToolsPromo lang="en" />
