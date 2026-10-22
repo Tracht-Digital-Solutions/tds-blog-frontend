@@ -377,7 +377,7 @@ const showConsent =
         which the store keeps writing. */}
     {showConsent && (
       <ConsentBanner
-        client:idle
+        client:when="consent"
         lang={lang}
         categories={consentCategories}
         privacyUrl={LEGAL_LINKS.privacy}
@@ -389,7 +389,12 @@ const showConsent =
         not an island: it needs no UI and no React — see the note in
         gatedEmbeds.ts. */}
     <script>
+      import { mountConsentLinks, mountThemeToggles } from "@tracht-digital-solutions/tds-shared/dom";
       import { initGatedEmbeds } from "~/lib/gatedEmbeds";
+      // The theme toggles and the footer's consent link are plain DOM, so an
+      // article page loads no React at all (#27).
+      mountThemeToggles();
+      mountConsentLinks();
       import { startAccountPrefsSync } from "@tracht-digital-solutions/tds-shared/prefs";
       import { registerServiceWorker } from "@tracht-digital-solutions/tds-shared/app";
       initGatedEmbeds();
@@ -421,7 +426,7 @@ const showConsent =
         proxy) without a rebuild. A hard-coded origin would silently opt the
         widget out of that. */}
     {!bare && (
-      <LiveChatCta client:idle frontend="blog" lang={lang} />
+      <LiveChatCta client:when={`chat:blog:${lang}`} frontend="blog" lang={lang} />
     )}
 
     {/* Consent-gated AdSense loader. Injects adsbygoogle.js only after the
