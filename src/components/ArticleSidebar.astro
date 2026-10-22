@@ -16,7 +16,7 @@
  * lives under `sidebar-hide-collapsed`, so the collapsed icon rail stays
  * the same minimal toggle + theme + CTA.
  */
-import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/islands/theme-toggle";
+import { themeToggleMarkup } from "@tracht-digital-solutions/tds-shared/dom";
 import { propertyContact } from "@tracht-digital-solutions/tds-shared/nav";
 import {
   primaryNav,
@@ -112,11 +112,12 @@ const contact = propertyContact(lang);
   </nav>
 
   <div class="flex justify-center mb-3 mt-3">
-    <ThemeToggle
-          client:idle
-          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
-          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
-        />
+    <Fragment
+      set:html={themeToggleMarkup({
+        labelToDark: lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten",
+        labelToLight: lang === "en" ? "Switch to light mode" : "Auf Hell umschalten",
+      })}
+    />
   </div>
 
   <div class="tds-lang-toggle mb-2.5 sidebar-hide-collapsed" role="group" aria-label="Sprache / Language">

@@ -16,7 +16,7 @@
  * 4.32:1; 0.6 is 5.5:1 and still sits below the blurb (0.65) and the links
  * (0.75).
  */
-import { ConsentLink } from "@tracht-digital-solutions/tds-shared/consent";
+import { consentLinkMarkup } from "@tracht-digital-solutions/tds-shared/dom";
 import NewsletterSignup from "~/components/islands/NewsletterSignup.tsx";
 import { entdeckenLabels, categoryHref, topicsHref, TOOLS_URL, SHOP_URL } from "~/lib/nav";
 import { getTaxonomy } from "~/lib/taxonomy";
@@ -167,10 +167,8 @@ const groups =
           as giving, and "as easy" cannot depend on whether an ad slot is
           currently filled.
         */}
-        <ConsentLink
-          client:idle
-          lang={lang}
-          className="text-white/60 hover:text-white transition-colors"
+        <Fragment
+          set:html={consentLinkMarkup({ lang, className: "text-white/60 hover:text-white transition-colors" })}
         />
         <p>DE / EN</p>
       </div>

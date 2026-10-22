@@ -3,7 +3,7 @@ import node from "@astrojs/node";
 import react from "@astrojs/react";
 // Shared CSS minify settings (incl. the cssTarget that keeps lightningcss
 // from dropping the .brand-header backdrop-filter prefix). See tds-shared#10.
-import { motionSsrNoExternal, tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
+import { motionSsrNoExternal, tdsClientDirectives, tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
 
 export default defineConfig({
   site: "https://blog.tracht-digital.de",
@@ -29,6 +29,9 @@ export default defineConfig({
   }),
   integrations: [
     react(),
+    // `client:when`: the account menu, consent banner and chat launcher load
+    // (and bring React) only for a visitor who needs them (#27).
+    tdsClientDirectives(),
     // @astrojs/sitemap is deliberately gone. It derives its entries from the
     // routes the build EMITS, and under `output: "server"` the articles,
     // taxonomy pages and archive pages are not emitted — it would have shipped

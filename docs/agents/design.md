@@ -106,6 +106,13 @@ no label, never an invented page count.
 - Favicon: `public/favicon.png`, the shared logomark.
 - A layout script prefixes the tab title with the visible section name.
 
+## No React for chrome (#27)
+
+Theme toggles and the footer's consent link are plain DOM from `tds-shared/dom`, wired once by the
+script in `Layout.astro`. `AccountMenu`, `ConsentBanner` and `LiveChatCta` use `client:when` (registered in
+`astro.config.mjs`, typed in `src/client-directives.d.ts`), so an article loads React only when one of them
+is needed or the reader scrolls to the newsletter form. Don't put a new React island on every page.
+
 ## No decorative motion
 
 Removed for good: scroll reveal (and the `html.js` flag), the 404's looping animations, the hero's auto-rotation

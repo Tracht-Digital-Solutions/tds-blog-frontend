@@ -161,7 +161,8 @@ describe("the account menu", () => {
   });
 
   it("is mounted with the page language", () => {
-    expect(source).toMatch(/<AccountMenu\s+client:idle\s+lang=\{lang\}\s*\/>/);
+    // `client:when="session"`: no React for a visitor who never signed in (#27).
+    expect(source).toMatch(/<AccountMenu\s+client:when="session"\s+lang=\{lang\}\s*\/>/);
   });
 
   it("says nothing to a signed-out reader", () => {

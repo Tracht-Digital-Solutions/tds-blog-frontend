@@ -27,7 +27,7 @@
  * `aria-controls` is the whole pattern.
  */
 import { AccountMenu } from "@tracht-digital-solutions/tds-shared/islands/account-menu";
-import { ThemeToggle } from "@tracht-digital-solutions/tds-shared/islands/theme-toggle";
+import { themeToggleMarkup } from "@tracht-digital-solutions/tds-shared/dom";
 import { propertyContact } from "@tracht-digital-solutions/tds-shared/nav";
 import {
   primaryNav,
@@ -187,10 +187,12 @@ const currentFor = (node: { key: string; href: string }): "page" | "true" | unde
           <a href="/en/" data-locale-link="en" class={lang === "en" ? "on" : ""} aria-current={lang === "en" ? "true" : undefined}>EN</a>
         </div>
 
-        <ThemeToggle
-          client:idle
-          labelToDark={lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten"}
-          labelToLight={lang === "en" ? "Switch to light mode" : "Auf Hell umschalten"}
+        {/* Plain DOM, no React island: wired by the script in Layout.astro (#27). */}
+        <Fragment
+          set:html={themeToggleMarkup({
+            labelToDark: lang === "en" ? "Switch to dark mode" : "Auf Dunkel umschalten",
+            labelToLight: lang === "en" ? "Switch to light mode" : "Auf Hell umschalten",
+          })}
         />
 
         <div class="tds-sitebar__wide">
@@ -205,7 +207,7 @@ const currentFor = (node: { key: string; href: string }): "page" | "true" | unde
           renders NOTHING for a signed-out reader — the blog is public and a login
           CTA next to the contact button would be noise. */}
       <div class="tds-sitebar__actions">
-        <AccountMenu client:idle lang={lang} />
+        <AccountMenu client:when="session" lang={lang} />
       </div>
     </div>
   </div>
