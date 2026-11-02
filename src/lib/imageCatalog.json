@@ -694,5 +694,83 @@
       }
     ],
     "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+  },
+  "/images/editorial/pi-imager-android-2026.webp": {
+    "src": "/images/editorial/pi-imager-android-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "Pi Imager für Android auf Tablet und Handy, mit fertig vorbereitetem Image und Modellauswahl.",
+      "en": "Pi Imager for Android on tablet and phone, with a prepared image and the model picker (German interface)."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/pi-imager-android-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "5b0c7d5f701d",
+        "bytes": 11582
+      },
+      {
+        "src": "/images/editorial/pi-imager-android-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "78b368ab7005",
+        "bytes": 27026
+      },
+      {
+        "src": "/images/editorial/pi-imager-android-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "5634d70a0499",
+        "bytes": 35362
+      },
+      {
+        "src": "/images/editorial/pi-imager-android-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "56d1a5608056",
+        "bytes": 62258
+      }
+    ]
+  },
+  "/images/editorial/wparted-2026.webp": {
+    "src": "/images/editorial/wparted-2026.webp",
+    "width": 1440,
+    "height": 960,
+    "alt": {
+      "de": "WParted mit Datenträgerkarte, Partitionsliste und einer ausstehenden Operation.",
+      "en": "WParted with a disk map, a partition list and one pending operation (German interface)."
+    },
+    "variants": [
+      {
+        "src": "/images/editorial/wparted-2026-480.webp",
+        "width": 480,
+        "height": 320,
+        "hash": "a86ca87d26e2",
+        "bytes": 11576
+      },
+      {
+        "src": "/images/editorial/wparted-2026-800.webp",
+        "width": 800,
+        "height": 533,
+        "hash": "aa1b2897d159",
+        "bytes": 25430
+      },
+      {
+        "src": "/images/editorial/wparted-2026-960.webp",
+        "width": 960,
+        "height": 640,
+        "hash": "ca8350fdfff1",
+        "bytes": 33132
+      },
+      {
+        "src": "/images/editorial/wparted-2026.webp",
+        "width": 1440,
+        "height": 960,
+        "hash": "e2a9ebbc0807",
+        "bytes": 58300
+      }
+    ]
   }
 }
