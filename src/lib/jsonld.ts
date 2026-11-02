@@ -1,3 +1,4 @@
+import { imageRights } from "@tracht-digital-solutions/tds-shared/site";
 import { imageObject } from "./imageCatalog";
 /**
  * Schema.org JSON-LD generators for the journal.
@@ -81,6 +82,7 @@ export function organizationSchema() {
     logo: {
       "@type": "ImageObject",
       url: `${siteConfig.url}/brand/td-logomark.webp`,
+      ...imageRights("de"),
     },
     address: {
       "@type": "PostalAddress",
@@ -238,6 +240,7 @@ export function blogPostingSchema(post: BlogPostingInput): WithContext {
       url: post.imageUrl,
       width: 1200,
       height: 630,
+      ...imageRights(post.lang),
     },
     author,
     publisher: { "@id": orgId },
