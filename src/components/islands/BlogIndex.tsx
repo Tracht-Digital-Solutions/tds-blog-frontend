@@ -240,7 +240,7 @@ export default function BlogIndex({
   const [sort, setSort] = useState<SortKey>("new");
   const [filterOpen, setFilterOpen] = useState(false);
   // The toggle steps aside while the panel is open (tds-shared ≥ 0.57, the
-  // same on the Online-Tools and the Digitalmarkt): focus moves into the
+  // same on the Online-Tools and the Shop): focus moves into the
   // panel on open and back to the toggle on close, never onto a hidden button.
   const filterToggle = useRef<HTMLButtonElement>(null);
   const filterPanel = useRef<HTMLDivElement>(null);
