@@ -2392,7 +2392,9 @@ a.jnl-tile:is(:hover, :focus-visible) {
   --book-edge: rgb(255 255 255 / 0.38);
   --book-spine: var(--color-accent-pink, var(--color-accent));
 }
-:root[data-theme="dark"] .book {
+/* The nearest data-theme wins, so the theme toggle's hover preview shows
+   light paper in a light copy on a dark page (tds-shared theme-motion-app.md). */
+:is(:root, .tds-theme-preview__page)[data-theme="dark"] .book:not(:where([data-theme="dark"] [data-theme="light"] *)) {
   /* Paper stays paper in the dark: light sheets, dark edge lines. */
   --book-paper: #d8d4c8;
   --book-edge: #55534d;
