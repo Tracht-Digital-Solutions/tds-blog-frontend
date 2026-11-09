@@ -14,7 +14,7 @@ cover below the byline, with reserved space to avoid layout shifts.
 Generated images are illustrative scenes, never evidence of a customer project.
 
 Original PNGs, WebP exports and full prompts are sorted in the workspace under
-`stuff/03-Materialien/Bildserie-2026-11/` (series 2026-11). Publish the landing-page release
+`stuff/03-Bilder/Bildserie-2026-11/` (series 2026-11). Publish the landing-page release
 before this frontend so all image URLs already exist. The historical notes
 below predate the current asset and runtime implementation.
 
