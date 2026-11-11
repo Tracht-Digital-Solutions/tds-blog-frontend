@@ -21,7 +21,7 @@ import ArticleSidebar from "~/components/ArticleSidebar.astro";
 import AppChrome from "~/components/AppChrome.astro";
 import JsonLd from "~/components/JsonLd.astro";
 import { LiveChatCta } from "@tracht-digital-solutions/tds-shared/islands/live-chat";
-import { ConsentBanner } from "@tracht-digital-solutions/tds-shared/consent";
+import { consentBannerHostMarkup } from "@tracht-digital-solutions/tds-shared/dom";
 import {
   errorBounceScript,
   hoverTipScript,
@@ -375,13 +375,16 @@ const showConsent =
         it off it states what the site stores and offers an acknowledgement.
         The AdSense loader below is unchanged — it still reads `tds-ad-consent`,
         which the store keeps writing. */}
+    {/* Plain DOM since tds-shared 0.64.11: same markup as the React island,
+        without the React runtime a first visit downloaded for it. */}
     {showConsent && (
-      <ConsentBanner
-        client:when="consent"
-        lang={lang}
-        categories={consentCategories}
-        privacyUrl={LEGAL_LINKS.privacy}
-        imprintUrl={LEGAL_LINKS.imprint}
+      <Fragment
+        set:html={consentBannerHostMarkup({
+          lang,
+          categories: consentCategories,
+          privacyUrl: LEGAL_LINKS.privacy,
+          imprintUrl: LEGAL_LINKS.imprint,
+        })}
       />
     )}
 
@@ -389,12 +392,17 @@ const showConsent =
         not an island: it needs no UI and no React — see the note in
         gatedEmbeds.ts. */}
     <script>
-      import { mountConsentLinks, mountThemeToggles } from "@tracht-digital-solutions/tds-shared/dom";
+      import {
+        mountConsentBannerHost,
+        mountConsentLinks,
+        mountThemeToggles,
+      } from "@tracht-digital-solutions/tds-shared/dom";
       import { initGatedEmbeds } from "~/lib/gatedEmbeds";
       // The theme toggles and the footer's consent link are plain DOM, so an
       // article page loads no React at all (#27).
       mountThemeToggles();
       mountConsentLinks();
+      mountConsentBannerHost();
       import { startAccountPrefsSync } from "@tracht-digital-solutions/tds-shared/prefs";
       import { registerServiceWorker } from "@tracht-digital-solutions/tds-shared/app";
       initGatedEmbeds();
