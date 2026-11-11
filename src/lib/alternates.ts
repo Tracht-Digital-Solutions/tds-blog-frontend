@@ -45,10 +45,57 @@ const SEGMENTS: Record<Lang, { category: string; author: string }> = {
 /** `/en/tag/x` for `/tag/x`, when the other tree really has that tag. */
 export async function tagAlternate(lang: Lang, tag: string): Promise<string | null> {
   const other = otherLang(lang);
+  const tagPath = (value: string) => `${PREFIX[other]}/tag/${encodeURIComponent(value.trim().toLowerCase())}`;
   const group = await byTag(other, tag);
   // A counterpart below the threshold is `noindex`: never an alternate.
-  if (!group || !isIndexedTag(group.posts.length)) return null;
-  return `${PREFIX[other]}/tag/${encodeURIComponent(tag.trim().toLowerCase())}`;
+  if (group && isIndexedTag(group.posts.length)) return tagPath(tag);
+  if (group) return null;
+  return derivedTagTwin(lang, tag).then((twin) => (twin ? tagPath(twin) : null));
+}
+
+const tagsOf = (post: { tags?: string | null }): string[] =>
+  (post.tags ?? "")
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+
+/**
+ * The tag the SAME ARTICLES carry in the other tree (2026-11-11), the way
+ * `categoryAlternate` derives a category: German posts tagged `digitalisierung`
+ * are tagged `digitalization` in English, so a slug match never finds them.
+ *
+ * Strict, because a wrong pair invalidates both hreflang sets: every
+ * translated article of this tag must carry the candidate, the candidate's
+ * page must be indexed, and the candidate's articles that have a twin here
+ * must be exactly this tag's translated articles. More than one such tag →
+ * no alternate.
+ */
+async function derivedTagTwin(lang: Lang, tag: string): Promise<string | null> {
+  const other = otherLang(lang);
+  const here = await byTag(lang, tag);
+  if (!here || here.posts.length === 0) return null;
+
+  const otherCorpus = await corpus(other);
+  const twins = new Map(otherCorpus.map((post) => [post.slug, post]));
+  const translated = here.posts.map((post) => twins.get(post.slug)).filter((post) => post !== undefined);
+  if (translated.length === 0) return null;
+
+  let candidates = new Set(tagsOf(translated[0]!));
+  for (const twin of translated.slice(1)) {
+    const has = new Set(tagsOf(twin));
+    candidates = new Set([...candidates].filter((t) => has.has(t)));
+  }
+
+  const hereSlugs = new Set(here.posts.map((post) => post.slug));
+  const thisCorpus = new Set((await corpus(lang)).map((post) => post.slug));
+  const matches: string[] = [];
+  for (const candidate of candidates) {
+    const group = await byTag(other, candidate);
+    if (!group || !isIndexedTag(group.posts.length)) continue;
+    const back = group.posts.filter((post) => thisCorpus.has(post.slug));
+    if (back.length === translated.length && back.every((post) => hereSlugs.has(post.slug))) matches.push(candidate);
+  }
+  return matches.length === 1 ? matches[0]! : null;
 }
 
 /**

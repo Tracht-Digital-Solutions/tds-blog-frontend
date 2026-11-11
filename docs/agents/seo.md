@@ -27,7 +27,9 @@ theme-color, and passes an optional `jsonLd`. The default description is `siteCo
 Listing routes (`tag/`, `kategorie/` ↔ `en/category/`, `autor/`, `page/`) don't mirror by prefix. They get alternates
 from `src/lib/alternates.ts`, which looks the counterpart up in the other language's corpus and returns a path only
 when it exists (`null` is the normal case for categories). **Never use a prefix swap** (`/en/tag/webshop` doesn't
-exist), because one dangling alternate invalidates the whole set.
+exist), because one dangling alternate invalidates the whole set. Since 2026-11-11 a tag without a slug twin is
+paired through its translated articles (`digitalisierung` ↔ `digitalization`), only when exactly one indexed tag
+carries exactly those articles.
 
 ## Sitemap
 

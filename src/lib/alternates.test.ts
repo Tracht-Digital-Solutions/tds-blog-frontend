@@ -41,6 +41,46 @@ describe("otherLang", () => {
   });
 });
 
+describe("tagAlternate — derived from the translated articles", () => {
+  const de = [
+    { slug: "a", tags: "digitalisierung,prozesse" },
+    { slug: "b", tags: "digitalisierung,excel" },
+    { slug: "c", tags: "webshop" },
+  ];
+  const en = [
+    { slug: "a", tags: "digitalization,workflows" },
+    { slug: "b", tags: "digitalization,spreadsheets" },
+    { slug: "c", tags: "online-shop" },
+  ];
+  const corpusOf = (lang: string) => (lang === "de" ? de : en);
+  const groupOf = (lang: string, tag: string) => {
+    const posts = corpusOf(lang).filter((p) => p.tags.split(",").includes(tag));
+    return posts.length ? { posts, allPosts: corpusOf(lang) } : null;
+  };
+
+  beforeEach(() => {
+    vi.mocked(routes.corpus).mockImplementation(async (lang) => corpusOf(lang) as never);
+    vi.mocked(routes.byTag).mockImplementation(async (lang, tag) => groupOf(lang, tag) as never);
+  });
+
+  it("pairs a tag with the one its articles carry in the other tree", async () => {
+    await expect(tagAlternate("de", "digitalisierung")).resolves.toBe("/en/tag/digitalization");
+    await expect(tagAlternate("en", "digitalization")).resolves.toBe("/tag/digitalisierung");
+  });
+
+  it("never pairs with a noindex (one-article) tag", async () => {
+    await expect(tagAlternate("de", "webshop")).resolves.toBeNull();
+  });
+
+  it("refuses when the candidate's articles are not exactly this tag's", async () => {
+    en.push({ slug: "d", tags: "digitalization" });
+    de.push({ slug: "d", tags: "other" });
+    await expect(tagAlternate("de", "digitalisierung")).resolves.toBeNull();
+    en.pop();
+    de.pop();
+  });
+});
+
 describe("tagAlternate", () => {
   it("points at the other tree when that tag really exists there", async () => {
     vi.mocked(routes.byTag).mockResolvedValue({ posts: [post, post], allPosts: [post, post] });
