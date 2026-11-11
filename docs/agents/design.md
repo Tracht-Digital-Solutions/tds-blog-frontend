@@ -128,6 +128,7 @@ Removed for good: scroll reveal (and the `html.js` flag), the 404's looping anim
 | tds-shared's `tds-spin`, `tds-skeleton-pulse`, `tds-toast-in`, `tds-modal-in`, … | Loading or outcome |
 | Cross-page fade (`page-transitions.css`) | Replaces the white flash; opacity only |
 | Index filter and newsletter confirmation (`transitionUpdate`) | They report a result; native View Transitions, no animation library |
+| tds-shared 0.65 quality-of-life layer: press dip on controls, growing `<details>`, eased link colour, `:target` heading flash (`tds-target-flash`) | Answers the reader's own press, open or TOC jump; nothing moves unprompted |
 
 Regression check on the built bundle:
 `npm run build && cat dist/_astro/*.css | grep -o "animation:[^;}]*" | sort -u`. Anything not prefixed `tds-` is new
