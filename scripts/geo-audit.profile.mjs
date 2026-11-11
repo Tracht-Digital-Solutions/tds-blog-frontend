@@ -124,16 +124,20 @@ export default {
       return { kind: "index", requiredTypes: ["WebSite", "Blog", "Organization", "ItemList"] };
     }
     if (/^\/(en\/)?(aktuelles|page\/\d+|seite\/\d+)$/.test(path)) {
-      return { kind: "archive", requiredTypes: ["WebSite", "Blog", "CollectionPage", "BreadcrumbList"] };
+      // Listings are hubs: their worth is the links, not prose. tds-shared
+      // ≥ 0.64.12 reads `minWords` per kind (2026-11-11).
+      return { kind: "archive", requiredTypes: ["WebSite", "Blog", "CollectionPage", "BreadcrumbList"], minWords: 150 };
     }
     if (/^\/(kategorie|en\/category|tag|en\/tag)\/[^/]+$/.test(path)) {
-      return { kind: "taxonomy", requiredTypes: ["WebSite", "Blog", "CollectionPage", "BreadcrumbList"] };
+      // A category or tag page is a heading, a line and its articles. Tags
+      // below MIN_INDEXED_TAG_POSTS are noindex anyway.
+      return { kind: "taxonomy", requiredTypes: ["WebSite", "Blog", "CollectionPage", "BreadcrumbList"], minWords: 40 };
     }
     if (/^\/(autor|en\/author)\/[^/]+$/.test(path)) {
-      return { kind: "author", requiredTypes: ["WebSite", "Blog", "ProfilePage", "ItemList", "BreadcrumbList"] };
+      return { kind: "author", requiredTypes: ["WebSite", "Blog", "ProfilePage", "ItemList", "BreadcrumbList"], minWords: 150 };
     }
     if (/^\/(en\/)?rss$/.test(path)) {
-      return { kind: "feed-info", requiredTypes: ["WebSite", "BreadcrumbList"] };
+      return { kind: "feed-info", requiredTypes: ["WebSite", "BreadcrumbList"], minWords: 150 };
     }
     if (/^\/(en\/)?[^/]+$/.test(path)) {
       // An article. `requireDate` is the point of this whole profile: the

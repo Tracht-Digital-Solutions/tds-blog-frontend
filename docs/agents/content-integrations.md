@@ -61,8 +61,9 @@ consent-gated Besucher-Statistik (`tds-shared/analytics`, panel `/statistik`).
 
 ## Cookie banner and AdSense
 
-- `cookieBannerEnabled()` reads the `cookie_banner` landing block; `Layout.astro` renders tds-shared's
-  `ConsentBanner` (`client:when="consent"`) when enabled. Absent block, demo or API down = off.
+- `cookieBannerEnabled()` reads the `cookie_banner` landing block; `Layout.astro` renders tds-shared's plain-DOM
+  banner (`consentBannerHostMarkup()` + `mountConsentBannerHost()`, since 0.57.2; no React) when enabled. Absent
+  block, demo or API down = off.
 - `adsConfig()` reads the `ads` landing block (`enabled`, `publisherId`, `defaultMode: auto|manual`, slots). Per post,
   `post.adsMode` (`default|off|auto|manual`) overrides it via `effectiveAdsMode()`.
 - `adsbygoogle.js` loads **only after ad consent**: when ads are enabled the `CookieNotice` consent variant sets
