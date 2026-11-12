@@ -1,0 +1,57 @@
+import { t as __exportAll } from "./rolldown-runtime_D8jQpDG7.mjs";
+import { A as maybeRenderHead, C as renderComponent, k as renderTemplate } from "./sequence_4TwHRs5k.mjs";
+import "./compiler_DUKTb6Ws.mjs";
+import { f as createComponent, t as $$Layout } from "./Layout_CScXTsWv.mjs";
+import { i as BlogIndex, n as $$ToolsPromo, r as ForYou, t as toIndexPost } from "./indexPosts_DxGDn6Jg.mjs";
+import { S as listReads, b as listAllPosts, x as listPopular } from "./cache_CmmuZktQ.mjs";
+import { c as itemListSchema, d as websiteSchema, i as blogSchema, l as organizationSchema, t as asGraph } from "./jsonld_By5_V016.mjs";
+import { n as siteConfig } from "./seo_DXIXsesw.mjs";
+// src/pages/en/index.astro
+var en_exports = /* @__PURE__ */ __exportAll({
+	default: () => $$Index,
+	file: () => $$file,
+	url: () => "/en"
+});
+var $$Index = createComponent(async ($$result, $$props, $$slots) => {
+	let allPosts = [];
+	let popular = [];
+	try {
+		let reads;
+		[allPosts, popular, reads] = await Promise.all([
+			listAllPosts("en"),
+			listPopular("en", 6),
+			listReads("en")
+		]);
+		if (reads.size > 0) allPosts = allPosts.map((p) => ({
+			...p,
+			viewCount: reads.get(p.slug) ?? 0
+		}));
+	} catch (err) {
+		console.error("[tds-blog] failed to fetch posts at build time:", err);
+	}
+	const jsonLd = asGraph(websiteSchema("en"), blogSchema("en"), organizationSchema(), itemListSchema(allPosts.slice(0, 10).map((p) => `${siteConfig.url}/en/${p.slug}`)));
+	return renderTemplate`${renderComponent($$result, "Layout", $$Layout, {
+		"title": "Ratgeber — Digitalization, Software & SMEs",
+		"lang": "en",
+		"jsonLd": jsonLd
+	}, { "default": ($$result) => renderTemplate`${maybeRenderHead($$result)}<main id="main">${renderComponent($$result, "BlogIndex", BlogIndex, {
+		"posts": allPosts.map(toIndexPost),
+		"popular": popular.map(toIndexPost),
+		"lang": "en",
+		"pageSize": 10,
+		"client:load": true,
+		"client:component-hydration": "load",
+		"client:component-path": "~/components/islands/BlogIndex.tsx",
+		"client:component-export": "default"
+	})}${renderComponent($$result, "ToolsPromo", $$ToolsPromo, { "lang": "en" })}${renderComponent($$result, "ForYou", ForYou, {
+		"lang": "en",
+		"client:idle": true,
+		"client:component-hydration": "idle",
+		"client:component-path": "~/components/islands/ForYou.tsx",
+		"client:component-export": "default"
+	})}</main>` })}`;
+}, "/home/runner/work/tds-blog-frontend/tds-blog-frontend/src/pages/en/index.astro", void 0);
+var $$file = "/home/runner/work/tds-blog-frontend/tds-blog-frontend/src/pages/en/index.astro";
+// \0virtual:astro:page:src/pages/en/index@_@astro
+var page = () => en_exports;
+export { page };
